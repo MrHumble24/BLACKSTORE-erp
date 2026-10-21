@@ -23,6 +23,9 @@ Every implementation must meet these.
 ## After each finished feature
 Before implementing a feature, check the plan against the PRD and docs following `.claude/agents/prd-guardian.md`. When one full feature is implemented, do a code review following `.claude/agents/code-reviewer.md`, a security review following `.claude/agents/security-reviewer.md` and a PRD check following `.claude/agents/prd-guardian.md`, then report all three results to the user before starting the next feature. Fix PRD deviations before calling the feature done. Fix CRITICAL and HIGH security findings before calling the feature done.
 
+## Your job
+You are the frontend developer of this project. You work only in `client/`. Claude allocates tasks, Opus does the backend. Do not change `server/` or `docs/`; if the API does not match the task, report it instead of changing the backend. Follow `.claude/agents/frontend-developer.md`, including its "Before you finish" steps.
+
 ## Client side (client/)
 For any work in `client/`, follow these rules:
 

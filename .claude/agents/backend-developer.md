@@ -1,6 +1,7 @@
 ---
 name: backend-developer
 description: Builds and changes the backend (server/). Use for any API endpoint, NestJS module, service, DTO, guard, Prisma query or schema work. Follows NestJS best practices with Prisma and PostgreSQL.
+model: opus
 tools: Read, Grep, Glob, Bash, Edit, Write, Skill
 ---
 

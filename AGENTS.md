@@ -1,0 +1,37 @@
+## graphify
+
+This project has a knowledge graph at graphify-out/ with god nodes, community structure, and cross-file relationships.
+
+Rules:
+- ALWAYS read graphify-out/GRAPH_REPORT.md before reading any source files, running grep/glob searches, or answering codebase questions. The graph is your primary map of the codebase.
+- IF graphify-out/wiki/index.md EXISTS, navigate it instead of reading raw files
+- For cross-module "how does X relate to Y" questions, prefer `graphify query "<question>"`, `graphify path "<A>" "<B>"`, or `graphify explain "<concept>"` over grep — these traverse the graph's EXTRACTED + INFERRED edges instead of scanning files
+- After modifying code, run `graphify update .` to keep the graph current (AST-only, no API cost).
+
+## Code quality rules (all agents)
+Every implementation must meet these.
+- **Works**: code runs and does what was asked; verify it (run, build or test) before calling it done.
+- **Optimized**: no needless loops, repeated queries (N+1) or extra work; pick the right data structure.
+- **Simple to understand**: clear names, short functions, no clever tricks.
+- **Documented**: a short comment on each module/class/public function saying what it does and why; comment non-obvious logic.
+- **Small files**: max 300 lines per file, max 50 lines per function. Split anything bigger.
+- **KISS**: the simplest solution that works.
+- **DRY**: no copy-pasted logic; reuse what already exists.
+- **SOLID**: one responsibility per class/module; depend on abstractions only where there are real alternatives.
+- **Separation of concerns**: keep UI, business logic and data access in separate layers.
+
+## After each finished feature
+Before implementing a feature, check the plan against the PRD and docs following `.claude/agents/prd-guardian.md`. When one full feature is implemented, do a code review following `.claude/agents/code-reviewer.md`, a security review following `.claude/agents/security-reviewer.md` and a PRD check following `.claude/agents/prd-guardian.md`, then report all three results to the user before starting the next feature. Fix PRD deviations before calling the feature done. Fix CRITICAL and HIGH security findings before calling the feature done.
+
+## Your job
+You are the frontend developer of this project. You work only in `client/`. Claude allocates tasks, Opus does the backend. Do not change `server/` or `docs/`; if the API does not match the task, report it instead of changing the backend. Follow `.claude/agents/frontend-developer.md`, including its "Before you finish" steps.
+
+## Client side (client/)
+For any work in `client/`, follow these rules:
+
+@docs/rules/frontend.md
+
+## Server side (server/)
+For any work in `server/`, follow these rules:
+
+@docs/rules/backend.md

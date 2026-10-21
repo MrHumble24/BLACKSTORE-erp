@@ -26,12 +26,22 @@ Before implementing a feature, run the `prd-guardian` agent on the plan and fix 
 ## After each finished feature
 When one full feature is implemented, run the `code-reviewer`, `security-reviewer` and `prd-guardian` agents (in parallel), then report all three results to the user before starting the next feature. Fix PRD deviations before calling the feature done. Fix CRITICAL and HIGH security findings before calling the feature done.
 
+## Task allocation (Claude is the allocator)
+Claude does not implement features itself. It splits each feature into backend and frontend tasks, hands them out, waits for the result, then runs the reviews below.
+
+| Work | Who does it | How Claude hands it over |
+| --- | --- | --- |
+| Backend (`server/`) | `backend-developer` agent on Opus | Agent tool, `subagent_type: backend-developer` |
+| Frontend (`client/`) | Gemini CLI, or OpenCode | `gemini -p "<task>" --approval-mode auto_edit` or `opencode run "<task>"` from the project root, in the background |
+
+Every hand-over message must name the feature, the PRD items it covers (FR/BR/W numbers), the API contract (endpoints, request and response shapes) and say "follow the rules in CLAUDE.md / GEMINI.md / AGENTS.md". Backend goes first when the frontend needs its API; otherwise both run in parallel. Gemini and OpenCode read their rules from GEMINI.md and AGENTS.md, which point to the same agent files and `docs/rules/` as Claude. After each task, Claude checks the result with the reviewers; a result that breaks the rules goes back to the same tool with the findings.
+
 ## Client side (client/)
-Use the `frontend-developer` agent for any work in `client/`. Every session and agent follows these rules:
+Frontend work is done by Gemini or OpenCode following `.claude/agents/frontend-developer.md`. Every session and agent follows these rules:
 
 @docs/rules/frontend.md
 
 ## Server side (server/)
-Use the `backend-developer` agent for any work in `server/`. Every session and agent follows these rules:
+Backend work is done by the `backend-developer` agent (Opus). Every session and agent follows these rules:
 
 @docs/rules/backend.md
