@@ -4,6 +4,7 @@ import {
   OnModuleDestroy,
   Logger,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
@@ -16,10 +17,9 @@ export class PrismaService
   private readonly logger = new Logger(PrismaService.name);
   private pool: Pool;
 
-  constructor() {
-    const connectionString =
-      process.env.DATABASE_URL ||
-      'postgresql://postgres:postgres@localhost:5432/blackstore?schema=public';
+  constructor(config: ConfigService) {
+    // Fails at startup if DATABASE_URL is missing, instead of using a default.
+    const connectionString = config.getOrThrow<string>('DATABASE_URL');
 
     const pool = new Pool({ connectionString });
     const adapter = new PrismaPg(pool);
