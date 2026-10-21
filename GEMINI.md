@@ -19,3 +19,6 @@ Every implementation must meet these.
 - **DRY**: no copy-pasted logic; reuse what already exists.
 - **SOLID**: one responsibility per class/module; depend on abstractions only where there are real alternatives.
 - **Separation of concerns**: keep UI, business logic and data access in separate layers.
+
+## After each finished feature
+When one full feature is implemented, do a code review following `.claude/agents/code-reviewer.md` and a security review following `.claude/agents/security-reviewer.md`, then report both results to the user before starting the next feature. Fix CRITICAL and HIGH security findings before calling the feature done.
