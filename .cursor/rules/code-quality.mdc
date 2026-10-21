@@ -1,0 +1,15 @@
+---
+description: Code quality rules for every implementation
+alwaysApply: true
+---
+
+Every implementation must meet these.
+- **Works**: code runs and does what was asked; verify it (run, build or test) before calling it done.
+- **Optimized**: no needless loops, repeated queries (N+1) or extra work; pick the right data structure.
+- **Simple to understand**: clear names, short functions, no clever tricks.
+- **Documented**: a short comment on each module/class/public function saying what it does and why; comment non-obvious logic.
+- **Small files**: max 300 lines per file, max 50 lines per function. Split anything bigger.
+- **KISS**: the simplest solution that works.
+- **DRY**: no copy-pasted logic; reuse what already exists.
+- **SOLID**: one responsibility per class/module; depend on abstractions only where there are real alternatives.
+- **Separation of concerns**: keep UI, business logic and data access in separate layers.
