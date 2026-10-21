@@ -20,8 +20,11 @@ Every implementation must meet these. The `code-reviewer` agent checks them.
 - **SOLID**: one responsibility per class/module; depend on abstractions only where there are real alternatives.
 - **Separation of concerns**: keep UI, business logic and data access in separate layers.
 
+## Before each feature
+Before implementing a feature, run the `prd-guardian` agent on the plan and fix any deviation from the PRD and docs first.
+
 ## After each finished feature
-When one full feature is implemented, run the `code-reviewer` agent and the `security-reviewer` agent (in parallel), then report both results to the user before starting the next feature. Fix CRITICAL and HIGH security findings before calling the feature done.
+When one full feature is implemented, run the `code-reviewer`, `security-reviewer` and `prd-guardian` agents (in parallel), then report all three results to the user before starting the next feature. Fix PRD deviations before calling the feature done. Fix CRITICAL and HIGH security findings before calling the feature done.
 
 ## Client side (client/)
 Use the `frontend-developer` agent for any work in `client/`. Every session and agent follows these rules:

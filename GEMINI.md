@@ -21,7 +21,7 @@ Every implementation must meet these.
 - **Separation of concerns**: keep UI, business logic and data access in separate layers.
 
 ## After each finished feature
-When one full feature is implemented, do a code review following `.claude/agents/code-reviewer.md` and a security review following `.claude/agents/security-reviewer.md`, then report both results to the user before starting the next feature. Fix CRITICAL and HIGH security findings before calling the feature done.
+Before implementing a feature, check the plan against the PRD and docs following `.claude/agents/prd-guardian.md`. When one full feature is implemented, do a code review following `.claude/agents/code-reviewer.md`, a security review following `.claude/agents/security-reviewer.md` and a PRD check following `.claude/agents/prd-guardian.md`, then report all three results to the user before starting the next feature. Fix PRD deviations before calling the feature done. Fix CRITICAL and HIGH security findings before calling the feature done.
 
 ## Client side (client/)
 For any work in `client/`, follow these rules:
