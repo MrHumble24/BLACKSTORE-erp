@@ -24,4 +24,6 @@ Every implementation must meet these.
 When one full feature is implemented, do a code review following `.claude/agents/code-reviewer.md` and a security review following `.claude/agents/security-reviewer.md`, then report both results to the user before starting the next feature. Fix CRITICAL and HIGH security findings before calling the feature done.
 
 ## Client side (client/)
-For any work in `client/`, follow the rules in `.claude/agents/frontend-developer.md` (Feature-Sliced Design, TanStack Query + axios + custom hooks, Zustand, shadcn/ui + Tailwind, max 300 lines per file, YAGNI, KISS, DRY).
+For any work in `client/`, follow these rules:
+
+@docs/rules/frontend.md

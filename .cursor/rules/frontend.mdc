@@ -1,7 +1,8 @@
 ---
 description: Client-side rules (FSD, TanStack Query, axios, Zustand, shadcn, Tailwind)
-globs: client/**
-alwaysApply: false
+alwaysApply: true
 ---
 
-For any work in `client/`, follow the rules in `.claude/agents/frontend-developer.md` (Feature-Sliced Design, TanStack Query + axios + custom hooks, Zustand, shadcn/ui + Tailwind, max 300 lines per file, YAGNI, KISS, DRY).
+For any work in `client/`, follow these rules:
+
+@docs/rules/frontend.md

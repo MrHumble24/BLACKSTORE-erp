@@ -24,4 +24,6 @@ Every implementation must meet these. The `code-reviewer` agent checks them.
 When one full feature is implemented, run the `code-reviewer` agent and the `security-reviewer` agent (in parallel), then report both results to the user before starting the next feature. Fix CRITICAL and HIGH security findings before calling the feature done.
 
 ## Client side (client/)
-Use the `frontend-developer` agent for any work in `client/`.
+Use the `frontend-developer` agent for any work in `client/`. Every session and agent follows these rules:
+
+@docs/rules/frontend.md
