@@ -1,0 +1,8 @@
+---
+description: Backend rules (NestJS best practices, Prisma, PostgreSQL)
+alwaysApply: true
+---
+
+For any work in `server/`, follow these rules:
+
+@docs/rules/backend.md

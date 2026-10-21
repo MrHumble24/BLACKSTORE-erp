@@ -27,3 +27,8 @@ When one full feature is implemented, do a code review following `.claude/agents
 For any work in `client/`, follow these rules:
 
 @docs/rules/frontend.md
+
+## Server side (server/)
+For any work in `server/`, follow these rules:
+
+@docs/rules/backend.md

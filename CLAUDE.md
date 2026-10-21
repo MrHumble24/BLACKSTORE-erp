@@ -27,3 +27,8 @@ When one full feature is implemented, run the `code-reviewer` agent and the `sec
 Use the `frontend-developer` agent for any work in `client/`. Every session and agent follows these rules:
 
 @docs/rules/frontend.md
+
+## Server side (server/)
+Use the `backend-developer` agent for any work in `server/`. Every session and agent follows these rules:
+
+@docs/rules/backend.md
