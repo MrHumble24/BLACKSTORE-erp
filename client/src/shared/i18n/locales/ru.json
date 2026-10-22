@@ -463,6 +463,7 @@
     "locationsRequired": "Нужно выбрать откуда и куда",
     "locationsMustDiffer": "Откуда и куда не должны совпадать",
     "atLeastOneLine": "Добавьте хотя бы одно устройство или аксессуар",
+    "accessoryRowIncomplete": "Заполните или удалите строку аксессуара",
     "selectFromFirst": "Сначала выберите локацию «откуда»",
     "itemNotAtSource": "Устройства нет в наличии в исходной локации",
     "itemAlreadyAdded": "Устройство уже добавлено",

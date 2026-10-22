@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-  Select, SelectTrigger, SelectValue, SelectContent, SelectItem, Input,
+  Select, SelectTrigger, SelectValue, SelectContent, SelectItem, Input, DateRangeInputs,
 } from '@/shared/ui';
 import { useUsers } from '@/entities/user';
 import type { AuditFilters } from '@/entities/audit-log';
@@ -14,6 +14,7 @@ interface Props {
 /** Exact-match filters for the audit log: entity, entity id, user, action, from/to. */
 export function AuditLogFilters({ filters, onChange }: Props) {
   const { t } = useTranslation();
+  // ponytail: the user filter lists only the first 100 users; add a searchable picker if the team outgrows that.
   const { data: usersPage } = useUsers(1, 100);
   const users = usersPage?.items ?? [];
   const [entity, setEntity] = useState(filters.entity ?? '');
@@ -52,12 +53,7 @@ export function AuditLogFilters({ filters, onChange }: Props) {
       </div>
       <Input value={action} onChange={(e) => setAction(e.target.value)} onBlur={applyText}
         placeholder={t('auditLog.action')} className="w-32 h-8 text-xs rounded-full" />
-      <Input type="date" value={filters.from ?? ''}
-        onChange={(e) => onChange({ ...filters, from: e.target.value || undefined })}
-        className="w-40 h-8 text-xs rounded-full" />
-      <Input type="date" value={filters.to ?? ''}
-        onChange={(e) => onChange({ ...filters, to: e.target.value || undefined })}
-        className="w-40 h-8 text-xs rounded-full" />
+      <DateRangeInputs from={filters.from} to={filters.to} onChange={(r) => onChange({ ...filters, ...r })} />
     </div>
   );
 }

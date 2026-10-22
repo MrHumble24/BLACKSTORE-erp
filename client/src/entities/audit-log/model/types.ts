@@ -1,7 +1,3 @@
-import type { Page } from '@/shared/types';
-
-export type { Page };
-
 export interface AuditEntry {
   id: number;
   createdAt: string;

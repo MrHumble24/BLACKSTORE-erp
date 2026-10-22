@@ -463,6 +463,7 @@
     "locationsRequired": "Qayerdan va qayerga tanlanishi shart",
     "locationsMustDiffer": "Qayerdan va qayerga bir xil bo'lmasligi kerak",
     "atLeastOneLine": "Kamida bitta qurilma yoki aksessuar qo'shing",
+    "accessoryRowIncomplete": "Aksessuar qatorini to'ldiring yoki o'chiring",
     "selectFromFirst": "Avval 'qayerdan' joyini tanlang",
     "itemNotAtSource": "Qurilma manba joyda omborda emas",
     "itemAlreadyAdded": "Qurilma allaqachon qo'shilgan",

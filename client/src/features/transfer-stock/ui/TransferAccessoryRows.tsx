@@ -2,28 +2,25 @@ import { useTranslation } from 'react-i18next';
 import { Plus, X } from 'lucide-react';
 import { Button, SelectField, Input, Label } from '@/shared/ui';
 import { useProductModels } from '@/entities/product-model';
+import type { ProductModel } from '@/entities/product-model';
 import type { Category } from '@/entities/category';
 import { newAccessoryDraft, type AccessoryDraft } from '../model/accessory-draft';
 
-/** Category + model + quantity for one accessory line; models reload per category. */
-function AccessoryRow({
-  row,
-  categories,
-  onChange,
-  onRemove,
-  disabled,
-}: {
+interface RowProps {
   row: AccessoryDraft;
   categories: Category[];
   onChange: (row: AccessoryDraft) => void;
   onRemove: () => void;
   disabled: boolean;
-}) {
-  const { t } = useTranslation();
-  const { data: models = [] } = useProductModels(row.categoryId || undefined);
+}
 
+/** Category + model selects for one line; picking a category clears the model. */
+function AccessoryLineSelects({
+  row, categories, models, onChange, disabled,
+}: Omit<RowProps, 'onRemove'> & { models: ProductModel[] }) {
+  const { t } = useTranslation();
   return (
-    <div className="flex items-end gap-2">
+    <>
       <SelectField
         label={t('transfers.category')}
         className="space-y-1 flex-1"
@@ -42,6 +39,18 @@ function AccessoryRow({
         options={models.map((m) => ({ value: String(m.id), label: m.name }))}
         disabled={disabled || !row.categoryId}
       />
+    </>
+  );
+}
+
+/** Category + model + quantity for one accessory line; models reload per category. */
+function AccessoryRow({ row, categories, onChange, onRemove, disabled }: RowProps) {
+  const { t } = useTranslation();
+  const { data: models = [] } = useProductModels(row.categoryId || undefined);
+
+  return (
+    <div className="flex items-end gap-2">
+      <AccessoryLineSelects row={row} categories={categories} models={models} onChange={onChange} disabled={disabled} />
       <div className="space-y-1 w-24">
         <Label htmlFor={`qty-${row.key}`}>{t('transfers.quantity')}</Label>
         <Input

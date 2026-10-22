@@ -1,10 +1,10 @@
-import { useState, useRef, type KeyboardEvent } from 'react';
+import { useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { ScanLine } from 'lucide-react';
-import { Input, Label } from '@/shared/ui';
+import { ScanCodeInput } from '@/shared/ui';
 import { getApiErrorMessage } from '@/shared/api';
-import { CameraScanButton } from '@/features/scan';
+import { SCAN_CODE_REGEX } from '@/entities/item';
 import { useScanStockCount, ScanStatusBadge, type StockCountScan } from '@/entities/stock-count';
 
 /** A scan paired with a stable client-only key (DUPLICATE scans repeat the same server id). */
@@ -46,7 +46,7 @@ export function CountScanPanel({ countId }: { countId: number }) {
   const submit = (raw: string) => {
     if (isPending) return;
     const normalized = raw.trim().toUpperCase();
-    if (!normalized) return;
+    if (!normalized || !SCAN_CODE_REGEX.test(normalized)) return;
     scan(normalized, {
       onSuccess: (result) => {
         keyRef.current += 1;
@@ -58,34 +58,22 @@ export function CountScanPanel({ countId }: { countId: number }) {
     });
   };
 
-  const onKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      submit(code);
-    }
-  };
-
   return (
     <section className="rounded-[28px] border border-hairline-silver/70 bg-gallery-white p-6 space-y-4">
       <div className="flex items-center gap-2 text-base font-semibold text-ink">
         <ScanLine className="h-4 w-4 text-pricing-blue" />
         {t('stockCount.scanPanelTitle')}
       </div>
-      <div className="space-y-1">
-        <Label htmlFor="count-scan">{t('stockCount.scanInputLabel')}</Label>
-        <div className="flex items-center gap-2">
-          <Input
-            id="count-scan"
-            ref={inputRef}
-            value={code}
-            onChange={(e) => setCode(e.target.value)}
-            onKeyDown={onKeyDown}
-            placeholder={t('stockCount.scanPlaceholder')}
-            autoComplete="off"
-          />
-          <CameraScanButton onScan={(c) => { setCode(c); submit(c); }} />
-        </div>
-      </div>
+      <ScanCodeInput
+        id="count-scan"
+        label={t('stockCount.scanInputLabel')}
+        value={code}
+        onChange={setCode}
+        onSubmit={submit}
+        inputRef={inputRef}
+        autoFocus
+        placeholder={t('stockCount.scanPlaceholder')}
+      />
       <SessionScans scans={scans} />
     </section>
   );

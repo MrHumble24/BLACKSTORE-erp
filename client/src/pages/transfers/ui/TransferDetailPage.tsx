@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import {
   BackLink, Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableEmptyRow,
 } from '@/shared/ui';
-import { formatDate } from '@/shared/lib';
+import { formatDateTime } from '@/shared/lib';
 import { ItemStatusBadge } from '@/entities/item';
 import { useTransfer, type Transfer } from '@/entities/transfer';
 
@@ -22,7 +22,7 @@ function TransferHeader({ transfer }: { transfer: Transfer }) {
   const { t } = useTranslation();
   return (
     <div className="rounded-[28px] border border-hairline-silver/70 bg-gallery-white p-5 grid grid-cols-2 md:grid-cols-4 gap-4">
-      <Field label={t('transfers.date')} value={formatDate(transfer.date)} />
+      <Field label={t('transfers.date')} value={formatDateTime(transfer.date)} />
       <Field label={t('transfers.route')} value={`${transfer.fromLocation.name} → ${transfer.toLocation.name}`} />
       <Field label={t('transfers.user')} value={transfer.user.name} />
       <Field label={t('transfers.note')} value={transfer.note ?? '—'} />

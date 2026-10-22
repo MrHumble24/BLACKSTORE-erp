@@ -4,7 +4,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
   TableLoadingRow, TableEmptyRow,
 } from '@/shared/ui';
-import { formatDate } from '@/shared/lib';
+import { formatDateTime } from '@/shared/lib';
 import type { TransferSummary } from '@/entities/transfer';
 
 function TransferRow({ transfer }: { transfer: TransferSummary }) {
@@ -18,7 +18,7 @@ function TransferRow({ transfer }: { transfer: TransferSummary }) {
     <TableRow className="border-b border-hairline-silver/40 hover:bg-studio-mist/60">
       <TableCell>
         <Link to={`/transfers/${transfer.id}`} className="font-medium text-apple-blue underline-offset-4 hover:underline">
-          {formatDate(transfer.date)}
+          {formatDateTime(transfer.date)}
         </Link>
       </TableCell>
       <TableCell className="text-xs text-ink">{transfer.fromLocation.name}</TableCell>

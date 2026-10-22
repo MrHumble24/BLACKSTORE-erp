@@ -2,13 +2,10 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { toast } from 'sonner';
 import { DialogFormFooter, FormError, Form } from '@/shared/ui';
-import { getTodayIso, normalizeMoney, useCreateOrUpdate } from '@/shared/lib';
-import {
-  useCreateLedgerEntry,
-  useLedgerCategories,
-  type CreateLedgerEntryPayload,
-} from '@/entities/ledger';
+import { getTodayIso, normalizeMoney, useSubmitWithError } from '@/shared/lib';
+import { useCreateLedgerEntry, useLedgerCategories } from '@/entities/ledger';
 import { createLedgerSchema, type LedgerFormValues } from '../model/ledger.schema';
 import { LedgerEntryFields } from './LedgerEntryFields';
 
@@ -17,16 +14,8 @@ export function LedgerEntryContent({ onClose }: { onClose: () => void }) {
   const { t } = useTranslation();
   const [todayIso] = useState(() => getTodayIso());
   const { data: categories = [] } = useLedgerCategories();
-  const { mutate: createEntry, isPending } = useCreateLedgerEntry();
-
-  const { submit, apiError } = useCreateOrUpdate({
-    create: (payload: CreateLedgerEntryPayload, opt) => createEntry(payload, opt),
-    update: () => undefined,
-    isPending,
-    isEditing: false,
-    successMessage: t('ledger.createdSuccess'),
-    onDone: onClose,
-  });
+  const { error, runWithCatch } = useSubmitWithError();
+  const { mutateAsync, isPending } = useCreateLedgerEntry();
 
   const form = useForm<LedgerFormValues>({
     resolver: zodResolver(createLedgerSchema(t)),
@@ -34,21 +23,27 @@ export function LedgerEntryContent({ onClose }: { onClose: () => void }) {
   });
   const isIncome = useWatch({ control: form.control, name: 'type' }) === 'INCOME';
 
-  const onSubmit = form.handleSubmit((values) => {
-    submit({
-      type: values.type,
-      category: values.category.trim(),
-      amount: normalizeMoney(values.amount),
-      ...(values.date.trim() ? { date: values.date.trim() } : {}),
-      ...(values.note.trim() ? { note: values.note.trim() } : {}),
-      ...(values.type === 'INCOME' ? { countsInProfit: values.countsInProfit } : {}),
-    });
+  const onSubmit = form.handleSubmit(async (values) => {
+    const entry = await runWithCatch(() =>
+      mutateAsync({
+        type: values.type,
+        category: values.category.trim(),
+        amount: normalizeMoney(values.amount),
+        ...(values.date.trim() ? { date: values.date.trim() } : {}),
+        ...(values.note.trim() ? { note: values.note.trim() } : {}),
+        ...(values.type === 'INCOME' ? { countsInProfit: values.countsInProfit } : {}),
+      }),
+    );
+    if (entry) {
+      toast.success(t('ledger.createdSuccess'));
+      onClose();
+    }
   });
 
   return (
     <Form {...form}>
       <form onSubmit={onSubmit} className="space-y-4 pt-2">
-        <FormError message={apiError} />
+        <FormError message={error} />
         <LedgerEntryFields
           control={form.control}
           register={form.register}

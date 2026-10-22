@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import {
-  Select, SelectTrigger, SelectValue, SelectContent, SelectItem, Input,
+  Select, SelectTrigger, SelectValue, SelectContent, SelectItem, DateRangeInputs,
 } from '@/shared/ui';
 import { useLocations } from '@/entities/location';
 import type { TransferFilters } from '@/entities/transfer';
@@ -33,18 +33,7 @@ export function TransfersFilters({ filters, onChange }: Props) {
           </SelectContent>
         </Select>
       </div>
-      <Input
-        type="date"
-        value={filters.from ?? ''}
-        onChange={(e) => onChange({ ...filters, from: e.target.value || undefined })}
-        className="w-40 h-8 text-xs rounded-full"
-      />
-      <Input
-        type="date"
-        value={filters.to ?? ''}
-        onChange={(e) => onChange({ ...filters, to: e.target.value || undefined })}
-        className="w-40 h-8 text-xs rounded-full"
-      />
+      <DateRangeInputs from={filters.from} to={filters.to} onChange={(r) => onChange({ ...filters, ...r })} />
     </div>
   );
 }

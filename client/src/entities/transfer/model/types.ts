@@ -1,16 +1,6 @@
-import type { ItemStatus, ItemIdentifier } from '@/entities/item';
-import type { Page } from '@/shared/types';
+import type { ItemBrief } from '@/entities/item';
 
-export type { Page };
-
-/** Minimal item projection returned by transfers, stock counts and the audit log. */
-export interface ItemBrief {
-  id: number;
-  identifiers: ItemIdentifier[];
-  productModel: { id: number; name: string };
-  status: ItemStatus;
-  location: { id: number; name: string };
-}
+export type { ItemBrief };
 
 interface NamedRef {
   id: number;

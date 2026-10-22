@@ -19,6 +19,15 @@ export interface ItemIdentifier {
   value: string;
 }
 
+/** Minimal item projection returned by transfers, stock counts and the audit log. */
+export interface ItemBrief {
+  id: number;
+  identifiers: ItemIdentifier[];
+  productModel: { id: number; name: string };
+  status: ItemStatus;
+  location: { id: number; name: string };
+}
+
 export interface Item {
   id: number;
   productModel: {
