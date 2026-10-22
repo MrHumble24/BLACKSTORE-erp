@@ -14,6 +14,7 @@ import { ItemDeviceInfoCard } from './ItemDeviceInfoCard';
 import { ItemIdentifiersCard } from './ItemIdentifiersCard';
 import { ItemOwnershipCard } from './ItemOwnershipCard';
 import { ItemPricingCard } from './ItemPricingCard';
+import { ItemTransfersCard } from './ItemTransfersCard';
 
 function useItemPermissions(status?: string) {
   const hasPermission = useAuthStore((state) => state.hasPermission);
@@ -119,6 +120,7 @@ export function ItemDetailsPage() {
           <ItemIdentifiersCard item={item} canAddIdentifier={canEdit} canPrintLabel={canReceiveBatch} onAddIdentifier={() => setIdentifierOpen(true)} />
           <ItemOwnershipCard item={item} />
           <ItemPricingCard item={item} canViewCost={canViewCost} canManagePrices={canManagePrices} onEditPrices={() => setPricesOpen(true)} />
+          <ItemTransfersCard itemId={item.id} />
         </div>
       </div>
       <ItemDetailsDialogs

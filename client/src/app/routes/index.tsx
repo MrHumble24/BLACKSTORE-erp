@@ -14,6 +14,10 @@ import { InvestorsPage, InvestorDetailPage } from '@/pages/investors';
 import { SuppliersPage, SupplierDetailPage } from '@/pages/suppliers';
 import { BatchesPage, BatchDetailPage } from '@/pages/batches';
 import { WalkInPurchasePage } from '@/pages/purchases';
+import { TransfersPage, NewTransferPage, TransferDetailPage } from '@/pages/transfers';
+import { StockCountsPage, StockCountDetailPage } from '@/pages/stock-counts';
+import { ExpensesPage } from '@/pages/expenses';
+import { AuditLogPage } from '@/pages/audit-log';
 import type { Permission } from '@/shared/config/permissions';
 import { ProtectedRoute } from './ProtectedRoute';
 
@@ -38,6 +42,13 @@ const PROTECTED_ROUTES: RouteConfig[] = [
   { path: 'batches', permission: 'receive_batch', Component: BatchesPage },
   { path: 'batches/:id', permission: 'receive_batch', Component: BatchDetailPage },
   { path: 'purchases/walk-in', permission: 'buy_walk_in', Component: WalkInPurchasePage },
+  { path: 'transfers', permission: 'view_stock', Component: TransfersPage },
+  { path: 'transfers/new', permission: 'transfer_stock', Component: NewTransferPage },
+  { path: 'transfers/:id', permission: 'view_stock', Component: TransferDetailPage },
+  { path: 'stock-counts', permission: 'stock_count', Component: StockCountsPage },
+  { path: 'stock-counts/:id', permission: 'stock_count', Component: StockCountDetailPage },
+  { path: 'expenses', permission: 'manage_expenses', Component: ExpensesPage },
+  { path: 'audit-log', permission: 'view_audit_log', Component: AuditLogPage },
 ];
 
 /** Redirects already authenticated users away from public pages. */

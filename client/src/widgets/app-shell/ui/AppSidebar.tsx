@@ -3,7 +3,7 @@ import { NavLink } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   Home, Users, Smartphone, Headphones, MapPin, Shapes, Coins,
-  Building2, Package, ShoppingCart,
+  Building2, Package, ShoppingCart, ArrowLeftRight, ClipboardCheck, Receipt, ScrollText,
 } from 'lucide-react';
 import { useAuthStore } from '@/entities/session';
 import { cn } from '@/shared/lib';
@@ -71,6 +71,29 @@ function ManagementItems() {
   );
 }
 
+/** Operations links (Transfers, Stock count, Expenses, Audit log), shown by their permissions. */
+function OperationsItems() {
+  const { t } = useTranslation();
+  const hasPermission = useAuthStore((state) => state.hasPermission);
+
+  return (
+    <>
+      {hasPermission('view_stock') && (
+        <SidebarItem to="/transfers" icon={<ArrowLeftRight className="h-4 w-4" />} label={t('nav.transfers')} />
+      )}
+      {hasPermission('stock_count') && (
+        <SidebarItem to="/stock-counts" icon={<ClipboardCheck className="h-4 w-4" />} label={t('nav.stockCount')} />
+      )}
+      {hasPermission('manage_expenses') && (
+        <SidebarItem to="/expenses" icon={<Receipt className="h-4 w-4" />} label={t('nav.expenses')} />
+      )}
+      {hasPermission('view_audit_log') && (
+        <SidebarItem to="/audit-log" icon={<ScrollText className="h-4 w-4" />} label={t('nav.auditLog')} />
+      )}
+    </>
+  );
+}
+
 /** Core links: home, stock block, users, catalog and investors (permission-gated). */
 function MainNavLinks() {
   const { t } = useTranslation();
@@ -94,6 +117,7 @@ function MainNavLinks() {
         </>
       )}
       <ManagementItems />
+      <OperationsItems />
       {canManageUsers && (
         <SidebarItem to="/users" icon={<Users className="h-4 w-4" />} label={t('nav.users')} />
       )}

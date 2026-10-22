@@ -1,0 +1,35 @@
+import type { Page } from '@/shared/types';
+
+export type LedgerType = 'INCOME' | 'EXPENSE';
+
+export interface LedgerEntry {
+  id: number;
+  type: LedgerType;
+  category: string;
+  amount: string;
+  date: string;
+  note: string | null;
+  /** Admin's confirmation that this INCOME adds to net profit (BR-5); always false for EXPENSE. */
+  countsInProfit: boolean;
+  user: { id: number; name: string };
+}
+
+export type LedgerPage = Page<LedgerEntry> & {
+  totals: { income: string; expense: string; net: string };
+};
+
+export interface LedgerFilters {
+  type?: LedgerType;
+  category?: string;
+  from?: string;
+  to?: string;
+}
+
+export interface CreateLedgerEntryPayload {
+  type: LedgerType;
+  category: string;
+  amount: string;
+  date?: string;
+  note?: string;
+  countsInProfit?: boolean;
+}
