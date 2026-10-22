@@ -1,15 +1,14 @@
-import { useState, useRef, type KeyboardEvent, type RefObject } from 'react';
+import { useState, useRef, type RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
 import { ScanLine } from 'lucide-react';
-import { Input, Label } from '@/shared/ui';
+import { ScanCodeInput } from '@/shared/ui';
 import { getApiErrorMessage } from '@/shared/api';
 import { normalizeMoney } from '@/shared/lib';
 import { useAuthStore } from '@/entities/session';
 import { useCategories, type Category } from '@/entities/category';
-import { CameraScanButton } from '@/shared/ui';
 import { useAddBatchItem, type BatchItemIdentifier } from '@/entities/batch';
 import { IMEI_REGEX, formatAttributes, type ItemCondition } from '@/entities/item';
 import { createBatchScanSchema, type BatchScanValues } from '../model/batch.schema';
@@ -100,42 +99,6 @@ function useScanLineSubmit(
   return { submitLine, isPending };
 }
 
-/** Scan row: always-focused code input with the camera fallback button next to it. */
-function ScanCodeInputField({
-  code,
-  onCodeChange,
-  onKeyDown,
-  onCameraScan,
-  inputRef,
-}: {
-  code: string;
-  onCodeChange: (value: string) => void;
-  onKeyDown: (e: KeyboardEvent<HTMLInputElement>) => void;
-  onCameraScan: (code: string) => void;
-  inputRef: RefObject<HTMLInputElement | null>;
-}) {
-  const { t } = useTranslation();
-
-  return (
-    <div className="space-y-1">
-      <Label htmlFor="batch-scan-input">{t('batches.scanInputLabel')}</Label>
-      <div className="flex items-center gap-2">
-        <Input
-          id="batch-scan-input"
-          ref={inputRef}
-          value={code}
-          onChange={(e) => onCodeChange(e.target.value)}
-          onKeyDown={onKeyDown}
-          placeholder={t('batches.scanPlaceholder')}
-          autoComplete="off"
-        />
-        <CameraScanButton onScan={onCameraScan} />
-      </div>
-      <p className="text-[11px] text-slate">{t('batches.scanHelp')}</p>
-    </div>
-  );
-}
-
 /** Section title row of the scan panel. */
 function ScanPanelHeader() {
   const { t } = useTranslation();
@@ -162,18 +125,6 @@ export function BatchScanPanel({ batchId }: { batchId: number }) {
     batchId, canManagePrices, serializedCategories, form, () => setCode(''), inputRef,
   );
 
-  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      submitLine(code);
-    }
-  };
-
-  const handleCameraScan = (cameraCode: string) => {
-    setCode(cameraCode);
-    submitLine(cameraCode);
-  };
-
   return (
     <section className="rounded-[28px] border border-hairline-silver/70 bg-gallery-white p-6 space-y-4 shadow-none">
       <ScanPanelHeader />
@@ -183,12 +134,15 @@ export function BatchScanPanel({ batchId }: { batchId: number }) {
         canManagePrices={canManagePrices}
         disabled={isPending}
       />
-      <ScanCodeInputField
-        code={code}
-        onCodeChange={setCode}
-        onKeyDown={handleKeyDown}
-        onCameraScan={handleCameraScan}
+      <ScanCodeInput
+        id="batch-scan-input"
+        label={t('batches.scanInputLabel')}
+        value={code}
+        onChange={setCode}
+        onSubmit={submitLine}
         inputRef={inputRef}
+        placeholder={t('batches.scanPlaceholder')}
+        hint={t('batches.scanHelp')}
       />
     </section>
   );

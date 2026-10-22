@@ -5,6 +5,7 @@ import type { PublicUser } from '../common/auth-user';
 import { hasPermission } from '../common/permissions';
 import { assertAccessoryModel, assertActiveLocation } from '../items/item-queries';
 import { PrismaService } from '../prisma/prisma.service';
+import { blendAvgCost } from './avg-cost';
 import { CreateAccessoryStockDto } from './dto/create-accessory-stock.dto';
 import { QueryAccessoryStockDto } from './dto/query-accessory-stock.dto';
 
@@ -103,18 +104,14 @@ export class AccessoryStockService {
     });
   }
 
-  /** avgCost = (oldQty·oldAvg + qty·unitCost) / (oldQty + qty); unchanged when no unitCost. */
+  /** avgCost from the shared blend helper; unchanged when no unitCost is given. */
   private nextAvgCost(
     existing: { quantity: number; avgCost: Prisma.Decimal } | null,
     dto: CreateAccessoryStockDto,
   ): Prisma.Decimal {
     const oldAvg = existing?.avgCost ?? new Prisma.Decimal(0);
     if (dto.unitCost === undefined) return oldAvg;
-    const oldQty = existing?.quantity ?? 0;
-    const unitCost = new Prisma.Decimal(dto.unitCost);
-    const totalQty = oldQty + dto.quantity;
-    const blended = oldAvg.times(oldQty).plus(unitCost.times(dto.quantity)).div(totalQty);
-    return new Prisma.Decimal(blended.toFixed(2));
+    return blendAvgCost(existing?.quantity ?? 0, oldAvg, dto.quantity, new Prisma.Decimal(dto.unitCost));
   }
 }
 

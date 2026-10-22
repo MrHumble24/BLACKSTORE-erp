@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import {
   Home, Users, Smartphone, Headphones, MapPin, Shapes, Coins,
   Building2, Package, ShoppingCart, Receipt, Contact, Settings,
+  ArrowLeftRight, ClipboardCheck, ScrollText,
 } from 'lucide-react';
 import { useAuthStore } from '@/entities/session';
 import { cn } from '@/shared/lib';
@@ -69,6 +70,28 @@ function BuyingItems() {
   );
 }
 
+/** Operations links (Transfers, Stock count, Expenses, Audit log), shown by their permissions. */
+function OperationsItems() {
+  const { t } = useTranslation();
+  const hasPermission = useAuthStore((state) => state.hasPermission);
+  return (
+    <>
+      {hasPermission('view_stock') && (
+        <SidebarItem to="/transfers" icon={<ArrowLeftRight className="h-4 w-4" />} label={t('nav.transfers')} />
+      )}
+      {hasPermission('stock_count') && (
+        <SidebarItem to="/stock-counts" icon={<ClipboardCheck className="h-4 w-4" />} label={t('nav.stockCount')} />
+      )}
+      {hasPermission('manage_expenses') && (
+        <SidebarItem to="/expenses" icon={<Receipt className="h-4 w-4" />} label={t('nav.expenses')} />
+      )}
+      {hasPermission('view_audit_log') && (
+        <SidebarItem to="/audit-log" icon={<ScrollText className="h-4 w-4" />} label={t('nav.auditLog')} />
+      )}
+    </>
+  );
+}
+
 /** Admin links: users, catalog, receipt settings and investors (permission-gated). */
 function AdminItems() {
   const { t } = useTranslation();
@@ -107,6 +130,7 @@ function SidebarNavList() {
         </>
       )}
       <BuyingItems />
+      <OperationsItems />
       <AdminItems />
     </nav>
   );

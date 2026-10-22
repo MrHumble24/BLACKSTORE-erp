@@ -134,6 +134,7 @@ model AuditLog {
 
   @@index([entity, entityId])
   @@index([createdAt])
+  @@index([userId])
 }
 
 // ─────────────────────────────────────────────
@@ -221,6 +222,7 @@ model ProductModel {
   stock         AccessoryStock[]
   saleItems     SaleItem[]
   purchaseLines PurchaseLine[]
+  transferAccessories TransferAccessory[]
 
   @@unique([categoryId, name])
 }
@@ -375,6 +377,7 @@ model Transfer {
   date           DateTime       @default(now())
   note           String?
   items          TransferItem[]
+  accessories    TransferAccessory[]
 }
 
 model TransferItem {
@@ -384,6 +387,17 @@ model TransferItem {
   item       Item     @relation(fields: [itemId], references: [id])
 
   @@id([transferId, itemId])
+}
+
+// Accessory quantities moved in a transfer (devices move via TransferItem).
+model TransferAccessory {
+  transferId     Int
+  transfer       Transfer     @relation(fields: [transferId], references: [id])
+  productModelId Int
+  productModel   ProductModel @relation(fields: [productModelId], references: [id])
+  quantity       Int
+
+  @@id([transferId, productModelId])
 }
 
 // ─────────────────────────────────────────────
@@ -533,6 +547,8 @@ model StockCount {
   startedAt  DateTime         @default(now())
   finishedAt DateTime?
   scans      StockCountScan[]
+
+  @@index([locationId, finishedAt])
 }
 
 // Missing items = items in this location NOT scanned; unknown = scans with no itemId
@@ -555,6 +571,7 @@ model LedgerEntry {
   amount   Decimal    @db.Decimal(12, 2)
   date     DateTime   @default(now())
   note     String?
+  countsInProfit Boolean @default(false) // Admin confirms this INCOME adds to net profit (BR-5); always false for EXPENSE
   userId   Int
   user     User       @relation(fields: [userId], references: [id])
 }

@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
+import { dateRange } from '../common/dates';
 import { PrismaService } from '../prisma/prisma.service';
+import { QueryAuditDto } from './dto/query-audit.dto';
 
 export interface AuditEntry {
   userId: number;
@@ -10,6 +12,18 @@ export interface AuditEntry {
   before?: object | null;
   after?: object | null;
 }
+
+/** Fields of an audit row that leave the server (Admin only); before/after returned as stored. */
+const auditSelect = {
+  id: true,
+  createdAt: true,
+  action: true,
+  entity: true,
+  entityId: true,
+  before: true,
+  after: true,
+  user: { select: { id: true, name: true } },
+} satisfies Prisma.AuditLogSelect;
 
 /** Writes AuditLog rows. Shared by every module that creates or changes records. */
 @Injectable()
@@ -31,6 +45,28 @@ export class AuditService {
         after: toSafeJson(entry.after),
       },
     });
+  }
+
+  /** Read-only, paginated audit trail with exact-match filters (FR-30); newest first. */
+  async findMany(query: QueryAuditDto) {
+    const where: Prisma.AuditLogWhereInput = {
+      entity: query.entity,
+      entityId: query.entityId,
+      userId: query.userId,
+      action: query.action,
+      createdAt: dateRange(query.from, query.to),
+    };
+    const [items, total] = await this.prisma.$transaction([
+      this.prisma.auditLog.findMany({
+        where,
+        select: auditSelect,
+        orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+        skip: (query.page - 1) * query.pageSize,
+        take: query.pageSize,
+      }),
+      this.prisma.auditLog.count({ where }),
+    ]);
+    return { items, total, page: query.page, pageSize: query.pageSize };
   }
 }
 

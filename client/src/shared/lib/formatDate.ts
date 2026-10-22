@@ -15,3 +15,6 @@ export function formatDate(
     : date.toLocaleDateString('ru-RU');
 }
 
+
+/** Date plus time (for the audit log timeline). */
+export const formatDateTime = (value: string | Date | null | undefined) => formatDate(value, true);

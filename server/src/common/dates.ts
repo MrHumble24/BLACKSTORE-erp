@@ -45,3 +45,12 @@ export function endOfDay(iso: string): Date {
   date.setHours(23, 59, 59, 999);
   return date;
 }
+
+/** Builds an inclusive `{ gte, lte }` date filter from optional `from`/`to`, or undefined when both absent. */
+export function dateRange(
+  from: string | undefined,
+  to: string | undefined,
+): { gte?: Date; lte?: Date } | undefined {
+  if (!from && !to) return undefined;
+  return { gte: from ? new Date(from) : undefined, lte: to ? endOfDay(to) : undefined };
+}
