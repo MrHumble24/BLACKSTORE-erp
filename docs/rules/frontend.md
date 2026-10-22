@@ -36,6 +36,6 @@ shared/    ui (shadcn), api (axios instance), lib, config, types
 - **KISS**: the simplest code that works; boring over clever.
 - **DRY**: reuse existing hooks, components and utils; don't duplicate logic across slices (move shared logic down a layer).
 - Types for API data come from one place per entity; no `any`.
-- Every user-visible text goes through translation (Uzbek and Russian), no hard-coded strings.
+- Every user-visible text goes through translation (Uzbek, Russian and English: `uz.json`, `ru.json`, `en.json` with identical keys), no hard-coded strings.
 - Staff must never see cost, purchase price or profit: don't render them unless the user has the permission (the server also blocks them).
 - A short comment on each slice's public hooks/components saying what they do; comment non-obvious logic only.

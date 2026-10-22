@@ -203,7 +203,7 @@ These rules decide every number the system shows. Example used below: an iPhone 
 | Security | HTTPS only; hashed passwords; access checked by permission on the server, not only hidden in the UI; staff sessions expire after inactivity |
 | Data integrity | Identifiers unique at database level; money stored as exact decimals; balances calculated from records |
 | Auditability | Every change is logged with user, time and before/after values |
-| Language | Uzbek (Latin script) and Russian. Each user picks their language; all screens, receipts and reports are translated |
+| Language | Uzbek (Latin script), Russian and English (English added at the client's request after Phase 1 development started). Each user picks their language; all screens, receipts and reports are translated |
 | Tech stack | Next.js (web), NestJS (API), PostgreSQL with Prisma; schema drafted |
 
 ## Release plan, risks and open questions

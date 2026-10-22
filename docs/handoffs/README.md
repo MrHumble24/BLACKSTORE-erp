@@ -22,6 +22,7 @@ One file per task handed to an agent. Paste the file's content as the first mess
 | F05 | Selling: sales, payments, debts, customers, returns, receipts | FR-19, FR-20, FR-21, FR-22, FR-23, FR-24 |
 | F06 | Operations: transfers, stock count, expenses, audit log (parallel to F05, worktree `.worktrees/F06-BE-01`) | FR-5, FR-6, FR-27, FR-30 |
 | F07 | Partners and finance: consignment, profit and investor reports (BE-01, worktree `.worktrees/F07-BE-01`), stock import, backups (BE-02, worktree `.worktrees/F07-BE-02`) | FR-7, FR-11, FR-26, FR-28, FR-31 |
+| F08 | English as a third language (client change request; worktree `.worktrees/F08-FE-01`) | NFR Language |
 
 ## Parallel tasks
 
