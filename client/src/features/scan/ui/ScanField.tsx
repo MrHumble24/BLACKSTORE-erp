@@ -7,6 +7,48 @@ import { useItemByCode, SCAN_CODE_REGEX } from '@/entities/item';
 import { getApiErrorStatus } from '@/shared/api';
 import { CameraScanButton } from './CameraScanButton';
 
+function ScanInput({
+  value,
+  setValue,
+  onKeyDown,
+  disabled,
+  isPending,
+  onCameraScan,
+}: {
+  value: string;
+  setValue: (v: string) => void;
+  onKeyDown: (e: KeyboardEvent<HTMLInputElement>) => void;
+  disabled: boolean;
+  isPending: boolean;
+  onCameraScan: (code: string) => void;
+}) {
+  const { t } = useTranslation();
+  return (
+    <div className="relative flex items-center w-52 md:w-64">
+      <div className="absolute left-2.5 flex items-center pointer-events-none text-steel">
+        {isPending ? (
+          <Loader2 className="h-3.5 w-3.5 animate-spin text-pricing-blue" />
+        ) : (
+          <Search className="h-3.5 w-3.5" />
+        )}
+      </div>
+      <input
+        type="text"
+        maxLength={40}
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        onKeyDown={onKeyDown}
+        placeholder={t('scan.placeholder')}
+        disabled={disabled}
+        className="h-8 w-full rounded-[980px] border border-hairline-silver bg-gallery-white pl-8 pr-8 text-xs text-ink placeholder:text-steel focus:border-pricing-blue focus:outline-none focus:ring-1 focus:ring-pricing-blue/20 transition-all tracking-[-0.01em]"
+      />
+      <div className="absolute right-1 flex items-center">
+        <CameraScanButton onScan={onCameraScan} />
+      </div>
+    </div>
+  );
+}
+
 /** Scan input in header for barcode / IMEI scanning and quick lookup. */
 export function ScanField() {
   const { t } = useTranslation();
@@ -47,27 +89,13 @@ export function ScanField() {
   };
 
   return (
-    <div className="relative flex items-center w-52 md:w-64">
-      <div className="absolute left-2.5 flex items-center pointer-events-none text-steel">
-        {isPending ? (
-          <Loader2 className="h-3.5 w-3.5 animate-spin text-pricing-blue" />
-        ) : (
-          <Search className="h-3.5 w-3.5" />
-        )}
-      </div>
-      <input
-        type="text"
-        maxLength={40}
-        value={value}
-        onChange={(e) => setValue(e.target.value)}
-        onKeyDown={handleKeyDown}
-        placeholder={t('scan.placeholder')}
-        disabled={isPending}
-        className="h-8 w-full rounded-[980px] border border-hairline-silver bg-gallery-white pl-8 pr-8 text-xs text-ink placeholder:text-steel focus:border-pricing-blue focus:outline-none focus:ring-1 focus:ring-pricing-blue/20 transition-all tracking-[-0.01em]"
-      />
-      <div className="absolute right-1 flex items-center">
-        <CameraScanButton onScan={handleCameraScan} />
-      </div>
-    </div>
+    <ScanInput
+      value={value}
+      setValue={setValue}
+      onKeyDown={handleKeyDown}
+      disabled={isPending}
+      isPending={isPending}
+      onCameraScan={handleCameraScan}
+    />
   );
 }

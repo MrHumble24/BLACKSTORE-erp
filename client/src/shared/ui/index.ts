@@ -15,5 +15,6 @@ export * from './DialogFormFooter';
 export * from './FormError';
 export * from './TableRows';
 export * from './SelectField';
+export * from './TextField';
 export * from './ActiveToggleButton';
 export * from './BackLink';

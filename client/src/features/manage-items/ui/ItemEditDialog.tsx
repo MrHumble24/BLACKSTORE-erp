@@ -13,7 +13,7 @@ import {
 import { useCategories } from '@/entities/category';
 import { useUpdateItem, type Item, type ItemCondition } from '@/entities/item';
 import { getApiErrorMessage } from '@/shared/api';
-import { ItemDynamicAttributes } from './ItemDynamicAttributes';
+import { ItemDynamicAttributes } from '@/entities/item';
 
 interface ItemEditDialogProps {
   open: boolean;

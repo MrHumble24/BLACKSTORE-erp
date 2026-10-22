@@ -1,9 +1,7 @@
 import { z } from 'zod';
+import { POSITIVE_MONEY_PATTERN } from '@/shared/lib';
 
 type TFn = (key: string) => string;
-
-/** Money-like amount string: digits with an optional 2-decimal part; sent as typed (no float math). */
-const AMOUNT_PATTERN = /^\d+([.,]\d{1,2})?$/;
 
 /** Creates a localized Zod schema for the investor form with the contract's shareValue rules
  * (PERCENT → 0–100; FIXED_PER_ITEM → ≥ 0; NONE → value hidden and not sent). */
@@ -21,7 +19,7 @@ export function createInvestorSchema(t: TFn) {
       if (values.shareType === 'NONE') {
         return;
       }
-      if (!AMOUNT_PATTERN.test(values.shareValue)) {
+      if (!POSITIVE_MONEY_PATTERN.test(values.shareValue)) {
         ctx.addIssue({
           code: 'custom',
           path: ['shareValue'],
@@ -58,7 +56,7 @@ export function createInvestorTransactionSchema(t: TFn) {
     amount: z
       .string()
       .min(1, { message: t('investors.validation.amountRequired') })
-      .regex(AMOUNT_PATTERN, { message: t('investors.validation.amountInvalid') })
+      .regex(POSITIVE_MONEY_PATTERN, { message: t('investors.validation.amountInvalid') })
       .refine((v) => Number(v.replace(',', '.')) > 0, {
         message: t('investors.validation.amountPositive'),
       }),

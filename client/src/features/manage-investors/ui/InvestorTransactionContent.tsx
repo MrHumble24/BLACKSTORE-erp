@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Form, DialogFormFooter, FormError } from '@/shared/ui';
 import { getApiErrorMessage } from '@/shared/api';
+import { getTodayIso } from '@/shared/lib';
 import {
   useCreateInvestorTransaction,
   type CreateInvestorTransactionPayload,
@@ -18,11 +19,6 @@ import { InvestorTransactionFields } from './InvestorTransactionFields';
 interface InvestorTransactionContentProps {
   investorId: number;
   onClose: () => void;
-}
-
-/** Returns current date formatted as YYYY-MM-DD. */
-function getTodayIso(): string {
-  return new Date().toISOString().slice(0, 10);
 }
 
 /** shadcn form body for recording a deposit or payout; a wrong amount is fixed by a correcting entry. */

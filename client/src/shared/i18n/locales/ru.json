@@ -25,7 +25,10 @@
     "accessories": "Аксессуары",
     "locations": "Локации",
     "categories": "Категории",
-    "investors": "Инвесторы"
+    "investors": "Инвесторы",
+    "suppliers": "Поставщики",
+    "batches": "Партии",
+    "walkInPurchase": "Скупка с рук"
   },
   "auth": {
     "title": "Вход в систему",
@@ -327,5 +330,111 @@
     "passwordMin": "Пароль должен содержать не менее 6 символов",
     "roleRequired": "Роль обязательна для выбора",
     "languageRequired": "Язык обязателен для выбора"
+  },
+  "suppliers": {
+    "title": "Поставщики",
+    "subtitle": "У кого магазин закупает товар и история платежей",
+    "addSupplier": "Добавить поставщика",
+    "editSupplier": "Редактировать поставщика",
+    "name": "Название",
+    "country": "Страна",
+    "phone": "Телефон",
+    "note": "Заметка",
+    "status": "Статус",
+    "noSuppliers": "Пока нет поставщиков",
+    "backToList": "Вернуться к списку поставщиков",
+    "notFound": "Поставщик не найден",
+    "balance": "Баланс",
+    "batchesTitle": "Партии",
+    "paymentsTitle": "Платежи",
+    "addPayment": "Добавить платёж",
+    "amount": "Сумма",
+    "amountHint": "Отрицательная сумма записывается как корректировка",
+    "fee": "Комиссия",
+    "date": "Дата",
+    "noPayments": "Платежей пока нет",
+    "paymentAddedSuccess": "Платёж добавлен",
+    "createdSuccess": "Поставщик добавлен",
+    "updatedSuccess": "Изменения сохранены",
+    "validation": {
+      "amountRequired": "Введите сумму",
+      "amountInvalid": "Неверный формат суммы",
+      "amountNotZero": "Сумма не должна быть нулём",
+      "feeInvalid": "Неверный формат комиссии"
+    }
+  },
+  "batches": {
+    "title": "Партии",
+    "subtitle": "Партии устройств и аксессуаров, принятые в магазин",
+    "newBatch": "Новая партия",
+    "supplier": "Поставщик",
+    "owner": "Владелец",
+    "location": "Локация",
+    "arrivalDate": "Дата поступления",
+    "note": "Заметка",
+    "allSuppliers": "Все поставщики",
+    "selectSupplier": "Выберите поставщика",
+    "devices": "Устройства",
+    "accessoryUnits": "Аксессуары / шт.",
+    "itemsCost": "Себестоимость устройств",
+    "extraCostTotal": "Доп. расходы",
+    "costSplitMethod": "Распределение",
+    "unitPrice": "Себестоимость за шт.",
+    "extraCost": "Доп. расход",
+    "split": {
+      "NONE": "Не распределяется",
+      "EQUAL": "Поровну",
+      "BY_PRICE": "По цене"
+    },
+    "scanPanelTitle": "Сканирование устройств",
+    "scanInputLabel": "Код (IMEI или серийный номер)",
+    "scanPlaceholder": "Сканируйте или введите",
+    "scanHelp": "Каждый введённый код добавляет строку (15 цифр → IMEI)",
+    "scanSuccess": "{{code}} принято",
+    "addAccessory": "Добавить аксессуары",
+    "addAccessories": "Добавить аксессуары",
+    "accessoryAddedSuccess": "Аксессуар добавлен",
+    "setPrice": "Назначить цену",
+    "lineModel": "{{model}} — цена",
+    "linePriceSuccess": "Цена сохранена",
+    "model": "Модель",
+    "codeOrQty": "Код / шт.",
+    "noBatches": "Партий пока нет",
+    "noLines": "Партия пока пуста",
+    "notFound": "Партия не найдена",
+    "backToList": "Вернуться к списку партий",
+    "createdSuccess": "Партия создана",
+    "updatedSuccess": "Партия сохранена",
+    "editBatch": "Редактировать партию",
+    "linesTitle": "Состав партии",
+    "validation": {
+      "supplierRequired": "Выберите поставщика",
+      "extraCostInvalid": "Неверный формат доп. расходов",
+      "unitCostInvalid": "Неверный формат себестоимости",
+      "unitPriceRequired": "Введите цену",
+      "unitPriceInvalid": "Неверный формат цены"
+    }
+  },
+  "walkIn": {
+    "title": "Скупка с рук",
+    "subtitle": "Приём устройства от частного продавца за наличные",
+    "sellerName": "Имя продавца",
+    "sellerPhone": "Телефон продавца",
+    "pricePaid": "Выплачено",
+    "pricePaidHelp": "Наличные отданы продавцу; сотрудникам потом не показывается",
+    "alreadyInSystem": "Внимание: этот код уже в системе {{item}} — статус {{status}}",
+    "createdSuccess": "Устройство добавлено в систему",
+    "submit": "Принять",
+    "validation": {
+      "sellerNameRequired": "Введите имя продавца",
+      "sellerPhoneRequired": "Введите телефон продавца",
+      "pricePaidRequired": "Введите выплаченную сумму",
+      "pricePaidInvalid": "Неверный формат суммы"
+    }
+  },
+  "labels": {
+    "print": "Печать этикетки",
+    "hint": "Этикетка 50×30 мм — откроется окно печати",
+    "generating": "Готовится системный код…"
   }
 }
