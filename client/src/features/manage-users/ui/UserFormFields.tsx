@@ -138,6 +138,7 @@ export function UserLanguageSelect({ language, setLanguage, error, disabled }: L
       options={[
         { value: 'uz', label: "O'zbekcha" },
         { value: 'ru', label: 'Русский' },
+        { value: 'en', label: 'English' },
       ]}
     />
   );

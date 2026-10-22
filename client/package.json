@@ -6,8 +6,9 @@
   "scripts": {
     "dev": "vite",
     "build": "oxlint --deny-warnings && tsc -b && vite build",
-    "lint": "oxlint --deny-warnings",
+    "lint": "node scripts/check-i18n.mjs && oxlint --deny-warnings",
     "lint:fix": "oxlint --fix",
+    "check:i18n": "node scripts/check-i18n.mjs",
     "preview": "vite preview",
     "graphify": "graphify update ."
   },
