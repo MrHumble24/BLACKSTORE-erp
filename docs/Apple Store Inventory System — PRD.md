@@ -183,7 +183,7 @@ These rules decide every number the system shows. Example used below: an iPhone 
 | BR-2 | Item profit = sale price − item cost | $1,200 − $1,030 = $170 |
 | BR-3 | Investor share (percent) = profit × investor %; business keeps the rest | Investor A $119, business $51 |
 | BR-4 | Investor share (fixed per item) = profit − fixed amount; business keeps the fixed amount | Fixed $30 → Investor A $140, business $30 |
-| BR-5 | Net profit = all item profits in the period − expenses in the period | — |
+| BR-5 | Net profit = all item profits in the period − expenses in the period + other income in the period that Admin marked as counting in profit (e.g. repair fees) | — |
 | BR-6 | Profit is counted when the item becomes **Sold**, not when it is handed to a partner or sold on debt | Item at partner = $0 profit yet |
 | BR-7 | Cost, owner, profit split and consignment minimum price are copied onto the sale when it happens; later changes don't alter past sales | Split changed to 60% next month → this sale stays 70% |
 | BR-8 | Balances are calculated, never typed in: customer debt = sale total − payments − refunds; partner debt = minimum prices of sold items − payments; supplier balance = cost of items received − payments | — |
