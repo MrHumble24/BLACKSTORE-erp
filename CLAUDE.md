@@ -33,6 +33,7 @@ Claude does not implement features itself. It splits each feature into backend a
 | --- | --- | --- |
 | Backend (`server/`) | `backend-developer` agent on Opus | Agent tool, `subagent_type: backend-developer` |
 | Frontend (`client/`) | Gemini CLI, or OpenCode | `gemini -p "<task>" --approval-mode auto_edit` or `opencode run "<task>"` from the project root, in the background |
+| Full stack for one feature | A second Opus session in its own worktree (backend first, then the frontend of the same feature, following `docs/rules/frontend.md`) | The user pastes the handoff into that session |
 | Reviews | `code-reviewer`, `security-reviewer`, `prd-guardian` agents on Opus (`model: opus` in their files) | Agent tool, in parallel |
 
 Claude itself (the allocator) runs on Fable and only plans, writes handoffs, verifies results (build, lint, tests) and launches the agents above. It never implements or reviews features itself.
