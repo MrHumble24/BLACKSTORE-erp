@@ -5,7 +5,7 @@ import { Search, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useItemByCode, SCAN_CODE_REGEX } from '@/entities/item';
 import { getApiErrorStatus } from '@/shared/api';
-import { CameraScanButton } from './CameraScanButton';
+import { CameraScanButton } from '@/shared/ui';
 
 function ScanInput({
   value,
@@ -67,11 +67,7 @@ export function ScanField() {
       },
       onError: (err) => {
         setValue('');
-        if (getApiErrorStatus(err) === 404) {
-          toast.error(t('scan.notFound'));
-        } else {
-          toast.error(t('common.error'));
-        }
+        toast.error(getApiErrorStatus(err) === 404 ? t('scan.notFound') : t('common.error'));
       },
     });
   };

@@ -9,7 +9,7 @@ import { getApiErrorMessage } from '@/shared/api';
 import { normalizeMoney } from '@/shared/lib';
 import { useAuthStore } from '@/entities/session';
 import { useCategories, type Category } from '@/entities/category';
-import { CameraScanButton } from '@/features/scan';
+import { CameraScanButton } from '@/shared/ui';
 import { useAddBatchItem, type BatchItemIdentifier } from '@/entities/batch';
 import { IMEI_REGEX, formatAttributes, type ItemCondition } from '@/entities/item';
 import { createBatchScanSchema, type BatchScanValues } from '../model/batch.schema';
