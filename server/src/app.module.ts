@@ -11,10 +11,13 @@ import { PrismaExceptionFilter } from './common/prisma-exception.filter';
 import { validateEnv } from './config/env.validation';
 import { HealthModule } from './health/health.module';
 import { InvestorsModule } from './investors/investors.module';
+import { LedgerModule } from './ledger/ledger.module';
 import { LocationsModule } from './locations/locations.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { ProductModelsModule } from './product-models/product-models.module';
+import { StockCountsModule } from './stock-counts/stock-counts.module';
 import { SuppliersModule } from './suppliers/suppliers.module';
+import { TransfersModule } from './transfers/transfers.module';
 import { UsersModule } from './users/users.module';
 import { WalkInPurchasesModule } from './walk-in-purchases/walk-in-purchases.module';
 
@@ -34,6 +37,9 @@ import { WalkInPurchasesModule } from './walk-in-purchases/walk-in-purchases.mod
     SuppliersModule,
     BatchesModule,
     WalkInPurchasesModule,
+    TransfersModule,
+    StockCountsModule,
+    LedgerModule,
     HealthModule,
   ],
   providers: [{ provide: APP_FILTER, useClass: PrismaExceptionFilter }],

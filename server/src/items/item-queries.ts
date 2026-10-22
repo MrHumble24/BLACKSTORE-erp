@@ -63,6 +63,16 @@ export async function assertActive(tx: Tx, investorId: number, locationId: numbe
   if (!location?.isActive) throw new BadRequestException('Location is inactive or does not exist');
 }
 
+/** 404 if the location is missing, 400 if it is inactive. Used by F06 transfers and counts. */
+export async function assertActiveLocation(tx: Tx, locationId: number): Promise<void> {
+  const location = await tx.location.findUnique({
+    where: { id: locationId },
+    select: { isActive: true },
+  });
+  if (!location) throw new NotFoundException('Location not found');
+  if (!location.isActive) throw new BadRequestException('Location is inactive');
+}
+
 /** Loads an item for editing and enforces the past-records permission (FR-29). */
 export async function loadForEdit(tx: Tx, id: number, actor: PublicUser): Promise<EditItemRow> {
   const row = await tx.item.findUnique({ where: { id }, select: editItemSelect });
