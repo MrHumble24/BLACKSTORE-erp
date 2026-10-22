@@ -6,7 +6,10 @@ import {
   PrismaHealthIndicator,
 } from '@nestjs/terminus';
 import { PrismaService } from '../prisma/prisma.service';
+import { Public } from '../common/decorators';
 
+/** Health checks; public so monitors can call them without a session. */
+@Public()
 @Controller('health')
 export class HealthController {
   constructor(

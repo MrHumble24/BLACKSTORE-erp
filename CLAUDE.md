@@ -37,6 +37,15 @@ Claude does not implement features itself. It splits each feature into backend a
 
 Claude itself (the allocator) runs on Fable and only plans, writes handoffs, verifies results (build, lint, tests) and launches the agents above. It never implements or reviews features itself.
 
+### Parallel tasks never share a working tree
+Two tasks may run at the same time only if they cannot touch the same files. Backend (`server/`) and frontend (`client/`) tasks are disjoint and may share the main tree. **Two frontend tasks (or two backend tasks) at the same time each get their own git worktree and branch**, created by Claude before the handoff and named after the handoff code:
+
+```
+git worktree add .worktrees/F03-FE-02 -b task/F03-FE-02 main
+```
+
+The handoff file states the worktree path in its first line, and the developer works only there. When the task is done, Claude runs the reviewers inside that worktree, merges the branch into `main` (`git merge --no-ff task/F03-FE-02`), resolves any conflicts in shared files (translations, routes, nav are additive, so conflicts are small), then removes the worktree and branch. If two tasks would both change the same shared files heavily, run them one after the other instead. `.worktrees/` is git-ignored.
+
 Every hand-over is saved as a file in `docs/handoffs/` named `F<feature>-<BE|FE|API>-<seq>-<title>.md` (see `docs/handoffs/README.md`); the user pastes it to the agent. Every hand-over message must name the feature, the PRD items it covers (FR/BR/W numbers), the API contract (endpoints, request and response shapes) and say "follow the rules in CLAUDE.md / GEMINI.md / AGENTS.md". Backend goes first when the frontend needs its API; otherwise both run in parallel. Gemini and OpenCode read their rules from GEMINI.md and AGENTS.md, which point to the same agent files and `docs/rules/` as Claude. After each task, Claude checks the result with the reviewers; a result that breaks the rules goes back to the same tool with the findings.
 
 ## Client side (client/)

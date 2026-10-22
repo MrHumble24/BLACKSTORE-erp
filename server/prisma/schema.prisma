@@ -18,8 +18,6 @@ enum LocationType {
 
 enum ItemStatus {
   IN_STOCK
-  RESERVED
-  IN_TRANSIT
   AT_PARTNER
   DEBT // sold, money not fully collected
   SOLD // fully paid
@@ -105,6 +103,7 @@ model User {
   name         String
   phone        String    @unique
   passwordHash String
+  language     String    @default("uz") // "uz" | "ru"
   isActive     Boolean   @default(true)
   roleId       Int
   role         Role      @relation(fields: [roleId], references: [id])
@@ -142,16 +141,18 @@ model AuditLog {
 // ─────────────────────────────────────────────
 
 model Location {
-  id    Int          @id @default(autoincrement())
-  name  String       @unique // "Sklad", "Dokon"
-  type  LocationType
-  items Item[]
+  id       Int          @id @default(autoincrement())
+  name     String       @unique // "Sklad", "Dokon"
+  type     LocationType
+  isActive Boolean      @default(true) // false = hidden from pick-lists, kept for history
+  items    Item[]
 
   accessoryStock AccessoryStock[]
   transfersOut   Transfer[]       @relation("TransferFrom")
   transfersIn    Transfer[]       @relation("TransferTo")
   sales          Sale[]
   stockCounts    StockCount[]
+  batches        Batch[]
 }
 
 model Investor {
@@ -161,6 +162,7 @@ model Investor {
   isOwn      Boolean?  @unique // true = the business itself; null for investors, so only one row can be true
   shareType  ShareType @default(NONE)
   shareValue Decimal   @default(0) @db.Decimal(12, 2)
+  isActive   Boolean   @default(true) // false = hidden from pick-lists; the OWN investor can never be deactivated
 
   items        Item[]
   batches      Batch[]
@@ -187,6 +189,7 @@ model Category {
   id           Int                 @id @default(autoincrement())
   name         String              @unique // "iPhone", "MacBook", "Accessory"
   isSerialized Boolean             @default(true) // false = counted by quantity
+  isActive     Boolean             @default(true) // false = hidden from pick-lists, kept for history
   attributes   CategoryAttribute[]
   models       ProductModel[]
 }
@@ -212,6 +215,7 @@ model ProductModel {
   category          Category @relation(fields: [categoryId], references: [id])
   name              String // "iPhone 15 Pro", "MacBook Air 13 M4", "USB-C charger"
   lowStockThreshold Int? // alert when stock drops below this (#7)
+  isActive          Boolean  @default(true) // false = hidden from pick-lists, kept for history
 
   items         Item[]
   stock         AccessoryStock[]
@@ -288,10 +292,11 @@ model ItemIdentifier {
 
 model Supplier {
   id       Int               @id @default(autoincrement())
-  name     String
+  name     String            @unique // one supplier record per name (409 on duplicate)
   country  String? // "UAE", "Hong Kong"
   phone    String?
   note     String?
+  isActive Boolean           @default(true) // false = hidden from pick-lists, kept for history
   batches  Batch[]
   payments SupplierPayment[]
 }
@@ -302,6 +307,8 @@ model Batch {
   supplier        Supplier        @relation(fields: [supplierId], references: [id])
   investorId      Int // owner of every device in this batch (accessories are always the business's)
   investor        Investor        @relation(fields: [investorId], references: [id])
+  locationId      Int // where the batch's items and accessories land (FR-8)
+  location        Location        @relation(fields: [locationId], references: [id])
   arrivalDate     DateTime
   extraCostTotal  Decimal         @default(0) @db.Decimal(12, 2) // shipping, customs...
   costSplitMethod CostSplitMethod @default(NONE)

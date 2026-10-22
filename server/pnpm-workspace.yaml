@@ -5,3 +5,4 @@ allowBuilds:
   prisma: true
   unrs-resolver: true
 
+  bcrypt: true
