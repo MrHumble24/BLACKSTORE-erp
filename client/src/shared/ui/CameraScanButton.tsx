@@ -1,20 +1,20 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Camera } from 'lucide-react';
+import { useCameraBarcodeScanner } from '@/shared/lib';
+import { Button } from './button';
 import {
-  Button,
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from '@/shared/ui';
-import { useCameraBarcodeScanner } from '../lib/useCameraBarcodeScanner';
+} from './dialog';
 
 interface CameraScanButtonProps {
   onScan: (code: string) => void;
 }
 
-/** Camera barcode scanner using browser-native BarcodeDetector API. */
+/** Camera barcode scanner button opening a video dialog using browser-native BarcodeDetector. */
 export function CameraScanButton({ onScan }: CameraScanButtonProps) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);

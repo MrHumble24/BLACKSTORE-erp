@@ -17,3 +17,4 @@ export * from './TableRows';
 export * from './SelectField';
 export * from './ActiveToggleButton';
 export * from './BackLink';
+export * from './CameraScanButton';

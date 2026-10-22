@@ -10,6 +10,10 @@ import { AccessoriesPage } from '@/pages/accessories';
 import { LocationsPage } from '@/pages/locations';
 import { CategoriesPage, CategoryDetailPage } from '@/pages/categories';
 import { InvestorsPage, InvestorDetailPage } from '@/pages/investors';
+import { SellPage } from '@/pages/sell';
+import { SalesPage, SaleDetailPage, ReceiptPage } from '@/pages/sales';
+import { CustomersPage, CustomerDetailPage } from '@/pages/customers';
+import { ReceiptSettingsPage } from '@/pages/settings';
 import type { Permission } from '@/shared/config/permissions';
 import { ProtectedRoute } from './ProtectedRoute';
 
@@ -20,6 +24,12 @@ interface RouteConfig {
 }
 
 const PROTECTED_ROUTES: RouteConfig[] = [
+  { path: 'sell', permission: 'sell', Component: SellPage },
+  { path: 'sales', permission: 'sell', Component: SalesPage },
+  { path: 'sales/:id', permission: 'sell', Component: SaleDetailPage },
+  { path: 'customers', permission: 'sell', Component: CustomersPage },
+  { path: 'customers/:id', permission: 'sell', Component: CustomerDetailPage },
+  { path: 'settings/receipt', permission: 'manage_catalog', Component: ReceiptSettingsPage },
   { path: 'users', permission: 'manage_users', Component: UsersPage },
   { path: 'items', permission: 'view_stock', Component: ItemsPage },
   { path: 'items/:id', permission: 'view_stock', Component: ItemDetailsPage },
@@ -76,6 +86,15 @@ export function AppRoutes() {
           />
         ))}
       </Route>
+
+      <Route
+        path="/sales/:id/receipt"
+        element={
+          <ProtectedRoute permission="sell">
+            <ReceiptPage />
+          </ProtectedRoute>
+        }
+      />
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
