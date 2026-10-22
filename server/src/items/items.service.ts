@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -257,7 +258,13 @@ export class ItemsService {
     if (!STATUS_TRANSITIONS[item.status].includes(to)) {
       throw new BadRequestException(`Cannot move item from ${item.status} to ${to}`);
     }
-    return tx.item.update({ where: { id: itemId }, data: { status: to } });
+    // Conditional write: only move if the status is still what we just read, so two
+    // concurrent sales of the same device can't both succeed (count 0 = lost the race).
+    const result = await tx.item.updateMany({
+      where: { id: itemId, status: item.status },
+      data: { status: to },
+    });
+    if (result.count === 0) throw new ConflictException('Item changed, try again');
   }
 
   // ── helpers ──────────────────────────────────────────────
