@@ -1,8 +1,8 @@
 import { Prisma } from '@prisma/client';
 import { Request } from 'express';
 
-/** Supported UI languages (PRD: Uzbek and Russian). */
-export const LANGUAGES = ['uz', 'ru'] as const;
+/** Supported UI languages (PRD NFR Language: Uzbek, Russian and English). */
+export const LANGUAGES = ['uz', 'ru', 'en'] as const;
 export type Language = (typeof LANGUAGES)[number];
 
 /** Fields of a user that may leave the server. Never includes passwordHash. */

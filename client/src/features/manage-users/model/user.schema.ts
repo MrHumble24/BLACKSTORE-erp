@@ -26,7 +26,7 @@ export function createUserFormSchema(isEditing: boolean, t: (key: string) => str
     roleId: z
       .number()
       .positive({ message: t('validation.roleRequired') }),
-    language: z.enum(['uz', 'ru'], {
+    language: z.enum(['uz', 'ru', 'en'], {
       message: t('validation.languageRequired'),
     }),
   });

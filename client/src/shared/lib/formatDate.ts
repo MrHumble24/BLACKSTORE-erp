@@ -1,3 +1,10 @@
+import i18n from '@/shared/i18n';
+
+/** Browser locale for dates: English uses en-GB; Uzbek and Russian keep ru-RU as today. */
+function dateLocale(): string {
+  return i18n.language === 'en' ? 'en-GB' : 'ru-RU';
+}
+
 /**
  * Formats an ISO date/time string into a localized display date.
  * Returns '—' for missing or invalid dates.
@@ -11,8 +18,8 @@ export function formatDate(
   if (Number.isNaN(date.getTime())) return String(value);
 
   return includeTime
-    ? date.toLocaleString('ru-RU', { dateStyle: 'short', timeStyle: 'short' })
-    : date.toLocaleDateString('ru-RU');
+    ? date.toLocaleString(dateLocale(), { dateStyle: 'short', timeStyle: 'short' })
+    : date.toLocaleDateString(dateLocale());
 }
 
 

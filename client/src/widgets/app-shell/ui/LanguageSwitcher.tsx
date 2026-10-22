@@ -42,6 +42,12 @@ export function LanguageSwitcher() {
         >
           🇷🇺 Русский
         </DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={() => changeLanguage('en')}
+          className={currentLang === 'en' ? 'font-medium bg-control-gray/50' : ''}
+        >
+          🇬🇧 English
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
