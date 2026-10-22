@@ -49,7 +49,6 @@ export function useCreateOrUpdate<TCreate, TUpdate = TCreate>({
   return {
     submit,
     apiError,
-    setApiError,
     isPending,
   };
 }

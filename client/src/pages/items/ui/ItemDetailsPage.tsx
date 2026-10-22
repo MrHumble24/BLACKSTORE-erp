@@ -25,7 +25,7 @@ function useItemPermissions(status?: string) {
   const isPastStatus = ['DEBT', 'SOLD', 'RETURNED', 'DEFECTIVE'].includes(status ?? '');
   const canEdit = canReceiveBatch && (!isPastStatus || canEditPastRecords);
 
-  return { canEdit, canManagePrices, canViewCost };
+  return { canEdit, canReceiveBatch, canManagePrices, canViewCost };
 }
 
 function ItemNotFoundState({ onBack }: { onBack: () => void }) {
@@ -97,7 +97,7 @@ export function ItemDetailsPage() {
   const itemId = Number(id);
   const isValid = !Number.isNaN(itemId) && itemId > 0;
   const { data: item, isLoading, isError } = useItem(isValid ? itemId : 0);
-  const { canEdit, canManagePrices, canViewCost } = useItemPermissions(item?.status);
+  const { canEdit, canReceiveBatch, canManagePrices, canViewCost } = useItemPermissions(item?.status);
 
   const [editOpen, setEditOpen] = useState(false);
   const [pricesOpen, setPricesOpen] = useState(false);
@@ -116,7 +116,7 @@ export function ItemDetailsPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <ItemDeviceInfoCard item={item} canEdit={canEdit} onEdit={() => setEditOpen(true)} />
         <div className="space-y-6">
-          <ItemIdentifiersCard item={item} canAddIdentifier={canEdit} onAddIdentifier={() => setIdentifierOpen(true)} />
+          <ItemIdentifiersCard item={item} canAddIdentifier={canEdit} canPrintLabel={canReceiveBatch} onAddIdentifier={() => setIdentifierOpen(true)} />
           <ItemOwnershipCard item={item} />
           <ItemPricingCard item={item} canViewCost={canViewCost} canManagePrices={canManagePrices} onEditPrices={() => setPricesOpen(true)} />
         </div>

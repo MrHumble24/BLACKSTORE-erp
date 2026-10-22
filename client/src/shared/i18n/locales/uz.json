@@ -25,7 +25,10 @@
     "accessories": "Aksessuarlar",
     "locations": "Joylashuvlar",
     "categories": "Kategoriyalar",
-    "investors": "Investorlar"
+    "investors": "Investorlar",
+    "suppliers": "Yetkazib beruvchilar",
+    "batches": "Partiyalar",
+    "walkInPurchase": "Kelib sotishlar"
   },
   "auth": {
     "title": "Tizimga kirish",
@@ -327,5 +330,111 @@
     "passwordMin": "Parol kamida 6 ta belgidan iborat bo'lishi kerak",
     "roleRequired": "Rol tanlanishi shart",
     "languageRequired": "Til tanlanishi shart"
+  },
+  "suppliers": {
+    "title": "Yetkazib beruvchilar",
+    "subtitle": "Qurilmalar xarid qilingan hamkorlar va ularga to'lovlar tarixi",
+    "addSupplier": "Yetkazib beruvchi qo'shish",
+    "editSupplier": "Yetkazib beruvchini tahrirlash",
+    "name": "Nomi",
+    "country": "Mamlakat",
+    "phone": "Telefon",
+    "note": "Izoh",
+    "status": "Holati",
+    "noSuppliers": "Hozircha yetkazib beruvchi yo'q",
+    "backToList": "Yetkazib beruvchilar ro'yxatiga qaytish",
+    "notFound": "Yetkazib beruvchi topilmadi",
+    "balance": "Balans",
+    "batchesTitle": "Partiyalar",
+    "paymentsTitle": "To'lovlar",
+    "addPayment": "To'lov qo'shish",
+    "amount": "Summa",
+    "amountHint": "Manfiy summa korektsiya sifatida yoziladi",
+    "fee": "Komissiya",
+    "date": "Sana",
+    "noPayments": "Hozircha to'lov yo'q",
+    "paymentAddedSuccess": "To'lov qo'shildi",
+    "createdSuccess": "Yetkazib beruvchi qo'shildi",
+    "updatedSuccess": "O'zgarishlar saqlandi",
+    "validation": {
+      "amountRequired": "Summa kiritilishi shart",
+      "amountInvalid": "Summa formati noto'g'ri",
+      "amountNotZero": "Summa 0 ga teng bo'lmasligi kerak",
+      "feeInvalid": "Komissiya formati noto'g'ri"
+    }
+  },
+  "batches": {
+    "title": "Partiyalar",
+    "subtitle": "Qabul qilingan qurilma va aksessuar partiyalari",
+    "newBatch": "Yangi partiya",
+    "supplier": "Yetkazib beruvchi",
+    "owner": "Egasi",
+    "location": "Joylashuv",
+    "arrivalDate": "Qabul sanasi",
+    "note": "Izoh",
+    "allSuppliers": "Barcha yetkazib beruvchilar",
+    "selectSupplier": "Yetkazib beruvchini tanlang",
+    "devices": "Qurilmalar",
+    "accessoryUnits": "Aksessuar / don",
+    "itemsCost": "Qurilmalar tannarxi",
+    "extraCostTotal": "Qo'shimcha xarajat",
+    "costSplitMethod": "Taqsimlash",
+    "unitPrice": "Tannarx (1 ta)",
+    "extraCost": "Qo'shimcha",
+    "split": {
+      "NONE": "Taqsimlanmagan",
+      "EQUAL": "Teng taqsimlash",
+      "BY_PRICE": "Narx bo'yicha"
+    },
+    "scanPanelTitle": "Qurilma qabul skaneri",
+    "scanInputLabel": "Skaner kodi (IMEI yoki seriya raqami)",
+    "scanPlaceholder": "Skanerlang yoki kiriting",
+    "scanHelp": "Har bir kiritilgan kod yangi qator qo'shadi (15 raqam → IMEI)",
+    "scanSuccess": "{{code}} qabul qilindi",
+    "addAccessory": "Aksessuar qo'shish",
+    "addAccessories": "Aksessualarni qo'shish",
+    "accessoryAddedSuccess": "Aksessuar qatori qo'shildi",
+    "setPrice": "Narx belgilash",
+    "lineModel": "{{model}} — narx",
+    "linePriceSuccess": "Narx saqlandi",
+    "model": "Model",
+    "codeOrQty": "Kod / dona",
+    "noBatches": "Hozircha partiya yo'q",
+    "noLines": "Partiya hali bo'sh",
+    "notFound": "Partiya topilmadi",
+    "backToList": "Partiyalar ro'yxatiga qaytish",
+    "createdSuccess": "Partiya yaratildi",
+    "updatedSuccess": "Partiya saqlandi",
+    "editBatch": "Partiyani tahrirlash",
+    "linesTitle": "Partiya mazmuni",
+    "validation": {
+      "supplierRequired": "Yetkazib beruvchi tanlanishi shart",
+      "extraCostInvalid": "Qo'shimcha xarajat formati noto'g'ri",
+      "unitCostInvalid": "Birlik tannarxi formati noto'g'ri",
+      "unitPriceRequired": "Sotish narxi kiritilishi shart",
+      "unitPriceInvalid": "Narx formati noto'g'ri"
+    }
+  },
+  "walkIn": {
+    "title": "Kelib sotish bo'yicha xarid",
+    "subtitle": "Do'konga kelgan sotuvchidan qurilmalarni naqd xarid qilish",
+    "sellerName": "Sotuvchi ismi",
+    "sellerPhone": "Sotuvchi telefoni",
+    "pricePaid": "To'langan summa",
+    "pricePaidHelp": "Naqd pul sotuvchiga beriladi; keyin xodimlar uchun ko'rsatilmaydi",
+    "alreadyInSystem": "Diqqat: bu kod allaqachon tizimda {{item}} — holati {{status}}",
+    "createdSuccess": "Qurilma tizimga qo'shildi",
+    "submit": "Qabul qilish",
+    "validation": {
+      "sellerNameRequired": "Sotuvchi ismi kiritilishi shart",
+      "sellerPhoneRequired": "Sotuvchi telefoni kiritilishi shart",
+      "pricePaidRequired": "To'langan summa kiritilishi shart",
+      "pricePaidInvalid": "To'langan summa noto'g'ri formatda"
+    }
+  },
+  "labels": {
+    "print": "Yorliq chop etish",
+    "hint": "Yorliq 50×30 mm — chop etish oynasi ochiladi",
+    "generating": "Tizim kodi tayyorlanmoqda…"
   }
 }

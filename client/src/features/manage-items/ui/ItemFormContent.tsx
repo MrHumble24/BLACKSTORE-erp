@@ -4,53 +4,23 @@ import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
 import { DialogFormFooter, FormError } from '@/shared/ui';
-import { useCategories, type Category, type CategoryAttribute } from '@/entities/category';
+import { useCategories, type Category } from '@/entities/category';
 import { useProductModels } from '@/entities/product-model';
 import { useInvestors } from '@/entities/investor';
 import { useLocations } from '@/entities/location';
-import { useCreateItem, type IdentifierType } from '@/entities/item';
-import { getApiErrorMessage, getApiErrorStatus } from '@/shared/api';
 import {
+  useCreateItem,
   createItemValidationSchema,
+  buildIdentifiers,
+  formatAttributes,
+  ItemCategoryModelSelects,
+  ItemOwnerLocationSelects,
+  ItemDynamicAttributes,
+  ItemIdentifierInputs,
+  ItemPriceInputs,
   type ItemFormValues,
-} from '../model/item.schema';
-import { ItemCategoryModelSelects } from './ItemCategoryModelSelects';
-import { ItemOwnerLocationSelects } from './ItemOwnerLocationSelects';
-import { ItemDynamicAttributes } from './ItemDynamicAttributes';
-import { ItemIdentifierInputs } from './ItemIdentifierInputs';
-import { ItemPriceInputs } from './ItemPriceInputs';
-
-function buildIdentifiers(values: ItemFormValues) {
-  const identifiers: { type: IdentifierType; value: string }[] = [];
-  if (values.imei.trim()) {
-    identifiers.push({ type: 'IMEI', value: values.imei.trim().toUpperCase() });
-  }
-  if (values.imei2.trim()) {
-    identifiers.push({ type: 'IMEI', value: values.imei2.trim().toUpperCase() });
-  }
-  if (values.serial.trim()) {
-    identifiers.push({ type: 'SERIAL', value: values.serial.trim().toUpperCase() });
-  }
-  return identifiers;
-}
-
-function formatAttributes(
-  raw: Record<string, string | number>,
-  definitions: CategoryAttribute[] = [],
-): Record<string, string | number> {
-  const result: Record<string, string | number> = {};
-  for (const [k, v] of Object.entries(raw)) {
-    if (v === undefined || v === null || String(v).trim() === '') continue;
-    const def = definitions.find((a) => a.key === k);
-    if (def?.type === 'NUMBER') {
-      const num = Number(v);
-      if (!Number.isNaN(num)) result[k] = num;
-    } else {
-      result[k] = String(v).trim();
-    }
-  }
-  return result;
-}
+} from '@/entities/item';
+import { getApiErrorMessage, getApiErrorStatus } from '@/shared/api';
 
 function useCreateItemSubmit(
   onClose: () => void,
@@ -121,13 +91,13 @@ function useItemForm(
     defaultValues: DEFAULT_FORM_VALUES,
   });
 
-  const { register, handleSubmit, setValue, control, formState: { errors } } = form;
-  const categoryId = useWatch({ control, name: 'categoryId' });
-  const modelId = useWatch({ control, name: 'productModelId' });
-  const investorId = useWatch({ control, name: 'investorId' });
-  const locationId = useWatch({ control, name: 'locationId' });
-  const condition = useWatch({ control, name: 'condition' });
-  const attributes = useWatch({ control, name: 'attributes' }) || {};
+  const { register, handleSubmit, setValue } = form;
+  const categoryId = useWatch({ control: form.control, name: 'categoryId' });
+  const modelId = useWatch({ control: form.control, name: 'productModelId' });
+  const investorId = useWatch({ control: form.control, name: 'investorId' });
+  const locationId = useWatch({ control: form.control, name: 'locationId' });
+  const condition = useWatch({ control: form.control, name: 'condition' });
+  const attributes = useWatch({ control: form.control, name: 'attributes' }) || {};
 
   const selectedCategory = serializedCategories.find((c) => c.id === categoryId);
   const { data: models = [] } = useProductModels(categoryId || undefined);
@@ -143,7 +113,7 @@ function useItemForm(
   };
 
   return {
-    register, handleSubmit, setValue, errors, categoryId, modelId,
+    register, handleSubmit, setValue, errors: form.formState.errors, categoryId, modelId,
     investorId, locationId, condition, attributes, models, investors,
     locations, selectedCategory, onCategoryChange, submit, errorMessage, isPending,
   };

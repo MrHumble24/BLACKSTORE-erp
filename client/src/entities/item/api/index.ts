@@ -123,3 +123,18 @@ export function useAddIdentifier() {
     },
   });
 }
+
+/** Generates (or returns the existing) BS-XXXXXX system code for an item (FR-15 labels). */
+export function useGenerateSystemCode() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: number) => {
+      const { data } = await api.post<ItemIdentifier>(`/items/${id}/system-code`);
+      return data;
+    },
+    onSuccess: (_, id) => {
+      void queryClient.invalidateQueries({ queryKey: itemKeys.detail(id) });
+      void queryClient.invalidateQueries({ queryKey: itemKeys.lists() });
+    },
+  });
+}

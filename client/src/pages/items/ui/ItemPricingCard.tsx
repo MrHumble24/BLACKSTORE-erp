@@ -4,6 +4,42 @@ import { Button, Card, CardHeader, CardTitle, CardContent } from '@/shared/ui';
 import type { Item } from '@/entities/item';
 import { formatMoney } from '@/shared/lib';
 
+interface PriceStatProps {
+  label: string;
+  value: string | null | undefined;
+  muted?: boolean;
+}
+
+/** One labelled money stat inside the pricing card. */
+function PriceStat({ label, value, muted }: PriceStatProps) {
+  return (
+    <div>
+      <span className="text-slate">{label}:</span>
+      <div className={`font-semibold text-sm mt-0.5 ${muted ? 'text-slate' : 'text-ink'}`}>
+        {formatMoney(value)}
+      </div>
+    </div>
+  );
+}
+
+/** Grid of sale prices plus (authorized only) purchase price and total cost. */
+function PriceStats({ item, canViewCost }: { item: Item; canViewCost: boolean }) {
+  const { t } = useTranslation();
+
+  return (
+    <CardContent className="p-0 grid grid-cols-2 gap-4 text-xs font-mono">
+      <PriceStat label={t('items.salePrice')} value={item.salePrice} />
+      <PriceStat label={t('items.minSalePrice')} value={item.minSalePrice} muted />
+      {canViewCost && (
+        <>
+          <PriceStat label={t('items.purchasePrice')} value={item.purchasePrice} />
+          <PriceStat label={t('items.totalCost')} value={item.cost} />
+        </>
+      )}
+    </CardContent>
+  );
+}
+
 interface Props {
   item: Item;
   canViewCost: boolean;
@@ -12,12 +48,7 @@ interface Props {
 }
 
 /** Card showing sale prices and optional cost if authorized. */
-export function ItemPricingCard({
-  item,
-  canViewCost,
-  canManagePrices,
-  onEditPrices,
-}: Props) {
+export function ItemPricingCard({ item, canViewCost, canManagePrices, onEditPrices }: Props) {
   const { t } = useTranslation();
 
   return (
@@ -36,30 +67,7 @@ export function ItemPricingCard({
           </Button>
         )}
       </CardHeader>
-      <CardContent className="p-0 grid grid-cols-2 gap-4 text-xs font-mono">
-        <div>
-          <span className="text-slate">{t('items.salePrice')}:</span>
-          <div className="font-semibold text-ink text-sm mt-0.5">{formatMoney(item.salePrice)}</div>
-        </div>
-        <div>
-          <span className="text-slate">{t('items.minSalePrice')}:</span>
-          <div className="font-semibold text-slate text-sm mt-0.5">{formatMoney(item.minSalePrice)}</div>
-        </div>
-        {canViewCost && (
-          <>
-            <div>
-              <span className="text-slate">{t('items.purchasePrice')}:</span>
-              <div className="font-semibold text-ink text-sm mt-0.5">
-                {formatMoney(item.purchasePrice)}
-              </div>
-            </div>
-            <div>
-              <span className="text-slate">{t('items.totalCost')}:</span>
-              <div className="font-semibold text-ink text-sm mt-0.5">{formatMoney(item.cost)}</div>
-            </div>
-          </>
-        )}
-      </CardContent>
+      <PriceStats item={item} canViewCost={canViewCost} />
     </Card>
   );
 }
