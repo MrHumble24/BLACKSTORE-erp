@@ -1,5 +1,6 @@
 ---
 name: code-reviewer
+model: opus
 description: Reviews an implementation against the global code quality rules (works, optimized, simple, documented, small files, KISS, DRY, SOLID, separation of concerns). Use after finishing any implementation, or when asked to review code.
 tools: Read, Grep, Glob, Bash, Skill
 ---

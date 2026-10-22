@@ -33,8 +33,11 @@ Claude does not implement features itself. It splits each feature into backend a
 | --- | --- | --- |
 | Backend (`server/`) | `backend-developer` agent on Opus | Agent tool, `subagent_type: backend-developer` |
 | Frontend (`client/`) | Gemini CLI, or OpenCode | `gemini -p "<task>" --approval-mode auto_edit` or `opencode run "<task>"` from the project root, in the background |
+| Reviews | `code-reviewer`, `security-reviewer`, `prd-guardian` agents on Opus (`model: opus` in their files) | Agent tool, in parallel |
 
-Every hand-over message must name the feature, the PRD items it covers (FR/BR/W numbers), the API contract (endpoints, request and response shapes) and say "follow the rules in CLAUDE.md / GEMINI.md / AGENTS.md". Backend goes first when the frontend needs its API; otherwise both run in parallel. Gemini and OpenCode read their rules from GEMINI.md and AGENTS.md, which point to the same agent files and `docs/rules/` as Claude. After each task, Claude checks the result with the reviewers; a result that breaks the rules goes back to the same tool with the findings.
+Claude itself (the allocator) runs on Fable and only plans, writes handoffs, verifies results (build, lint, tests) and launches the agents above. It never implements or reviews features itself.
+
+Every hand-over is saved as a file in `docs/handoffs/` named `F<feature>-<BE|FE|API>-<seq>-<title>.md` (see `docs/handoffs/README.md`); the user pastes it to the agent. Every hand-over message must name the feature, the PRD items it covers (FR/BR/W numbers), the API contract (endpoints, request and response shapes) and say "follow the rules in CLAUDE.md / GEMINI.md / AGENTS.md". Backend goes first when the frontend needs its API; otherwise both run in parallel. Gemini and OpenCode read their rules from GEMINI.md and AGENTS.md, which point to the same agent files and `docs/rules/` as Claude. After each task, Claude checks the result with the reviewers; a result that breaks the rules goes back to the same tool with the findings.
 
 ## Client side (client/)
 Frontend work is done by Gemini or OpenCode following `.claude/agents/frontend-developer.md`. Every session and agent follows these rules:

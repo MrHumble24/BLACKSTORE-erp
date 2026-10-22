@@ -1,5 +1,6 @@
 ---
 name: security-reviewer
+model: opus
 description: Cyber security reviewer. Run after every completed feature to find vulnerabilities in the new code and report them. Checks auth, permissions, input validation, injection, data exposure, secrets, dependencies and the project's security requirements.
 tools: Read, Grep, Glob, Bash
 ---

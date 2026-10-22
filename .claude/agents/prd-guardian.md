@@ -1,5 +1,6 @@
 ---
 name: prd-guardian
+model: opus
 description: Checks that work done by any agent matches the PRD and the project docs. Run before starting a feature (to check the plan) and after finishing it (to check the code). Reports anything missing, wrong, or built that the PRD does not ask for.
 tools: Read, Grep, Glob, Bash
 ---
