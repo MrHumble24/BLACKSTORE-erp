@@ -3,7 +3,8 @@ import { NavLink } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   Home, Users, Smartphone, Headphones, MapPin, Shapes, Coins,
-  Building2, Package, ShoppingCart, ArrowLeftRight, ClipboardCheck, Receipt, ScrollText,
+  Building2, Package, ShoppingCart, Receipt, Contact, Settings,
+  ArrowLeftRight, ClipboardCheck, ScrollText,
 } from 'lucide-react';
 import { useAuthStore } from '@/entities/session';
 import { cn } from '@/shared/lib';
@@ -36,36 +37,34 @@ function SidebarItem({ to, end, icon, label }: SidebarItemProps) {
   );
 }
 
-/** Buying links (Suppliers, Batches, Walk-in purchases), shown by their permissions. */
-function ManagementItems() {
+/** Selling links (Sell, Sales, Customers), shown to users with the `sell` permission. */
+function SellingItems() {
   const { t } = useTranslation();
-  const hasPermission = useAuthStore((state) => state.hasPermission);
-  const canReceiveBatch = hasPermission('receive_batch');
-  const canBuyWalkIn = hasPermission('buy_walk_in');
-  const canManageSuppliers = hasPermission('manage_suppliers');
-
+  const canSell = useAuthStore((state) => state.hasPermission('sell'));
+  if (!canSell) return null;
   return (
     <>
-      {canManageSuppliers && (
-        <SidebarItem
-          to="/suppliers"
-          icon={<Building2 className="h-4 w-4" />}
-          label={t('nav.suppliers')}
-        />
+      <SidebarItem to="/sell" icon={<ShoppingCart className="h-4 w-4" />} label={t('nav.sell')} />
+      <SidebarItem to="/sales" icon={<Receipt className="h-4 w-4" />} label={t('nav.sales')} />
+      <SidebarItem to="/customers" icon={<Contact className="h-4 w-4" />} label={t('nav.customers')} />
+    </>
+  );
+}
+
+/** Buying links (Suppliers, Batches, Walk-in purchases), shown by their permissions. */
+function BuyingItems() {
+  const { t } = useTranslation();
+  const hasPermission = useAuthStore((state) => state.hasPermission);
+  return (
+    <>
+      {hasPermission('manage_suppliers') && (
+        <SidebarItem to="/suppliers" icon={<Building2 className="h-4 w-4" />} label={t('nav.suppliers')} />
       )}
-      {canReceiveBatch && (
-        <SidebarItem
-          to="/batches"
-          icon={<Package className="h-4 w-4" />}
-          label={t('nav.batches')}
-        />
+      {hasPermission('receive_batch') && (
+        <SidebarItem to="/batches" icon={<Package className="h-4 w-4" />} label={t('nav.batches')} />
       )}
-      {canBuyWalkIn && (
-        <SidebarItem
-          to="/purchases/walk-in"
-          icon={<ShoppingCart className="h-4 w-4" />}
-          label={t('nav.walkInPurchase')}
-        />
+      {hasPermission('buy_walk_in') && (
+        <SidebarItem to="/purchases/walk-in" icon={<ShoppingCart className="h-4 w-4" />} label={t('nav.walkInPurchase')} />
       )}
     </>
   );
@@ -75,7 +74,6 @@ function ManagementItems() {
 function OperationsItems() {
   const { t } = useTranslation();
   const hasPermission = useAuthStore((state) => state.hasPermission);
-
   return (
     <>
       {hasPermission('view_stock') && (
@@ -94,55 +92,47 @@ function OperationsItems() {
   );
 }
 
-/** Core links: home, stock block, users, catalog and investors (permission-gated). */
-function MainNavLinks() {
+/** Admin links: users, catalog, receipt settings and investors (permission-gated). */
+function AdminItems() {
   const { t } = useTranslation();
   const hasPermission = useAuthStore((state) => state.hasPermission);
-  const canManageUsers = hasPermission('manage_users');
-  const canViewStock = hasPermission('view_stock');
-  const canManageCatalog = hasPermission('manage_catalog');
-  const canManageInvestors = hasPermission('manage_investors');
-
   return (
     <>
+      {hasPermission('manage_users') && (
+        <SidebarItem to="/users" icon={<Users className="h-4 w-4" />} label={t('nav.users')} />
+      )}
+      {hasPermission('manage_catalog') && (
+        <>
+          <SidebarItem to="/locations" icon={<MapPin className="h-4 w-4" />} label={t('nav.locations')} />
+          <SidebarItem to="/categories" icon={<Shapes className="h-4 w-4" />} label={t('nav.categories')} />
+          <SidebarItem to="/settings/receipt" icon={<Settings className="h-4 w-4" />} label={t('nav.receiptSettings')} />
+        </>
+      )}
+      {hasPermission('manage_investors') && (
+        <SidebarItem to="/investors" icon={<Coins className="h-4 w-4" />} label={t('nav.investors')} />
+      )}
+    </>
+  );
+}
+
+/** Full nav list: home, selling, stock, buying, admin. */
+function SidebarNavList() {
+  const { t } = useTranslation();
+  const canViewStock = useAuthStore((state) => state.hasPermission('view_stock'));
+  return (
+    <nav className="space-y-1.5">
       <SidebarItem to="/" end icon={<Home className="h-4 w-4" />} label={t('nav.home')} />
+      <SellingItems />
       {canViewStock && (
         <>
           <SidebarItem to="/items" icon={<Smartphone className="h-4 w-4" />} label={t('nav.items')} />
-          <SidebarItem
-            to="/accessories"
-            icon={<Headphones className="h-4 w-4" />}
-            label={t('nav.accessories')}
-          />
+          <SidebarItem to="/accessories" icon={<Headphones className="h-4 w-4" />} label={t('nav.accessories')} />
         </>
       )}
-      <ManagementItems />
+      <BuyingItems />
       <OperationsItems />
-      {canManageUsers && (
-        <SidebarItem to="/users" icon={<Users className="h-4 w-4" />} label={t('nav.users')} />
-      )}
-      {canManageCatalog && (
-        <>
-          <SidebarItem
-            to="/locations"
-            icon={<MapPin className="h-4 w-4" />}
-            label={t('nav.locations')}
-          />
-          <SidebarItem
-            to="/categories"
-            icon={<Shapes className="h-4 w-4" />}
-            label={t('nav.categories')}
-          />
-        </>
-      )}
-      {canManageInvestors && (
-        <SidebarItem
-          to="/investors"
-          icon={<Coins className="h-4 w-4" />}
-          label={t('nav.investors')}
-        />
-      )}
-    </>
+      <AdminItems />
+    </nav>
   );
 }
 
@@ -150,9 +140,7 @@ function MainNavLinks() {
 export function AppSidebar() {
   return (
     <aside className="w-64 shrink-0 border-r border-hairline-silver/70 bg-gallery-white min-h-[calc(100vh-3.5rem)] p-4 flex flex-col justify-between">
-      <nav className="space-y-1.5">
-        <MainNavLinks />
-      </nav>
+      <SidebarNavList />
       <div className="p-3 text-[11px] text-slate tracking-[-0.01em] text-center border-t border-hairline-silver/60">
         BLACKSTORE
       </div>

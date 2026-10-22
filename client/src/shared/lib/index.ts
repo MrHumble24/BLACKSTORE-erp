@@ -3,3 +3,6 @@ export * from './formatMoney';
 export * from './useCreateOrUpdate';
 export * from './dates';
 export * from './money';
+export * from './useCameraBarcodeScanner';
+export * from './formatDate';
+export * from './useSubmitWithError';

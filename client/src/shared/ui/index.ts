@@ -18,3 +18,4 @@ export * from './SelectField';
 export * from './TextField';
 export * from './ActiveToggleButton';
 export * from './BackLink';
+export * from './CameraScanButton';

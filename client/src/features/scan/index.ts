@@ -1,2 +1,2 @@
 export * from './ui/ScanField';
-export * from './ui/CameraScanButton';
+export { CameraScanButton } from '@/shared/ui';

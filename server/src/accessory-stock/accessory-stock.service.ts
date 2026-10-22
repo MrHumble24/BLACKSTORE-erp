@@ -1,20 +1,13 @@
-import {
-  BadRequestException,
-  ForbiddenException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { ForbiddenException, Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { AuditService } from '../audit/audit.service';
 import type { PublicUser } from '../common/auth-user';
 import { hasPermission } from '../common/permissions';
-import { assertActiveLocation } from '../items/item-queries';
+import { assertAccessoryModel, assertActiveLocation } from '../items/item-queries';
 import { PrismaService } from '../prisma/prisma.service';
 import { blendAvgCost } from './avg-cost';
 import { CreateAccessoryStockDto } from './dto/create-accessory-stock.dto';
 import { QueryAccessoryStockDto } from './dto/query-accessory-stock.dto';
-
-type Tx = Prisma.TransactionClient;
 
 const stockSelect = {
   id: true,
@@ -70,7 +63,7 @@ export class AccessoryStockService {
       throw new ForbiddenException('Setting unitCost requires the manage_prices permission');
     }
     return this.prisma.$transaction(async (tx) => {
-      await this.assertAccessoryModel(tx, dto.productModelId);
+      await assertAccessoryModel(tx, dto.productModelId);
       await assertActiveLocation(tx, dto.locationId);
       const key = { productModelId_locationId: { productModelId: dto.productModelId, locationId: dto.locationId } };
       const existing = await tx.accessoryStock.findUnique({
@@ -119,18 +112,6 @@ export class AccessoryStockService {
     const oldAvg = existing?.avgCost ?? new Prisma.Decimal(0);
     if (dto.unitCost === undefined) return oldAvg;
     return blendAvgCost(existing?.quantity ?? 0, oldAvg, dto.quantity, new Prisma.Decimal(dto.unitCost));
-  }
-
-  /** 404 if the model is missing; 400 if its category is serialized (belongs in /items). */
-  private async assertAccessoryModel(tx: Tx, productModelId: number) {
-    const model = await tx.productModel.findUnique({
-      where: { id: productModelId },
-      select: { category: { select: { isSerialized: true } } },
-    });
-    if (!model) throw new NotFoundException('Product model not found');
-    if (model.category.isSerialized) {
-      throw new BadRequestException('This category is serialized; use POST /items');
-    }
   }
 }
 

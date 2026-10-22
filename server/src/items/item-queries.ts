@@ -53,6 +53,47 @@ export async function loadContextAndAttributes(tx: Tx, dto: ItemContext) {
   return validateAttributes(dto.attributes, model.category.attributes);
 }
 
+/**
+ * Fields the sale path needs from a device being sold: status and location to
+ * validate it, price floor for the minimum-price rule, and cost + investor share
+ * for the BR-7 snapshot.
+ */
+export const sellDeviceSelect = {
+  id: true,
+  status: true,
+  locationId: true,
+  productModelId: true,
+  purchasePrice: true,
+  extraCost: true,
+  minSalePrice: true,
+  investorId: true,
+  investor: { select: { id: true, name: true, code: true, shareType: true, shareValue: true } },
+} satisfies Prisma.ItemSelect;
+
+export type SellDeviceRow = Prisma.ItemGetPayload<{ select: typeof sellDeviceSelect }>;
+
+/** 404 if the location is missing, 400 if it is inactive (sale/stock path: investor is irrelevant). */
+export async function assertActiveLocation(tx: Tx, locationId: number): Promise<void> {
+  const location = await tx.location.findUnique({
+    where: { id: locationId },
+    select: { isActive: true },
+  });
+  if (!location) throw new NotFoundException('Location not found');
+  if (!location.isActive) throw new BadRequestException('Location is inactive');
+}
+
+/** 404 if the model is missing; 400 if its category is serialized (accessory callers handle non-serialized only). */
+export async function assertAccessoryModel(tx: Tx, productModelId: number): Promise<void> {
+  const model = await tx.productModel.findUnique({
+    where: { id: productModelId },
+    select: { category: { select: { isSerialized: true } } },
+  });
+  if (!model) throw new NotFoundException('Product model not found');
+  if (model.category.isSerialized) {
+    throw new BadRequestException('This category is serialized; use POST /items');
+  }
+}
+
 /** 400 if the investor or location is inactive or missing. */
 export async function assertActive(tx: Tx, investorId: number, locationId: number) {
   const [investor, location] = await Promise.all([
@@ -61,16 +102,6 @@ export async function assertActive(tx: Tx, investorId: number, locationId: numbe
   ]);
   if (!investor?.isActive) throw new BadRequestException('Investor is inactive or does not exist');
   if (!location?.isActive) throw new BadRequestException('Location is inactive or does not exist');
-}
-
-/** 404 if the location is missing, 400 if it is inactive. Used by F06 transfers and counts. */
-export async function assertActiveLocation(tx: Tx, locationId: number): Promise<void> {
-  const location = await tx.location.findUnique({
-    where: { id: locationId },
-    select: { isActive: true },
-  });
-  if (!location) throw new NotFoundException('Location not found');
-  if (!location.isActive) throw new BadRequestException('Location is inactive');
 }
 
 /** Loads an item for editing and enforces the past-records permission (FR-29). */
