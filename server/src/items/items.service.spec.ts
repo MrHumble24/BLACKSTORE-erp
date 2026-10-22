@@ -1,4 +1,4 @@
-import { BadRequestException, ForbiddenException } from '@nestjs/common';
+import { BadRequestException, ConflictException, ForbiddenException } from '@nestjs/common';
 import { IdentifierType, ItemStatus, Prisma } from '@prisma/client';
 import { AuditService } from '../audit/audit.service';
 import type { PublicUser } from '../common/auth-user';
@@ -106,7 +106,7 @@ describe('toItem cost visibility', () => {
 });
 
 describe('ItemsService', () => {
-  const item = { findUnique: jest.fn(), update: jest.fn() };
+  const item = { findUnique: jest.fn(), update: jest.fn(), updateMany: jest.fn() };
   const purchaseLine = { findFirst: jest.fn(), update: jest.fn() };
   const tx = { item, purchaseLine };
   const prisma = {
@@ -119,11 +119,23 @@ describe('ItemsService', () => {
 
   beforeEach(() => jest.clearAllMocks());
 
-  it('changeStatus allows IN_STOCK → SOLD', async () => {
+  it('changeStatus allows IN_STOCK → SOLD with a conditional write', async () => {
     item.findUnique.mockResolvedValue({ status: ItemStatus.IN_STOCK });
-    item.update.mockResolvedValue({ id: 1, status: ItemStatus.SOLD });
+    item.updateMany.mockResolvedValue({ count: 1 });
     await service.changeStatus(tx as unknown as Prisma.TransactionClient, 1, ItemStatus.SOLD);
-    expect(item.update).toHaveBeenCalled();
+    // The write is guarded on the status we just read, so a concurrent sale can't double-move it.
+    expect(item.updateMany).toHaveBeenCalledWith({
+      where: { id: 1, status: ItemStatus.IN_STOCK },
+      data: { status: ItemStatus.SOLD },
+    });
+  });
+
+  it('changeStatus throws 409 when the item changed under us (count 0)', async () => {
+    item.findUnique.mockResolvedValue({ status: ItemStatus.IN_STOCK });
+    item.updateMany.mockResolvedValue({ count: 0 });
+    await expect(
+      service.changeStatus(tx as unknown as Prisma.TransactionClient, 1, ItemStatus.SOLD),
+    ).rejects.toThrow(ConflictException);
   });
 
   it('changeStatus blocks SOLD → AT_PARTNER', async () => {
@@ -131,7 +143,7 @@ describe('ItemsService', () => {
     await expect(
       service.changeStatus(tx as unknown as Prisma.TransactionClient, 1, ItemStatus.AT_PARTNER),
     ).rejects.toThrow(BadRequestException);
-    expect(item.update).not.toHaveBeenCalled();
+    expect(item.updateMany).not.toHaveBeenCalled();
   });
 
   it('blocks Staff from editing a SOLD item (past record)', async () => {

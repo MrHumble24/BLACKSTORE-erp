@@ -124,7 +124,9 @@ export function assertPriceOrder(salePrice?: string | null, minSalePrice?: strin
 export const STATUS_TRANSITIONS: Record<ItemStatus, ItemStatus[]> = {
   [ItemStatus.IN_STOCK]: [ItemStatus.AT_PARTNER, ItemStatus.DEBT, ItemStatus.SOLD],
   [ItemStatus.AT_PARTNER]: [ItemStatus.IN_STOCK, ItemStatus.DEBT, ItemStatus.SOLD],
-  [ItemStatus.DEBT]: [ItemStatus.SOLD],
+  // RETURNED is REQUIRED BY BR-9 (walk-in/return path): a debt sale can be returned
+  // before it is fully paid, as well as moved to SOLD once the debt is collected.
+  [ItemStatus.DEBT]: [ItemStatus.SOLD, ItemStatus.RETURNED],
   // BR-9 requires "Sold → In stock only through a walk-in buy-back": the only caller
   // that may take this move is the walk-in buy-back path (enforced by convention).
   [ItemStatus.SOLD]: [ItemStatus.RETURNED, ItemStatus.IN_STOCK],
