@@ -30,17 +30,17 @@ export function AuditLogFilters({ filters, onChange }: Props) {
     });
 
   return (
-    <div className="flex flex-wrap items-center gap-2.5 pt-1">
+    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 pt-1 w-full sm:w-auto flex-wrap">
       <Input value={entity} onChange={(e) => setEntity(e.target.value)} onBlur={applyText}
-        placeholder={t('auditLog.entity')} className="w-36 h-8 text-xs rounded-full" />
+        placeholder={t('auditLog.entity')} className="w-full sm:w-36 h-8 text-xs rounded-full" />
       <Input value={entityId} onChange={(e) => setEntityId(e.target.value)} onBlur={applyText}
-        placeholder={t('auditLog.entityId')} className="w-28 h-8 text-xs rounded-full" />
-      <div className="w-40">
+        placeholder={t('auditLog.entityId')} className="w-full sm:w-28 h-8 text-xs rounded-full" />
+      <div className="w-full sm:w-40">
         <Select
           value={filters.userId ? String(filters.userId) : 'ALL'}
           onValueChange={(v) => onChange({ ...filters, userId: v === 'ALL' ? undefined : Number(v) })}
         >
-          <SelectTrigger className="h-8 text-xs rounded-full">
+          <SelectTrigger className="h-8 text-xs rounded-full w-full">
             <SelectValue placeholder={t('auditLog.allUsers')} />
           </SelectTrigger>
           <SelectContent>
@@ -52,7 +52,7 @@ export function AuditLogFilters({ filters, onChange }: Props) {
         </Select>
       </div>
       <Input value={action} onChange={(e) => setAction(e.target.value)} onBlur={applyText}
-        placeholder={t('auditLog.action')} className="w-32 h-8 text-xs rounded-full" />
+        placeholder={t('auditLog.action')} className="w-full sm:w-32 h-8 text-xs rounded-full" />
       <DateRangeInputs from={filters.from} to={filters.to} onChange={(r) => onChange({ ...filters, ...r })} />
     </div>
   );
