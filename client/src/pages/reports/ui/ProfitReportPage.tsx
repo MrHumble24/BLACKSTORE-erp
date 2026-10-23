@@ -5,10 +5,14 @@ import { getTodayIso } from '@/shared/lib';
 import { useAuthStore } from '@/entities/session';
 import { useProfitReport, type ProfitReportFilters, type ProfitReport } from '@/entities/report';
 import { ReportsNavTabs } from './ReportsNavTabs';
+import { ReportPageHeader } from './ReportPageHeader';
 import { ProfitReportFilterControls } from './ProfitReportFilterControls';
 import { ProfitReportTotalsCards } from './ProfitReportTotalsCards';
+import { ProfitTrendsChart } from './ProfitTrendsChart';
+import { ProfitDistributionCharts } from './ProfitDistributionCharts';
 import { ProfitGroupTables } from './ProfitGroupTables';
 import { ProfitLinesTable } from './ProfitLinesTable';
+import { ReportSkeleton } from './ReportSkeleton';
 
 function getDefaultRange() {
   const today = getTodayIso();
@@ -22,17 +26,24 @@ interface ProfitReportContentProps {
   onPageChange: (p: number) => void;
 }
 
-function ProfitReportContent({
-  report,
-  canViewCost,
-  page,
-  onPageChange,
-}: ProfitReportContentProps) {
+function ProfitReportContent({ report, canViewCost, page, onPageChange }: ProfitReportContentProps) {
   const totalPages = Math.max(1, Math.ceil(report.lines.total / report.lines.pageSize));
 
   return (
     <>
-      <ProfitReportTotalsCards totals={report.totals} canViewCost={canViewCost} />
+      <ProfitReportTotalsCards
+        totals={report.totals}
+        dailyTrends={report.dailyTrends}
+        canViewCost={canViewCost}
+      />
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <div className="lg:col-span-2">
+          <ProfitTrendsChart dailyTrends={report.dailyTrends} canViewCost={canViewCost} />
+        </div>
+        <div className="lg:col-span-1">
+          <ProfitDistributionCharts byCategory={report.byCategory} />
+        </div>
+      </div>
       <ProfitGroupTables
         byInvestor={report.byInvestor}
         byLocation={report.byLocation}
@@ -62,21 +73,20 @@ export function ProfitReportPage() {
   const { data: report, isLoading } = useProfitReport(filters, page, 20);
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
-      <ReportsNavTabs />
-      <div>
-        <h1 className="text-xl font-bold tracking-tight text-ink">{t('reports.profitReport')}</h1>
-        <p className="text-xs text-slate mt-0.5">{t('reports.profitSubtitle')}</p>
+    <div className="space-y-6">
+      <div className="space-y-4">
+        <ReportsNavTabs />
+        <ReportPageHeader title={t('reports.profitReport')} subtitle={t('reports.profitSubtitle')} />
+        <ProfitReportFilterControls
+          filters={filters}
+          onChange={(newFilters) => {
+            setFilters(newFilters);
+            setPage(1);
+          }}
+        />
       </div>
-      <ProfitReportFilterControls
-        filters={filters}
-        onChange={(newFilters) => {
-          setFilters(newFilters);
-          setPage(1);
-        }}
-      />
       {isLoading ? (
-        <div className="p-12 text-center text-xs text-slate">{t('common.loading')}</div>
+        <ReportSkeleton variant="profit" />
       ) : report ? (
         <ProfitReportContent
           report={report}

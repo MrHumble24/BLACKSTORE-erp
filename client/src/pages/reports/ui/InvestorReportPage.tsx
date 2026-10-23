@@ -8,12 +8,14 @@ import { useAuthStore } from '@/entities/session';
 import { useInvestors } from '@/entities/investor';
 import { useInvestorReport } from '@/entities/report';
 import { ReportsNavTabs } from './ReportsNavTabs';
+import { ReportPageHeader } from './ReportPageHeader';
+import { InvestorSummaryStrip } from './InvestorSummaryStrip';
 import { InvestorReportTable } from './InvestorReportTable';
 import { FilterSelect } from './FilterSelect';
+import { ReportSkeleton } from './ReportSkeleton';
 
 function getDefaultMonth() {
-  const today = getTodayIso();
-  return today.slice(0, 7);
+  return getTodayIso().slice(0, 7);
 }
 
 interface InvestorReportFiltersProps {
@@ -23,22 +25,17 @@ interface InvestorReportFiltersProps {
   onInvestorChange: (id?: number) => void;
 }
 
-function InvestorReportFilters({
-  month,
-  onMonthChange,
-  investorId,
-  onInvestorChange,
-}: InvestorReportFiltersProps) {
+function InvestorReportFilters({ month, onMonthChange, investorId, onInvestorChange }: InvestorReportFiltersProps) {
   const { t } = useTranslation();
   const { data: investors } = useInvestors();
 
   return (
-    <div className="flex flex-wrap items-center gap-3">
+    <div className="flex flex-wrap items-center gap-2">
       <Input
         type="month"
         value={month}
         onChange={(e) => onMonthChange(e.target.value)}
-        className="w-40 h-8 text-xs rounded-full"
+        className="w-40 h-8 text-xs"
       />
       <FilterSelect
         value={investorId ? String(investorId) : 'ALL'}
@@ -65,34 +62,37 @@ export function InvestorReportPage() {
   const excelUrl = `${API_BASE_URL}/reports/investors.xlsx?${params}`;
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
-      <ReportsNavTabs />
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-xl font-bold tracking-tight text-ink">
-            {t('reports.investorReport')}
-          </h1>
-          <p className="text-xs text-slate mt-0.5">{t('reports.investorSubtitle')}</p>
-        </div>
-        <a
-          href={excelUrl}
-          download
-          className="inline-flex items-center gap-1.5 h-8 px-4 rounded-full text-xs font-medium bg-control-gray hover:bg-control-gray/80 text-ink transition-colors border border-hairline-silver/70 shadow-sm"
-        >
-          <Download className="h-3.5 w-3.5" />
-          <span>{t('reports.exportExcel')}</span>
-        </a>
+    <div className="space-y-6">
+      <div className="space-y-4">
+        <ReportsNavTabs />
+        <ReportPageHeader
+          title={t('reports.investorReport')}
+          subtitle={t('reports.investorSubtitle')}
+          actions={
+            <a
+              href={excelUrl}
+              download
+              className="inline-flex items-center gap-1.5 rounded-full border border-hairline-silver bg-gallery-white px-4 py-1.5 text-xs font-medium text-ink shadow-xs transition-colors hover:bg-studio-mist"
+            >
+              <Download className="h-3.5 w-3.5" />
+              <span>{t('reports.exportExcel')}</span>
+            </a>
+          }
+        />
+        <InvestorReportFilters
+          month={month}
+          onMonthChange={setMonth}
+          investorId={investorId}
+          onInvestorChange={setInvestorId}
+        />
       </div>
-      <InvestorReportFilters
-        month={month}
-        onMonthChange={setMonth}
-        investorId={investorId}
-        onInvestorChange={setInvestorId}
-      />
       {isLoading ? (
-        <div className="p-12 text-center text-xs text-slate">{t('common.loading')}</div>
+        <ReportSkeleton variant="investor" />
       ) : report ? (
-        <InvestorReportTable report={report} canViewCost={canViewCost} />
+        <>
+          <InvestorSummaryStrip totals={report.totals} />
+          <InvestorReportTable report={report} canViewCost={canViewCost} />
+        </>
       ) : null}
     </div>
   );

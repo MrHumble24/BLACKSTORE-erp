@@ -21,7 +21,7 @@ export function ReportsNavTabs() {
   ];
 
   return (
-    <div className="flex items-center gap-2 border-b border-hairline-silver/70 pb-3">
+    <div className="flex items-center gap-2">
       {tabs.map((tab) => (
         <NavLink
           key={tab.to}
