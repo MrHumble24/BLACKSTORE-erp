@@ -26,17 +26,20 @@ function AccessorySelectPair({
   disabled: boolean;
 }) {
   const errors = form.formState.errors;
+  // useWatch so this isolated select pair re-renders when setValue updates them.
+  const categoryId = useWatch({ control: form.control, name: 'categoryId' });
+  const productModelId = useWatch({ control: form.control, name: 'productModelId' });
 
   return (
     <ItemCategoryModelSelects
-      categoryId={form.watch('categoryId')}
+      categoryId={categoryId}
       onCategoryChange={(catId) => {
         form.setValue('categoryId', catId, { shouldValidate: true });
         form.setValue('productModelId', 0);
       }}
       categoryError={errors.categoryId?.message}
       categories={categories}
-      productModelId={form.watch('productModelId')}
+      productModelId={productModelId}
       onModelChange={(id) => form.setValue('productModelId', id, { shouldValidate: true })}
       modelError={errors.productModelId?.message}
       models={models}

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { toast } from 'sonner';
 import {
   Dialog,
@@ -79,13 +79,15 @@ function useAccessoryStockForm(onClose: () => void) {
 
 function AccessoryStockContent({ onClose }: { onClose: () => void }) {
   const { form, errorMessage, canManagePrices, isPending, submit } = useAccessoryStockForm(onClose);
-  const { handleSubmit, setValue, watch } = form;
+  const { handleSubmit, setValue, control } = form;
 
-  const categoryId = watch('categoryId');
-  const productModelId = watch('productModelId');
-  const locationId = watch('locationId');
-  const quantity = watch('quantity');
-  const unitCost = watch('unitCost');
+  // useWatch (not watch) so this component re-renders on setValue — the selects
+  // are custom (setValue-driven) with no Controller to trigger a re-render.
+  const categoryId = useWatch({ control, name: 'categoryId' });
+  const productModelId = useWatch({ control, name: 'productModelId' });
+  const locationId = useWatch({ control, name: 'locationId' });
+  const quantity = useWatch({ control, name: 'quantity' });
+  const unitCost = useWatch({ control, name: 'unitCost' });
 
   const { data: categories = [] } = useCategories();
   const nonSerializedCategories = categories.filter((c) => !c.isSerialized);

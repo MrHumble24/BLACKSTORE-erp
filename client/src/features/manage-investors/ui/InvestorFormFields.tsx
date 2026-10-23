@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { useFormContext } from 'react-hook-form';
+import { useFormContext, useWatch } from 'react-hook-form';
 import {
   FormField, FormItem, FormLabel, FormControl, FormMessage,
   Input, SelectField,
@@ -73,8 +73,9 @@ function InvestorShareValueField({ disabled, shareType }: { disabled: boolean; s
 /** Share type select plus the conditional value input. */
 function InvestorShareFields({ disabled }: { disabled: boolean }) {
   const { t } = useTranslation();
-  const { control, watch } = useFormContext<InvestorFormValues>();
-  const shareType = watch('shareType');
+  const { control } = useFormContext<InvestorFormValues>();
+  // useWatch (not watch) for reliable re-render on the shareType change.
+  const shareType = useWatch({ control, name: 'shareType' });
 
   return (
     <>

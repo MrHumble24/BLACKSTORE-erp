@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
 import { DialogFormFooter } from '@/shared/ui';
@@ -86,10 +86,11 @@ interface UserFormContentProps {
 /** Form body handling user creation and edition with Zod validation. */
 export function UserFormContent({ user, onClose }: UserFormContentProps) {
   const { form, roles, isPending, onSubmit } = useUserForm(user, onClose);
-  const { register, handleSubmit, setValue, watch, formState: { errors } } = form;
+  const { register, handleSubmit, setValue, control, formState: { errors } } = form;
 
-  const currentRoleId = watch('roleId');
-  const currentLanguage = watch('language');
+  // useWatch (not watch) so the role/language selects re-render on setValue.
+  const currentRoleId = useWatch({ control, name: 'roleId' });
+  const currentLanguage = useWatch({ control, name: 'language' });
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 pt-2">

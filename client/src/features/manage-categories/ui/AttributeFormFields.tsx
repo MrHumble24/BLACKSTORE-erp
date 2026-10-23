@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { useFormContext } from 'react-hook-form';
+import { useFormContext, useWatch } from 'react-hook-form';
 import {
   FormField, FormItem, FormLabel, FormControl, FormMessage, FormDescription,
   Input, Switch, SelectField,
@@ -88,8 +88,10 @@ function AttributeTypeField({ disabled, isEditing }: FieldProps & { isEditing: b
 /** Comma-separated options list, only relevant for SELECT attributes. */
 function AttributeOptionsField({ disabled }: FieldProps) {
   const { t } = useTranslation();
-  const { control, watch } = useFormContext<AttributeFormValues>();
-  const type = watch('type');
+  const { control } = useFormContext<AttributeFormValues>();
+  // useWatch (not watch) so this isolated sibling re-renders when the Type
+  // select changes — the type Controller lives in a separate component.
+  const type = useWatch({ control, name: 'type' });
 
   if (type !== 'SELECT') {
     return null;

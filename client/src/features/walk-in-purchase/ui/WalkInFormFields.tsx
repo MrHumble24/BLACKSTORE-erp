@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import type { UseFormReturn, FieldErrors } from 'react-hook-form';
+import { useWatch, type UseFormReturn, type FieldErrors } from 'react-hook-form';
 import { TextField } from '@/shared/ui';
 import { useProductModels } from '@/entities/product-model';
 import type { Category } from '@/entities/category';
@@ -51,7 +51,9 @@ function WalkInCategoryModelFields({
   errors: FieldErrors<WalkInPurchaseFormValues>;
   disabled: boolean;
 }) {
-  const categoryId = form.watch('categoryId');
+  // useWatch so category/model changes re-render these dependent selects.
+  const categoryId = useWatch({ control: form.control, name: 'categoryId' });
+  const productModelId = useWatch({ control: form.control, name: 'productModelId' });
   const { data: models = [] } = useProductModels(categoryId || undefined);
 
   return (
@@ -64,7 +66,7 @@ function WalkInCategoryModelFields({
       }}
       categoryError={errors.categoryId?.message}
       categories={categories}
-      productModelId={form.watch('productModelId')}
+      productModelId={productModelId}
       onModelChange={(id) => form.setValue('productModelId', id, { shouldValidate: true })}
       modelError={errors.productModelId?.message}
       models={models}
@@ -87,17 +89,22 @@ function WalkInOwnerFields({
   errors: FieldErrors<WalkInPurchaseFormValues>;
   disabled: boolean;
 }) {
+  // useWatch so owner/location/condition selects re-render on setValue.
+  const investorId = useWatch({ control: form.control, name: 'investorId' });
+  const locationId = useWatch({ control: form.control, name: 'locationId' });
+  const condition = useWatch({ control: form.control, name: 'condition' });
+
   return (
     <ItemOwnerLocationSelects
-      investorId={form.watch('investorId')}
+      investorId={investorId}
       onInvestorChange={(id) => form.setValue('investorId', id, { shouldValidate: true })}
       investorError={errors.investorId?.message}
       investors={investors}
-      locationId={form.watch('locationId')}
+      locationId={locationId}
       onLocationChange={(id) => form.setValue('locationId', id, { shouldValidate: true })}
       locationError={errors.locationId?.message}
       locations={locations}
-      condition={form.watch('condition')}
+      condition={condition}
       onConditionChange={(c) => form.setValue('condition', c, { shouldValidate: true })}
       disabled={disabled}
     />

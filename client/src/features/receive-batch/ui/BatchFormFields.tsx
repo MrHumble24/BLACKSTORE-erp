@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import type { UseFormReturn } from 'react-hook-form';
+import { useWatch, type UseFormReturn } from 'react-hook-form';
 import { SelectField, TextField } from '@/shared/ui';
 import type { Investor } from '@/entities/investor';
 import type { Location } from '@/entities/location';
@@ -22,12 +22,14 @@ type Form = UseFormReturn<BatchFormValues>;
 /** Supplier dropdown (batch header, required). */
 function SupplierSelect({ form, suppliers, disabled }: { form: Form; suppliers: SupplierSummary[]; disabled: boolean }) {
   const { t } = useTranslation();
+  // useWatch so this isolated select re-renders when setValue updates the field.
+  const supplierId = useWatch({ control: form.control, name: 'supplierId' });
 
   return (
     <SelectField
       label={t('batches.supplier')}
       required
-      value={form.watch('supplierId') ? String(form.watch('supplierId')) : ''}
+      value={supplierId ? String(supplierId) : ''}
       onValueChange={(val) => form.setValue('supplierId', Number(val), { shouldValidate: true })}
       disabled={disabled}
       placeholder={t('batches.selectSupplier')}
@@ -40,12 +42,13 @@ function SupplierSelect({ form, suppliers, disabled }: { form: Form; suppliers: 
 /** Owner (investor) dropdown with the business code appended. */
 function OwnerSelect({ form, investors, disabled }: { form: Form; investors: Investor[]; disabled: boolean }) {
   const { t } = useTranslation();
+  const investorId = useWatch({ control: form.control, name: 'investorId' });
 
   return (
     <SelectField
       label={t('batches.owner')}
       required
-      value={form.watch('investorId') ? String(form.watch('investorId')) : ''}
+      value={investorId ? String(investorId) : ''}
       onValueChange={(val) => form.setValue('investorId', Number(val), { shouldValidate: true })}
       disabled={disabled}
       placeholder={t('items.selectOwner')}
@@ -58,12 +61,13 @@ function OwnerSelect({ form, investors, disabled }: { form: Form; investors: Inv
 /** Storage location dropdown. */
 function LocationSelect({ form, locations, disabled }: { form: Form; locations: Location[]; disabled: boolean }) {
   const { t } = useTranslation();
+  const locationId = useWatch({ control: form.control, name: 'locationId' });
 
   return (
     <SelectField
       label={t('batches.location')}
       required
-      value={form.watch('locationId') ? String(form.watch('locationId')) : ''}
+      value={locationId ? String(locationId) : ''}
       onValueChange={(val) => form.setValue('locationId', Number(val), { shouldValidate: true })}
       disabled={disabled}
       placeholder={t('items.selectLocation')}
@@ -116,12 +120,13 @@ function ExtraCostInput({ form, disabled }: { form: Form; disabled: boolean }) {
 /** Cost split method dropdown (NONE / EQUAL / BY_PRICE), manage_prices only. */
 function SplitMethodSelect({ form, disabled }: { form: Form; disabled: boolean }) {
   const { t } = useTranslation();
+  const costSplitMethod = useWatch({ control: form.control, name: 'costSplitMethod' });
 
   return (
     <SelectField
       label={t('batches.costSplitMethod')}
       required
-      value={form.watch('costSplitMethod') ?? 'NONE'}
+      value={costSplitMethod ?? 'NONE'}
       onValueChange={(val) => form.setValue('costSplitMethod', val as BatchFormValues['costSplitMethod'])}
       disabled={disabled}
       error={form.formState.errors.costSplitMethod?.message}

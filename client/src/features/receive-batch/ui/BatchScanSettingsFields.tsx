@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import type { UseFormReturn } from 'react-hook-form';
+import { useWatch, type UseFormReturn } from 'react-hook-form';
 import { Label, SelectField, Switch, TextField } from '@/shared/ui';
 import { useAuthStore } from '@/entities/session';
 import type { Category } from '@/entities/category';
@@ -30,13 +30,15 @@ function ConditionPriceRow({
   const { t } = useTranslation();
   const { register, setValue } = form;
   const canViewCost = useAuthStore((state) => state.hasPermission('view_cost'));
+  // useWatch so the condition select re-renders when setValue updates it.
+  const condition = useWatch({ control: form.control, name: 'condition' });
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
       <SelectField
         label={t('items.conditionLabel')}
         required
-        value={form.watch('condition')}
+        value={condition}
         onValueChange={(val) => setValue('condition', val as BatchScanValues['condition'])}
         disabled={disabled}
         options={[
@@ -71,7 +73,9 @@ function ScanSettingSelects({
   canManagePrices: boolean;
   disabled: boolean;
 }) {
-  const categoryId = form.watch('categoryId');
+  // useWatch so category/model changes re-render these dependent selects.
+  const categoryId = useWatch({ control: form.control, name: 'categoryId' });
+  const productModelId = useWatch({ control: form.control, name: 'productModelId' });
   const { data: models = [] } = useProductModels(categoryId || undefined);
 
   return (
@@ -85,7 +89,7 @@ function ScanSettingSelects({
         }}
         categoryError={form.formState.errors.categoryId?.message}
         categories={categories}
-        productModelId={form.watch('productModelId')}
+        productModelId={productModelId}
         onModelChange={(id) => form.setValue('productModelId', id, { shouldValidate: true })}
         modelError={form.formState.errors.productModelId?.message}
         models={models}
@@ -134,8 +138,9 @@ export function BatchScanSettingsFields({
   onDualSimChange,
 }: BatchScanSettingsFieldsProps) {
   const { setValue, formState: { errors } } = form;
-  const categoryId = form.watch('categoryId');
-  const attributes = form.watch('attributes') || {};
+  // useWatch so the attributes block re-renders when category/values change.
+  const categoryId = useWatch({ control: form.control, name: 'categoryId' });
+  const attributes = useWatch({ control: form.control, name: 'attributes' }) || {};
   const selectedCategory = categories.find((c) => c.id === categoryId);
 
   return (
