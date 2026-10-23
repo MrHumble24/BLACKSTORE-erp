@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import {
   Home, Users, Smartphone, Headphones, MapPin, Shapes, Coins,
   Building2, Package, ShoppingCart, Receipt, Contact, Settings,
-  ArrowLeftRight, ClipboardCheck, ScrollText,
+  ArrowLeftRight, ClipboardCheck, ScrollText, Handshake, BarChart3,
 } from 'lucide-react';
 import { useAuthStore } from '@/entities/session';
 import { cn } from '@/shared/lib';
@@ -37,16 +37,25 @@ function SidebarItem({ to, end, icon, label }: SidebarItemProps) {
   );
 }
 
-/** Selling links (Sell, Sales, Customers), shown to users with the `sell` permission. */
+/** Selling links (Sell, Sales, Customers, Partners), shown by permission. */
 function SellingItems() {
   const { t } = useTranslation();
-  const canSell = useAuthStore((state) => state.hasPermission('sell'));
-  if (!canSell) return null;
+  const hasPermission = useAuthStore((state) => state.hasPermission);
+  const canSell = hasPermission('sell');
+  const canConsign = hasPermission('consign');
+  if (!canSell && !canConsign) return null;
   return (
     <>
-      <SidebarItem to="/sell" icon={<ShoppingCart className="h-4 w-4" />} label={t('nav.sell')} />
-      <SidebarItem to="/sales" icon={<Receipt className="h-4 w-4" />} label={t('nav.sales')} />
-      <SidebarItem to="/customers" icon={<Contact className="h-4 w-4" />} label={t('nav.customers')} />
+      {canSell && (
+        <>
+          <SidebarItem to="/sell" icon={<ShoppingCart className="h-4 w-4" />} label={t('nav.sell')} />
+          <SidebarItem to="/sales" icon={<Receipt className="h-4 w-4" />} label={t('nav.sales')} />
+          <SidebarItem to="/customers" icon={<Contact className="h-4 w-4" />} label={t('nav.customers')} />
+        </>
+      )}
+      {canConsign && (
+        <SidebarItem to="/partners" icon={<Handshake className="h-4 w-4" />} label={t('nav.partners')} />
+      )}
     </>
   );
 }
@@ -110,6 +119,9 @@ function AdminItems() {
       )}
       {hasPermission('manage_investors') && (
         <SidebarItem to="/investors" icon={<Coins className="h-4 w-4" />} label={t('nav.investors')} />
+      )}
+      {hasPermission('view_profit') && (
+        <SidebarItem to="/reports/profit" icon={<BarChart3 className="h-4 w-4" />} label={t('nav.reports')} />
       )}
     </>
   );

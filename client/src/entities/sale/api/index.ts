@@ -26,6 +26,7 @@ function buildSaleQueryParams(filters: SaleFilters, page: number, pageSize: numb
   };
   if (filters.status) params.status = filters.status;
   if (filters.customerId) params.customerId = String(filters.customerId);
+  if (filters.partnerId) params.partnerId = String(filters.partnerId);
   if (filters.locationId) params.locationId = String(filters.locationId);
   if (filters.from) params.from = filters.from;
   if (filters.to) params.to = filters.to;
@@ -92,6 +93,7 @@ export function useAddSalePayment() {
       void queryClient.setQueryData(saleKeys.detail(variables.saleId), data);
       void queryClient.invalidateQueries({ queryKey: ['sales'] });
       void queryClient.invalidateQueries({ queryKey: ['customers'] });
+      void queryClient.invalidateQueries({ queryKey: ['partners'] });
     },
   });
 }
