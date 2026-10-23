@@ -30,7 +30,7 @@ export function CustomerDetailPage() {
   const totalPages = Math.max(1, Math.ceil((salesPage?.total ?? 0) / (salesPage?.pageSize ?? 20)));
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
+    <div className="space-y-6">
       <BackLink to="/customers" label={t('customers.backToList')} />
       <div className="border-b border-hairline-silver/70 pb-4">
         <h1 className="text-xl font-bold tracking-tight text-ink">{customer.name}</h1>

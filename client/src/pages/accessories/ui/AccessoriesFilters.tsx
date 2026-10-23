@@ -28,9 +28,9 @@ function FilterSelect({
   allLabel: string;
 }) {
   return (
-    <div className="w-44">
+    <div className="w-full sm:w-44">
       <Select value={value || 'ALL'} onValueChange={onChange}>
-        <SelectTrigger className="h-8 text-xs rounded-full">
+        <SelectTrigger className="h-8 text-xs rounded-full w-full">
           <SelectValue placeholder={allLabel} />
         </SelectTrigger>
         <SelectContent>
@@ -59,7 +59,7 @@ export function AccessoriesFilters({ filters, onChange }: AccessoriesFiltersProp
   const { data: locations = [] } = useLocations();
 
   return (
-    <div className="flex flex-wrap items-center gap-2.5 pt-1">
+    <div className="grid grid-cols-1 sm:flex sm:flex-wrap items-center gap-2.5 pt-1 w-full sm:w-auto">
       <FilterSelect
         value={filters.categoryId ? String(filters.categoryId) : ''}
         onChange={(val) =>

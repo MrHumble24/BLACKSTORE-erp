@@ -11,7 +11,7 @@ export function AppShell() {
       <AppHeader />
       <div className="flex flex-1">
         <AppSidebar />
-        <main className="flex-1 p-6 lg:p-8 overflow-y-auto">
+        <main className="flex-1 p-3 sm:p-5 lg:p-8 overflow-y-auto min-w-0">
           <div className="max-w-[1600px] mx-auto w-full">
             <Outlet />
           </div>

@@ -31,7 +31,7 @@ export function CustomersPage() {
   const { data: customerPage, isLoading } = useCustomers(search, page, 20);
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
+    <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-xl font-bold tracking-tight text-ink">{t('customers.title')}</h1>

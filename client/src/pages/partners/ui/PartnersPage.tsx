@@ -41,7 +41,7 @@ export function PartnersPage() {
   );
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
+    <div className="space-y-6">
       <PartnersHeader onAdd={() => setDialogOpen(true)} />
       <div className="flex items-center gap-3">
         <div className="relative flex-1 max-w-md">

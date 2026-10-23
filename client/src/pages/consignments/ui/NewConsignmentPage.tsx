@@ -7,7 +7,7 @@ export function NewConsignmentPage() {
   const { t } = useTranslation();
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
+    <div className="space-y-6">
       <BackLink to="/partners" label={t('partners.backToList')} />
       <div>
         <h1 className="text-xl font-bold tracking-tight text-ink">{t('consign.newHandoverTitle')}</h1>

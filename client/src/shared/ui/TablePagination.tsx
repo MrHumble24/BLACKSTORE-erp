@@ -17,11 +17,11 @@ export function TablePagination({
 }: TablePaginationProps) {
   const { t } = useTranslation();
   return (
-    <div className="flex items-center justify-between border-t border-hairline-silver/60 bg-gallery-white px-6 py-3.5 text-xs text-slate">
-      <div>
+    <div className="flex flex-col sm:flex-row items-center justify-between gap-2.5 border-t border-hairline-silver/60 bg-gallery-white px-4 sm:px-6 py-3 text-xs text-slate">
+      <div className="self-start sm:self-auto text-[11px] sm:text-xs">
         {t('common.total')}: <span className="font-semibold text-ink">{total}</span>
       </div>
-      <div className="flex items-center gap-4">
+      <div className="flex items-center justify-between sm:justify-end w-full sm:w-auto gap-3 sm:gap-4">
         <span>
           {t('common.page')} <span className="font-medium text-ink">{page}</span>{' '}
           {t('common.of')} <span className="font-medium text-ink">{totalPages}</span>

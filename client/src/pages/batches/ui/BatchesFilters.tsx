@@ -17,9 +17,9 @@ function SupplierFilterSelect({
   allLabel: string;
 }) {
   return (
-    <div className="w-44">
+    <div className="w-full sm:w-44">
       <Select value={value || 'ALL'} onValueChange={onChange}>
-        <SelectTrigger className="h-8 text-xs rounded-full">
+        <SelectTrigger className="h-8 text-xs rounded-full w-full">
           <SelectValue placeholder={allLabel} />
         </SelectTrigger>
         <SelectContent>

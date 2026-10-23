@@ -15,13 +15,13 @@ export function DateRangeInputs({ from, to, onChange }: DateRangeInputsProps) {
         type="date"
         value={from ?? ''}
         onChange={(e) => onChange({ from: e.target.value || undefined, to })}
-        className="w-40 h-8 text-xs rounded-full"
+        className="w-full sm:w-40 h-8 text-xs rounded-full"
       />
       <Input
         type="date"
         value={to ?? ''}
         onChange={(e) => onChange({ from, to: e.target.value || undefined })}
-        className="w-40 h-8 text-xs rounded-full"
+        className="w-full sm:w-40 h-8 text-xs rounded-full"
       />
     </>
   );

@@ -21,13 +21,13 @@ export function ExpensesFilters({ filters, onChange }: Props) {
   };
 
   return (
-    <div className="flex flex-wrap items-center gap-2.5 pt-1">
-      <div className="w-40">
+    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 pt-1 w-full sm:w-auto">
+      <div className="w-full sm:w-40">
         <Select
           value={filters.type ?? 'ALL'}
           onValueChange={(v) => onChange({ ...filters, type: v === 'ALL' ? undefined : (v as LedgerType) })}
         >
-          <SelectTrigger className="h-8 text-xs rounded-full">
+          <SelectTrigger className="h-8 text-xs rounded-full w-full">
             <SelectValue placeholder={t('ledger.allTypes')} />
           </SelectTrigger>
           <SelectContent>
@@ -43,7 +43,7 @@ export function ExpensesFilters({ filters, onChange }: Props) {
         onBlur={submitCategory}
         onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); submitCategory(); } }}
         placeholder={t('ledger.category')}
-        className="w-44 h-8 text-xs rounded-full"
+        className="w-full sm:w-44 h-8 text-xs rounded-full"
       />
       <DateRangeInputs from={filters.from} to={filters.to} onChange={(r) => onChange({ ...filters, ...r })} />
     </div>

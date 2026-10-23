@@ -16,13 +16,13 @@ export function TransfersFilters({ filters, onChange }: Props) {
   const { data: locations = [] } = useLocations();
 
   return (
-    <div className="flex flex-wrap items-center gap-2.5 pt-1">
-      <div className="w-44">
+    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 pt-1 w-full sm:w-auto">
+      <div className="w-full sm:w-44">
         <Select
           value={filters.locationId ? String(filters.locationId) : 'ALL'}
           onValueChange={(v) => onChange({ ...filters, locationId: v === 'ALL' ? undefined : Number(v) })}
         >
-          <SelectTrigger className="h-8 text-xs rounded-full">
+          <SelectTrigger className="h-8 text-xs rounded-full w-full">
             <SelectValue placeholder={t('transfers.allLocations')} />
           </SelectTrigger>
           <SelectContent>

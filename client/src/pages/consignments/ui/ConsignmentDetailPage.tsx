@@ -63,7 +63,7 @@ export function ConsignmentDetailPage() {
   }
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
+    <div className="space-y-6">
       <BackLink
         to={`/partners/${consignment.partner.id}`}
         label={t('consign.backToPartner', { name: consignment.partner.name })}

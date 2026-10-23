@@ -58,7 +58,7 @@ export function PartnerDetailPage() {
   }
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
+    <div className="space-y-6">
       <BackLink to="/partners" label={t('partners.backToList')} />
       <PartnerDetailHeader
         partner={partner}

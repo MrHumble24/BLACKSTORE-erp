@@ -41,10 +41,10 @@ function FilterSelect({ value, placeholder, onChange, options }: FilterSelectPro
   const isFiltered = value !== 'ALL';
 
   return (
-    <div className="w-36">
+    <div className="w-full sm:w-36">
       <Select value={value} onValueChange={onChange}>
         <SelectTrigger
-          className={`h-8 text-xs rounded-full border-hairline-silver/70 transition-colors ${
+          className={`h-8 text-xs rounded-full border-hairline-silver/70 transition-colors w-full ${
             isFiltered ? 'bg-studio-mist font-medium text-ink border-steel/60' : 'bg-gallery-white text-slate'
           }`}
         >
@@ -83,7 +83,7 @@ function SearchFilterInput({
   };
 
   return (
-    <div className="relative flex items-center">
+    <div className="relative flex items-center w-full sm:w-auto">
       <Search className="absolute left-3 h-3.5 w-3.5 text-slate pointer-events-none" />
       <Input
         placeholder={placeholder}
@@ -96,7 +96,7 @@ function SearchFilterInput({
           }
         }}
         onBlur={handleApply}
-        className="w-56 md:w-64 h-8 pl-8 pr-7 text-xs rounded-full bg-studio-mist/40 border-hairline-silver/70 focus:bg-gallery-white"
+        className="w-full sm:w-56 md:w-64 h-8 pl-8 pr-7 text-xs rounded-full bg-studio-mist/40 border-hairline-silver/70 focus:bg-gallery-white"
       />
       {value && (
         <button
@@ -134,42 +134,44 @@ export function ItemsFilters({ filters, onChange }: ItemsFiltersProps) {
   ].filter(Boolean).length;
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 bg-gallery-white border border-hairline-silver/70 rounded-2xl p-2.5 shadow-none">
-      <div className="flex flex-wrap items-center gap-2">
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-gallery-white border border-hairline-silver/70 rounded-2xl p-2.5 sm:p-3 shadow-none">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto flex-1">
         <SearchFilterInput
           key={filters.search ?? 'empty'}
           initialValue={filters.search ?? ''}
           onSubmit={handleSearchSubmit}
           placeholder={t('items.searchPlaceholder')}
         />
-        <FilterSelect
-          value={filters.status ?? 'ALL'}
-          placeholder={t('items.allStatuses')}
-          onChange={(val) => onChange({ ...filters, status: val === 'ALL' ? undefined : (val as ItemStatus) })}
-          options={[{ value: 'ALL', label: t('items.allStatuses') }, ...ALL_STATUSES.map((st) => ({ value: st, label: t(`items.status.${st}`) }))]}
-        />
-        <FilterSelect
-          value={filters.categoryId ? String(filters.categoryId) : 'ALL'}
-          placeholder={t('items.allCategories')}
-          onChange={(val) => onChange({ ...filters, categoryId: val === 'ALL' ? undefined : Number(val) })}
-          options={[{ value: 'ALL', label: t('items.allCategories') }, ...categories.map((c) => ({ value: String(c.id), label: c.name }))]}
-        />
-        <FilterSelect
-          value={filters.locationId ? String(filters.locationId) : 'ALL'}
-          placeholder={t('items.allLocations')}
-          onChange={(val) => onChange({ ...filters, locationId: val === 'ALL' ? undefined : Number(val) })}
-          options={[{ value: 'ALL', label: t('items.allLocations') }, ...locations.map((l) => ({ value: String(l.id), label: l.name }))]}
-        />
-        <FilterSelect
-          value={filters.investorId ? String(filters.investorId) : 'ALL'}
-          placeholder={t('items.allOwners')}
-          onChange={(val) => onChange({ ...filters, investorId: val === 'ALL' ? undefined : Number(val) })}
-          options={[{ value: 'ALL', label: t('items.allOwners') }, ...investors.map((i) => ({ value: String(i.id), label: i.name }))]}
-        />
+        <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 w-full sm:w-auto">
+          <FilterSelect
+            value={filters.status ?? 'ALL'}
+            placeholder={t('items.allStatuses')}
+            onChange={(val) => onChange({ ...filters, status: val === 'ALL' ? undefined : (val as ItemStatus) })}
+            options={[{ value: 'ALL', label: t('items.allStatuses') }, ...ALL_STATUSES.map((st) => ({ value: st, label: t(`items.status.${st}`) }))]}
+          />
+          <FilterSelect
+            value={filters.categoryId ? String(filters.categoryId) : 'ALL'}
+            placeholder={t('items.allCategories')}
+            onChange={(val) => onChange({ ...filters, categoryId: val === 'ALL' ? undefined : Number(val) })}
+            options={[{ value: 'ALL', label: t('items.allCategories') }, ...categories.map((c) => ({ value: String(c.id), label: c.name }))]}
+          />
+          <FilterSelect
+            value={filters.locationId ? String(filters.locationId) : 'ALL'}
+            placeholder={t('items.allLocations')}
+            onChange={(val) => onChange({ ...filters, locationId: val === 'ALL' ? undefined : Number(val) })}
+            options={[{ value: 'ALL', label: t('items.allLocations') }, ...locations.map((l) => ({ value: String(l.id), label: l.name }))]}
+          />
+          <FilterSelect
+            value={filters.investorId ? String(filters.investorId) : 'ALL'}
+            placeholder={t('items.allOwners')}
+            onChange={(val) => onChange({ ...filters, investorId: val === 'ALL' ? undefined : Number(val) })}
+            options={[{ value: 'ALL', label: t('items.allOwners') }, ...investors.map((i) => ({ value: String(i.id), label: i.name }))]}
+          />
+        </div>
       </div>
 
       {activeFiltersCount > 0 && (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center justify-end gap-2 pt-2 sm:pt-0 border-t sm:border-t-0 border-hairline-silver/40">
           <Badge variant="secondary" className="h-6 px-2 text-[10px] font-medium rounded-full bg-studio-mist text-slate">
             {activeFiltersCount}
           </Badge>
