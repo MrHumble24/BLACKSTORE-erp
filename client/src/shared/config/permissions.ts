@@ -21,6 +21,7 @@ export const ADMIN_ONLY_PERMISSIONS = [
   'manage_expenses',
   'manage_catalog',
   'view_audit_log',
+  'manage_backups',
 ] as const;
 
 export const ALL_PERMISSIONS = [

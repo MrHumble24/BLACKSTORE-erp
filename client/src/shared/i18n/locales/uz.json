@@ -37,7 +37,9 @@
     "sell": "Sotish",
     "sales": "Sotuvlar",
     "customers": "Mijozlar",
-    "receiptSettings": "Chek sozlamalari"
+    "receiptSettings": "Chek sozlamalari",
+    "importStock": "Mahsulot importi",
+    "backups": "Zaxira nusxalar"
   },
   "auth": {
     "title": "Tizimga kirish",
@@ -718,5 +720,39 @@
     "footer": "Chek ostidagi matn",
     "footerPlaceholder": "Xaridingiz uchun rahmat! Kafolat uchun chekni saqlang.",
     "savedSuccess": "Chek sozlamalari muvaffaqiyatli saqlandi"
+  },
+  "importStock": {
+    "title": "Mahsulotlarni import qilish",
+    "subtitle": "Ma'lumotlarni Excel fayl orqali ommaviy kiritish.",
+    "howTemplate": "Shablonni yuklab oling: category, model, identifier (IMEI yoki serial), owner_code, location, condition, narx ustunlari va note — qolgan ustunlar kategoriya atributlari.",
+    "howErrors": "Har bir qator alohida tekislanadi: to‘g‘ri qatorlar saqlanadi, xatoga uchragan qatorlar Excel qator raqami va xabari bilan ro‘yxatda chiqadi.",
+    "backToList": "Qurilmalarga qaytish",
+    "template": "Shablonni yuklab olish",
+    "chooseFile": "Faylni tanlash",
+    "import": "Import qilish",
+    "wrongType": "Faqat .xlsx fayl qabul qilinadi",
+    "fileTooLarge": "Fayl hajmi 5 MB dan katta",
+    "created": "{{count}} mahsulot yaratildi",
+    "errorsTitle": "O'tkazib yuborilgan qatorlar",
+    "row": "Qator (Excel)",
+    "message": "Xato"
+  },
+  "backups": {
+    "title": "Zaxira nusxalar",
+    "subtitle": "Har kuni soat 03:00 da avtomatik; oxirgi 30 nusxa saqlanadi.",
+    "runNow": "Hozir zaxira olish",
+    "runSuccess": "Zaxira nusxa tayyor: {{name}}",
+    "empty": "Hali zaxira nusxa yo'q",
+    "fileName": "Fayl",
+    "size": "Hajm",
+    "createdAt": "Yaratilgan",
+    "status": "Holat",
+    "telegram": "Telegramga yuborilgan",
+    "secondCopy": "Ikkinchi nusxa",
+    "restore": "Tiklash",
+    "restoreTitle": "Zaxiradan tiklash",
+    "restoreWarning": "Butun ma'lumotlar bazasi zaxira nusxasidagi holatga qaytariladi. Avtomatik himoya nusxa avval yaratiladi.",
+    "confirmLabel": "Fayl nomini aynan takrorlang",
+    "restoreSuccess": "Baza tiklandi. Himoya nusxa: {{name}}"
   }
 }

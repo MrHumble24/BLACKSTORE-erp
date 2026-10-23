@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import {
   Home, Users, Smartphone, Headphones, MapPin, Shapes, Coins,
   Building2, Package, ShoppingCart, Receipt, Contact, Settings,
-  ArrowLeftRight, ClipboardCheck, ScrollText,
+  ArrowLeftRight, ClipboardCheck, ScrollText, Upload, DatabaseBackup,
 } from 'lucide-react';
 import { useAuthStore } from '@/entities/session';
 import { cn } from '@/shared/lib';
@@ -110,6 +110,12 @@ function AdminItems() {
       )}
       {hasPermission('manage_investors') && (
         <SidebarItem to="/investors" icon={<Coins className="h-4 w-4" />} label={t('nav.investors')} />
+      )}
+      {hasPermission('manage_prices') && (
+        <SidebarItem to="/items/import" icon={<Upload className="h-4 w-4" />} label={t('nav.importStock')} />
+      )}
+      {hasPermission('manage_backups') && (
+        <SidebarItem to="/backups" icon={<DatabaseBackup className="h-4 w-4" />} label={t('nav.backups')} />
       )}
     </>
   );

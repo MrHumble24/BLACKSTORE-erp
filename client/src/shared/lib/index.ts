@@ -6,3 +6,4 @@ export * from './money';
 export * from './useCameraBarcodeScanner';
 export * from './formatDate';
 export * from './useSubmitWithError';
+export * from './formatFileSize';

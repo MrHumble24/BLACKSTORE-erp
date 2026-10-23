@@ -28,6 +28,7 @@ export const apiClient = axios.create({
 });
 
 export const api = apiClient;
+export const API_BASE_URL = apiClient.defaults.baseURL ?? '/api';
 
 apiClient.interceptors.response.use(
   (response) => response,
