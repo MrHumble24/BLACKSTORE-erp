@@ -21,6 +21,7 @@ export const ALL_PERMISSIONS = [
   'manage_suppliers',
   'manage_expenses',
   'view_audit_log',
+  'manage_backups',
 ] as const;
 
 export type Permission = (typeof ALL_PERMISSIONS)[number];

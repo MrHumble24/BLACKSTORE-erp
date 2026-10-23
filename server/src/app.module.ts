@@ -1,8 +1,10 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_FILTER } from '@nestjs/core';
+import { ScheduleModule } from '@nestjs/schedule';
 import { AccessoryStockModule } from './accessory-stock/accessory-stock.module';
 import { AuditModule } from './audit/audit.module';
+import { BackupsModule } from './backups/backups.module';
 import { AuthModule } from './auth/auth.module';
 import { BatchesModule } from './batches/batches.module';
 import { CategoriesModule } from './categories/categories.module';
@@ -27,8 +29,10 @@ import { WalkInPurchasesModule } from './walk-in-purchases/walk-in-purchases.mod
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true, validate: validateEnv }),
+    ScheduleModule.forRoot(),
     PrismaModule,
     AuditModule,
+    BackupsModule,
     AuthModule,
     UsersModule,
     LocationsModule,
