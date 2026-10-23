@@ -9,9 +9,11 @@ import {
   TableRow,
   TableCell,
 } from '@/shared/ui';
-import { cn, formatMoney } from '@/shared/lib';
+import { cn } from '@/shared/lib';
 import type { ProfitGroup } from '@/entities/report';
 import { ReportHeadCell } from './ReportHeadCell';
+import { CARD } from './chartPalette';
+import { money } from './reportFormat';
 
 type GroupTab = 'category' | 'location' | 'investor';
 
@@ -21,12 +23,12 @@ function GroupRow({ group }: { group: ProfitGroup }) {
     <TableRow className="text-[13px]">
       <TableCell className="py-3 px-6 font-medium text-ink">{group.name || t('reports.accessories')}</TableCell>
       <TableCell className="py-3 px-6 text-center tabular-nums text-steel">{group.quantity}</TableCell>
-      <TableCell className="py-3 px-6 text-right font-medium tabular-nums text-ink">{formatMoney(group.sales)}</TableCell>
+      <TableCell className="py-3 px-6 text-right font-medium tabular-nums text-ink">{money(group.sales)}</TableCell>
       <TableCell className="py-3 px-6 text-right font-semibold tabular-nums text-emerald-600">
-        {formatMoney(group.profit)}
+        {money(group.profit)}
       </TableCell>
-      <TableCell className="py-3 px-6 text-right tabular-nums text-slate">{formatMoney(group.investorShare)}</TableCell>
-      <TableCell className="py-3 px-6 text-right tabular-nums text-slate">{formatMoney(group.businessShare)}</TableCell>
+      <TableCell className="py-3 px-6 text-right tabular-nums text-slate">{money(group.investorShare)}</TableCell>
+      <TableCell className="py-3 px-6 text-right tabular-nums text-slate">{money(group.businessShare)}</TableCell>
     </TableRow>
   );
 }
@@ -81,7 +83,7 @@ export function ProfitGroupTables({ byInvestor, byLocation, byCategory }: Profit
   const current = tabs.find((tab) => tab.id === activeTab) ?? tabs[0];
 
   return (
-    <Card className="overflow-hidden">
+    <Card className={cn(CARD, 'overflow-hidden')}>
       <div className="flex flex-col justify-between gap-3 p-5 sm:flex-row sm:items-center sm:p-6">
         <h3 className="text-[15px] font-semibold tracking-[-0.01em] text-ink">
           {t('reports.breakdowns', 'Performance Breakdown')}

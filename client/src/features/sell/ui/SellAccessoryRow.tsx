@@ -1,7 +1,16 @@
 import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Plus } from 'lucide-react';
-import { Input, Button, SelectField } from '@/shared/ui';
+import {
+  Input,
+  Button,
+  Label,
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from '@/shared/ui';
 import { useAccessoryStock, type AccessoryStock } from '@/entities/accessory-stock';
 import type { AccessoryCartLine } from '../model/types';
 
@@ -59,16 +68,32 @@ function AccessoryInputs({ form, options }: AccessoryInputsProps) {
   const { t } = useTranslation();
   return (
     <>
-      <div className="flex-1 min-w-[200px]">
-        <SelectField
-          label={t('sell.addAccessory')}
+      <div className="flex-1 min-w-[200px] space-y-1">
+        <Label className="text-xs">{t('sell.tableModel')}</Label>
+        <Select
           value={form.selectedModelId}
           onValueChange={form.setSelectedModelId}
-          options={options}
-          placeholder={t('sell.selectAccessory')}
-        />
+          disabled={options.length === 0}
+        >
+          <SelectTrigger className="h-10 bg-surface-card">
+            <SelectValue placeholder={options.length === 0 ? t('sell.noAccessoriesInStock') : t('sell.selectAccessory')} />
+          </SelectTrigger>
+          <SelectContent>
+            {options.map((opt) => (
+              <SelectItem key={opt.value} value={opt.value}>
+                {opt.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
-      <div className="w-24">
+      <div className="w-full sm:w-28 space-y-1">
+        <div className="flex justify-between items-center">
+          <Label className="text-xs">{t('sell.accessoryQty')}</Label>
+          {form.selectedStock && (
+            <span className="text-[10px] text-slate font-mono">max {form.selectedStock.quantity}</span>
+          )}
+        </div>
         <Input
           type="number"
           min="1"
@@ -76,18 +101,19 @@ function AccessoryInputs({ form, options }: AccessoryInputsProps) {
           value={form.quantity}
           onChange={(e) => form.setQuantity(Math.max(1, Number(e.target.value)))}
           placeholder={t('sell.accessoryQty')}
-          className="h-10"
+          className="h-10 text-center font-mono"
         />
       </div>
-      <div className="w-32">
+      <div className="w-full sm:w-36 space-y-1">
+        <Label className="text-xs">{t('sell.accessoryPrice')} ($)</Label>
         <Input
           type="number"
           step="any"
           min="0"
           value={form.unitPrice}
           onChange={(e) => form.setUnitPrice(e.target.value)}
-          placeholder={t('sell.accessoryPrice')}
-          className="h-10"
+          placeholder="0.00"
+          className="h-10 font-mono text-right"
         />
       </div>
     </>
@@ -106,18 +132,23 @@ export function SellAccessoryRow({
   const options = stockList.map((s) => ({ value: String(s.productModel.id), label: `${s.productModel.name} (${s.quantity})` }));
 
   return (
-    <div className="flex flex-wrap items-end gap-2 pt-2 border-t border-hairline-silver/60">
-      <AccessoryInputs form={form} options={options} />
-      <Button
-        type="button"
-        variant="outline"
-        onClick={form.handleAdd}
-        disabled={!form.selectedStock || !form.unitPrice.trim()}
-        className="h-10 gap-1 text-xs"
-      >
-        <Plus className="h-4 w-4" />
-        {t('sell.addAccessory')}
-      </Button>
+    <div className="rounded-xl border border-hairline-silver/60 bg-surface-card/60 p-3.5 backdrop-blur-sm space-y-2">
+      <div className="flex items-center gap-1.5 text-xs font-semibold text-slate uppercase tracking-wider">
+        <Plus className="h-3.5 w-3.5" />
+        <span>{t('sell.addAccessory')}</span>
+      </div>
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-end gap-2.5">
+        <AccessoryInputs form={form} options={options} />
+        <Button
+          type="button"
+          onClick={form.handleAdd}
+          disabled={!form.selectedStock || !form.unitPrice.trim()}
+          className="h-10 gap-1.5 text-xs px-4 self-stretch sm:self-auto"
+        >
+          <Plus className="h-4 w-4" />
+          {t('sell.addAccessory')}
+        </Button>
+      </div>
     </div>
   );
 }

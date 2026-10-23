@@ -1,5 +1,6 @@
 import { Prisma } from '@prisma/client';
-import { LineTotals, ProfitGroupAcc, ProfitLine } from './profit-lines';
+import { HeatmapAcc, LowMarginAcc } from './profit-analytics';
+import { DailyTrendAcc, LineTotals, ProfitGroupAcc, ProfitLine } from './profit-lines';
 
 /** Accessory group id/name used when an investor is null (ProfitGroup needs a numeric id). */
 export const ACCESSORIES = { id: 0, name: 'Accessories' };
@@ -37,6 +38,35 @@ export function toProfitGroup(g: ProfitGroupAcc) {
     profit: g.profit.toFixed(2),
     investorShare: g.investorShare.toFixed(2),
     businessShare: g.businessShare.toFixed(2),
+  };
+}
+
+/** Maps a daily trend bucket to the API trend object, masking cost if not permitted. */
+export function toDailyTrend(t: DailyTrendAcc, canViewCost: boolean) {
+  const base = {
+    date: t.date,
+    quantity: t.quantity,
+    sales: t.sales.toFixed(2),
+    profit: t.profit.toFixed(2),
+  };
+  return canViewCost ? { ...base, cost: t.cost.toFixed(2) } : base;
+}
+
+/** Maps a heatmap cell to the API shape; `sales` 2-dp string, no cost (safe for all roles). */
+export function toHeatmapBucket(b: HeatmapAcc) {
+  return { weekday: b.weekday, hour: b.hour, count: b.count, sales: b.sales.toFixed(2) };
+}
+
+/** Maps a low-margin row to the API shape; profit stays (view_profit), cost is never present. */
+export function toLowMargin(r: LowMarginAcc) {
+  return {
+    saleId: r.saleId,
+    saleItemId: r.saleItemId,
+    item: r.item,
+    productModel: r.productModel,
+    salePrice: r.salePrice.toFixed(2),
+    profit: r.profit.toFixed(2),
+    marginPct: r.marginPct,
   };
 }
 

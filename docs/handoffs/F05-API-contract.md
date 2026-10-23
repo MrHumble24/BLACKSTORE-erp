@@ -40,7 +40,13 @@ type SaleSummary = {
   itemCount: number;
 };
 type Sale = SaleSummary & { items: SaleItem[]; payments: SalePayment[]; returns: SaleReturn[] };
-type ReceiptSettings = { shopName: string; address: string; phone: string; footer: string }; // Setting key "receipt"
+type ReceiptSettings = {
+  shopName: string; headerNote: string; taxId: string; address: string; phone: string;
+  secondContact: string; website: string; footer: string;
+  logo: string; // '' or a base64 image data URL (data:image/<png|jpeg|jpg|webp|svg+xml>;base64,...), ≤~500KB
+  showLogo: boolean; showHeaderNote: boolean; showTaxId: boolean; showAddress: boolean; showPhone: boolean;
+  showSecondContact: boolean; showWebsite: boolean; showCustomer: boolean; showWarranty: boolean; showFooter: boolean;
+}; // Setting key "receipt". Text fields default '', every toggle defaults true.
 ```
 
 ## Endpoints
@@ -55,8 +61,8 @@ type ReceiptSettings = { shopName: string; address: string; phone: string; foote
 | POST | /sales | sell | `{ locationId; lines: ({ itemId; unitPrice; warrantyUntil? } \| { productModelId; quantity; unitPrice })[]; customerId?; dueDate?; payment?: { amount; method } }` | `Sale` (201). See rules |
 | POST | /sales/:id/payments | record_payment | `{ amount; method }` | `Sale`. 400 if the sale is not DEBT or `amount` > balance |
 | POST | /sales/:id/returns | sell | `{ saleItemId; quantity?; refundAmount; result; reason? }` | `Sale` (201). See rules |
-| GET | /settings/receipt | logged in | – | `ReceiptSettings` (empty strings until set) |
-| PATCH | /settings/receipt | manage_catalog | `ReceiptSettings` (all optional) | `ReceiptSettings` |
+| GET | /settings/receipt | logged in | – | `ReceiptSettings` (empty strings, all toggles `true`, until set) |
+| PATCH | /settings/receipt | manage_catalog | `Partial<ReceiptSettings>` (all fields optional; `logo` = base64 image data URL ≤~500KB or `''` to clear) | `ReceiptSettings` |
 
 No DELETE and no sale editing (BR-12): mistakes are fixed with a return or a payment.
 

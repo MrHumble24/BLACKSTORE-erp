@@ -14,7 +14,7 @@ export function formatMoney(amount: string | number | null | undefined): string 
   }
 
   const parts = num.toFixed(2).split('.');
-  const integerPart = parts[0]?.replace(/\B(?=(\d{3})+(?!\d))/g, ' ') ?? '0';
+  const integerPart = parts[0]?.replace(/\B(?=(\d{3})+(?!\d))/g, '\u00A0') ?? '0';
   const decimalPart = parts[1] ?? '00';
 
   return `${integerPart}.${decimalPart}`;

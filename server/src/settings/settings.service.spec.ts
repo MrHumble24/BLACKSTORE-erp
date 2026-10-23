@@ -13,15 +13,64 @@ describe('SettingsService receipt', () => {
 
   beforeEach(() => jest.clearAllMocks());
 
-  it('returns empty strings until set', async () => {
+  const EMPTY = {
+    shopName: '',
+    headerNote: '',
+    taxId: '',
+    address: '',
+    phone: '',
+    secondContact: '',
+    website: '',
+    footer: '',
+    logo: '',
+    showLogo: true,
+    showHeaderNote: true,
+    showTaxId: true,
+    showAddress: true,
+    showPhone: true,
+    showSecondContact: true,
+    showWebsite: true,
+    showCustomer: true,
+    showWarranty: true,
+    showFooter: true,
+  };
+
+  it('returns empty strings and all toggles on until set', async () => {
     setting.findUnique.mockResolvedValue(null);
-    expect(await service.getReceipt()).toEqual({ shopName: '', address: '', phone: '', footer: '' });
+    expect(await service.getReceipt()).toEqual(EMPTY);
   });
 
-  it('merges a partial update over the stored value', async () => {
-    setting.findUnique.mockResolvedValue({ key: 'receipt', value: { shopName: 'BlackStore', address: 'Main St' } });
-    const result = await service.updateReceipt({ phone: '+99890' }, 5);
-    expect(result).toEqual({ shopName: 'BlackStore', address: 'Main St', phone: '+99890', footer: '' });
+  it('round-trips new fields through update', async () => {
+    setting.findUnique.mockResolvedValue(null);
+    const result = await service.updateReceipt(
+      { headerNote: 'Thanks', taxId: '123', website: 'shop.uz', logo: 'data:image/png;base64,AAAA' },
+      5,
+    );
+    expect(result).toMatchObject({ headerNote: 'Thanks', taxId: '123', website: 'shop.uz', logo: 'data:image/png;base64,AAAA' });
     expect(setting.upsert).toHaveBeenCalled();
+  });
+
+  it('defaults toggles to true when the stored row predates them', async () => {
+    setting.findUnique.mockResolvedValue({
+      key: 'receipt',
+      value: { shopName: 'BlackStore', address: 'Main St', phone: '+99890', footer: 'Bye' },
+    });
+    const result = await service.getReceipt();
+    expect(result).toEqual({
+      ...EMPTY,
+      shopName: 'BlackStore',
+      address: 'Main St',
+      phone: '+99890',
+      footer: 'Bye',
+    });
+  });
+
+  it('leaves other fields untouched on a partial toggle PATCH', async () => {
+    setting.findUnique.mockResolvedValue({
+      key: 'receipt',
+      value: { ...EMPTY, shopName: 'BlackStore', phone: '+99890' },
+    });
+    const result = await service.updateReceipt({ showPhone: false }, 5);
+    expect(result).toEqual({ ...EMPTY, shopName: 'BlackStore', phone: '+99890', showPhone: false });
   });
 });

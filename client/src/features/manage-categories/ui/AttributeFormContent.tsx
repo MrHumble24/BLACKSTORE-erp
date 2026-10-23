@@ -4,8 +4,10 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Form, DialogFormFooter, FormError } from '@/shared/ui';
 import { useCreateOrUpdate } from '@/shared/lib';
 import {
+  useCategories,
   useCreateAttribute,
   useUpdateAttribute,
+  type Category,
   type CategoryAttribute,
   type CreateAttributePayload,
   type UpdateAttributePayload,
@@ -16,11 +18,24 @@ import { AttributeFormFields } from './AttributeFormFields';
 interface AttributeFormContentProps {
   categoryId: number;
   attribute: CategoryAttribute | null;
+  defaultSortOrder?: number;
   onClose: () => void;
 }
 
+/** Computes the next attribute sort order from existing category attributes. */
+function resolveNextSortOrder(categories: Category[], categoryId: number, explicitOrder?: number): number {
+  if (explicitOrder !== undefined) return explicitOrder;
+  const currentCategory = categories.find((c) => c.id === categoryId);
+  if (!currentCategory || currentCategory.attributes.length === 0) return 0;
+  return Math.max(...currentCategory.attributes.map((a) => a.sortOrder)) + 1;
+}
+
 /** Form setup for the attribute dialog (localized schema + defaults per create/edit). */
-function useAttributeForm(t: (k: string) => string, attribute: CategoryAttribute | null) {
+function useAttributeForm(
+  t: (k: string) => string,
+  attribute: CategoryAttribute | null,
+  inheritedSortOrder: number,
+) {
   return useForm<AttributeFormValues>({
     resolver: zodResolver(createAttributeSchema(t)),
     defaultValues: {
@@ -29,21 +44,28 @@ function useAttributeForm(t: (k: string) => string, attribute: CategoryAttribute
       type: attribute?.type ?? 'TEXT',
       options: (attribute?.options ?? []).join(', '),
       required: attribute?.required ?? false,
-      sortOrder: attribute ? String(attribute.sortOrder) : '0',
+      sortOrder: attribute ? String(attribute.sortOrder) : String(inheritedSortOrder),
     },
   });
 }
 
 /** Builds the API payload from sanitized form values (SELECT-only options list). */
-function buildPayload(values: AttributeFormValues, isEditing: boolean) {
+function buildPayload(values: AttributeFormValues, isEditing: boolean, fallbackSortOrder = 0) {
   const options =
     values.type === 'SELECT'
       ? values.options.split(',').map((v) => v.trim()).filter(Boolean)
       : undefined;
-  const sortOrder = values.sortOrder === '' ? undefined : Number(values.sortOrder);
+  const sortOrder = values.sortOrder === '' ? fallbackSortOrder : Number(values.sortOrder);
 
   return isEditing
-    ? { label: values.label.trim(), options, required: values.required, sortOrder }
+    ? {
+        key: values.key.trim(),
+        label: values.label.trim(),
+        type: values.type,
+        options,
+        required: values.required,
+        sortOrder,
+      }
     : {
         key: values.key.trim(),
         label: values.label.trim(),
@@ -54,10 +76,16 @@ function buildPayload(values: AttributeFormValues, isEditing: boolean) {
       };
 }
 
-/** shadcn form body for category attributes; key and type are read-only while editing. */
-export function AttributeFormContent({ categoryId, attribute, onClose }: AttributeFormContentProps) {
+/** shadcn form body for category attributes; type is read-only while editing. */
+export function AttributeFormContent({
+  categoryId,
+  attribute,
+  defaultSortOrder,
+  onClose,
+}: AttributeFormContentProps) {
   const { t } = useTranslation();
   const isEditing = Boolean(attribute);
+  const { data: categories = [] } = useCategories(true);
 
   const { mutate: create, isPending: isCreating } = useCreateAttribute();
   const { mutate: update, isPending: isUpdating } = useUpdateAttribute();
@@ -73,10 +101,11 @@ export function AttributeFormContent({ categoryId, attribute, onClose }: Attribu
     onDone: onClose,
   });
 
-  const form = useAttributeForm(t, attribute);
+  const inheritedSortOrder = resolveNextSortOrder(categories, categoryId, defaultSortOrder);
+  const form = useAttributeForm(t, attribute, inheritedSortOrder);
 
   const onSubmit = form.handleSubmit((values) => {
-    const payload = buildPayload(values, isEditing);
+    const payload = buildPayload(values, isEditing, inheritedSortOrder);
     submit(payload as CreateAttributePayload, payload as UpdateAttributePayload);
   });
 

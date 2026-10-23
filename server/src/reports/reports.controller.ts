@@ -22,6 +22,21 @@ export class ReportsController {
     return this.profit.report(query, hasPermission(actor, 'view_cost'));
   }
 
+  // The same numbers as /reports/profit, streamed as an .xlsx attachment (Totals + Lines sheets).
+  @Get('profit.xlsx')
+  async profitReportXlsx(
+    @Query() query: QueryProfitDto,
+    @CurrentUser() actor: PublicUser,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<StreamableFile> {
+    const { from, to, buffer } = await this.profit.xlsx(query, hasPermission(actor, 'view_cost'));
+    res.set({
+      'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'Content-Disposition': `attachment; filename="profit-${from}_${to}.xlsx"`,
+    });
+    return new StreamableFile(buffer);
+  }
+
   @Get('investors')
   investorReport(@Query() query: QueryInvestorReportDto, @CurrentUser() actor: PublicUser) {
     return this.investors.report(query, hasPermission(actor, 'view_cost'));

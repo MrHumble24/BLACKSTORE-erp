@@ -18,7 +18,7 @@ export function SellCartPanel({
 }: SellCartPanelProps) {
   return (
     <div className="lg:col-span-2 space-y-4">
-      <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-end">
+      <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-start">
         <SellLocationSelect
           locationId={locationId}
           onLocationChange={onLocationChange}

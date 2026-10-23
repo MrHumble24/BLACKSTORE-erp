@@ -7,7 +7,7 @@ describe('CategoriesService', () => {
   const category = { findUnique: jest.fn(), count: jest.fn(), update: jest.fn() };
   const item = { count: jest.fn() };
   const accessoryStock = { count: jest.fn() };
-  const categoryAttribute = { create: jest.fn() };
+  const categoryAttribute = { create: jest.fn(), findFirst: jest.fn(), update: jest.fn() };
   const tx = { category, item, accessoryStock, categoryAttribute, auditLog: { create: jest.fn() } };
   const prisma = {
     category,
@@ -55,5 +55,66 @@ describe('CategoriesService', () => {
     await expect(
       service.createAttribute(1, { key: 'color', label: 'Color', type: 'TEXT', options: ['Red'] }, 1),
     ).rejects.toThrow(BadRequestException);
+  });
+
+  it('changes an attribute key when the category has no items', async () => {
+    categoryAttribute.findFirst.mockResolvedValue({ id: 5, key: 'ram', type: 'TEXT' });
+    item.count.mockResolvedValue(0);
+    categoryAttribute.update.mockResolvedValue({ id: 5, key: 'memory' });
+    await service.updateAttribute(1, 5, { key: 'memory' }, 1);
+    expect(categoryAttribute.update).toHaveBeenCalled();
+  });
+
+  it('blocks changing an attribute key when the category has items', async () => {
+    categoryAttribute.findFirst.mockResolvedValue({ id: 5, key: 'ram', type: 'TEXT' });
+    item.count.mockResolvedValue(3);
+    await expect(
+      service.updateAttribute(1, 5, { key: 'memory' }, 1),
+    ).rejects.toThrow(BadRequestException);
+    expect(categoryAttribute.update).not.toHaveBeenCalled();
+  });
+
+  it('updates label and options with items present when the key is unchanged', async () => {
+    categoryAttribute.findFirst.mockResolvedValue({ id: 5, key: 'ram', type: 'SELECT' });
+    item.count.mockResolvedValue(3);
+    categoryAttribute.update.mockResolvedValue({ id: 5, label: 'Memory' });
+    await service.updateAttribute(1, 5, { label: 'Memory', options: ['8GB', '16GB'] }, 1);
+    expect(item.count).not.toHaveBeenCalled();
+    expect(categoryAttribute.update).toHaveBeenCalled();
+  });
+
+  it('changes an attribute type when the category has no items', async () => {
+    categoryAttribute.findFirst.mockResolvedValue({ id: 5, key: 'ram', type: 'TEXT' });
+    item.count.mockResolvedValue(0);
+    categoryAttribute.update.mockResolvedValue({ id: 5, type: 'NUMBER' });
+    await service.updateAttribute(1, 5, { type: 'NUMBER' }, 1);
+    expect(categoryAttribute.update).toHaveBeenCalled();
+  });
+
+  it('changes an attribute type even when the category has items (values persist by key)', async () => {
+    categoryAttribute.findFirst.mockResolvedValue({ id: 5, key: 'ram', type: 'TEXT' });
+    item.count.mockResolvedValue(3);
+    categoryAttribute.update.mockResolvedValue({ id: 5, type: 'NUMBER' });
+    await service.updateAttribute(1, 5, { type: 'NUMBER' }, 1);
+    expect(item.count).not.toHaveBeenCalled();
+    expect(categoryAttribute.update).toHaveBeenCalled();
+  });
+
+  it('rejects changing a type to SELECT without options', async () => {
+    categoryAttribute.findFirst.mockResolvedValue({ id: 5, key: 'ram', type: 'TEXT' });
+    await expect(
+      service.updateAttribute(1, 5, { type: 'SELECT' }, 1),
+    ).rejects.toThrow(BadRequestException);
+    expect(categoryAttribute.update).not.toHaveBeenCalled();
+  });
+
+  it('clears options to [] when changing away from SELECT with items present', async () => {
+    categoryAttribute.findFirst.mockResolvedValue({ id: 5, key: 'ram', type: 'SELECT' });
+    item.count.mockResolvedValue(3);
+    categoryAttribute.update.mockResolvedValue({ id: 5, type: 'TEXT', options: [] });
+    await service.updateAttribute(1, 5, { type: 'TEXT' }, 1);
+    expect(categoryAttribute.update).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ options: [] }) }),
+    );
   });
 });

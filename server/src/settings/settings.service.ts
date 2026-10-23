@@ -6,15 +6,54 @@ import { UpdateReceiptDto } from './dto/update-receipt.dto';
 
 const RECEIPT_KEY = 'receipt';
 
-/** The receipt header the frontend prints on (PRD FR-24). One Setting row, key "receipt". */
+/**
+ * The receipt header the frontend prints on (PRD FR-24). One Setting row, key "receipt".
+ * Text fields plus per-part on/off toggles; toggles default true so existing rows keep
+ * showing everything. `logo` is '' or a base64 image data URL.
+ */
 export interface ReceiptSettings {
   shopName: string;
+  headerNote: string;
+  taxId: string;
   address: string;
   phone: string;
+  secondContact: string;
+  website: string;
   footer: string;
+  logo: string; // '' or data:image/<png|jpeg|webp|svg+xml>;base64,...
+  showLogo: boolean;
+  showHeaderNote: boolean;
+  showTaxId: boolean;
+  showAddress: boolean;
+  showPhone: boolean;
+  showSecondContact: boolean;
+  showWebsite: boolean;
+  showCustomer: boolean;
+  showWarranty: boolean;
+  showFooter: boolean;
 }
 
-const EMPTY_RECEIPT: ReceiptSettings = { shopName: '', address: '', phone: '', footer: '' };
+const EMPTY_RECEIPT: ReceiptSettings = {
+  shopName: '',
+  headerNote: '',
+  taxId: '',
+  address: '',
+  phone: '',
+  secondContact: '',
+  website: '',
+  footer: '',
+  logo: '',
+  showLogo: true,
+  showHeaderNote: true,
+  showTaxId: true,
+  showAddress: true,
+  showPhone: true,
+  showSecondContact: true,
+  showWebsite: true,
+  showCustomer: true,
+  showWarranty: true,
+  showFooter: true,
+};
 
 /** Reads and writes app settings stored as JSON key-value rows. */
 @Injectable()

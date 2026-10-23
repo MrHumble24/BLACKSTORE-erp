@@ -85,6 +85,11 @@ function CategoryDetailContent({
         onOpenChange={(open) => { if (!open) { setAttribute(undefined); } }}
         categoryId={category.id}
         attribute={attribute ?? null}
+        defaultSortOrder={
+          category.attributes.length > 0
+            ? Math.max(...category.attributes.map((a) => a.sortOrder)) + 1
+            : 0
+        }
       />
       <ProductModelFormDialog
         open={model !== undefined}

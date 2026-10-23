@@ -8,13 +8,13 @@ interface ItemConditionBadgeProps {
 }
 
 const conditionStyles: Record<ItemCondition, string> = {
-  NEW: 'bg-gallery-white text-ink border border-hairline-silver font-medium',
-  USED: 'bg-control-gray text-slate border-0 font-normal',
-  REFURBISHED: 'bg-control-gray/50 text-slate border border-hairline-silver/60 font-normal',
+  NEW: 'bg-sky-50 text-sky-700 border-sky-200/70 font-medium',
+  USED: 'bg-zinc-100 text-zinc-600 border-zinc-200 font-normal',
+  REFURBISHED: 'bg-violet-50 text-violet-700 border-violet-200/70 font-medium',
 };
 
 /**
- * Apple-styled device condition pill badge (New, Used, Refurbished).
+ * Modern ERP-styled device condition pill badge (New, Used, Refurbished).
  */
 export function ItemConditionBadge({ condition, className }: ItemConditionBadgeProps) {
   const { t } = useTranslation();
@@ -22,7 +22,7 @@ export function ItemConditionBadge({ condition, className }: ItemConditionBadgeP
   return (
     <Badge
       variant="outline"
-      className={`px-2 py-0.5 text-[11px] rounded-full tracking-[-0.01em] ${conditionStyles[condition]} ${className ?? ''}`}
+      className={`inline-flex items-center px-2 py-0.5 text-[11px] rounded-full whitespace-nowrap tracking-[-0.01em] border ${conditionStyles[condition]} ${className ?? ''}`}
     >
       {t(`items.condition.${condition}`)}
     </Badge>

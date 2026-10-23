@@ -38,7 +38,7 @@ Reference lists (`/locations`, `/categories`, `/product-models`, `/investors`) r
 | POST | /categories | manage_catalog | `{ name; isSerialized? }` (default true) | `Category` (201). 409 if name exists |
 | PATCH | /categories/:id | manage_catalog | `{ name?; isSerialized?; isActive? }` | `Category`. 400 if `isSerialized` would change and the category already has items or accessory stock |
 | POST | /categories/:id/attributes | manage_catalog | `{ key; label; type; options?; required?; sortOrder? }` | `CategoryAttribute` (201). 409 if key exists in this category. `options` required and non-empty when type is SELECT |
-| PATCH | /categories/:id/attributes/:attrId | manage_catalog | `{ label?; options?; required?; sortOrder? }` | `CategoryAttribute`. `key` and `type` cannot change (items store values by key) |
+| PATCH | /categories/:id/attributes/:attrId | manage_catalog | `{ key?; type?; label?; options?; required?; sortOrder? }` | `CategoryAttribute`. `type` (TEXT\|NUMBER\|SELECT) may change anytime — item values are keyed by `key` and re-validated only on the next item edit, so existing rows persist. `key` (lowercase snake_case, ≤50) may change only while the category has no items — else 400 (a key change orphans stored item values); 409 if the new key already exists in this category. Changing `type` to SELECT requires a non-empty `options`; changing away from SELECT clears options to `[]` |
 | GET | /product-models?categoryId= | logged in | – | `ProductModel[]` (all, or filtered by category) |
 | POST | /product-models | manage_catalog | `{ categoryId; name }` | `ProductModel` (201). 409 if name exists in that category |
 | PATCH | /product-models/:id | manage_catalog | `{ name?; isActive? }` | `ProductModel` (category cannot change) |

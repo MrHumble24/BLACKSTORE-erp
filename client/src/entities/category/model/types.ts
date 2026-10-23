@@ -48,7 +48,9 @@ export interface CreateAttributePayload {
 }
 
 export interface UpdateAttributePayload {
+  key?: string;
   label?: string;
+  type?: AttributeType;
   options?: string[];
   required?: boolean;
   sortOrder?: number;

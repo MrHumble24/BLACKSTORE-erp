@@ -7,10 +7,12 @@ import {
   TableRow,
   TableCell,
 } from '@/shared/ui';
-import { cn, formatMoney, formatDate } from '@/shared/lib';
+import { cn, formatDate } from '@/shared/lib';
 import type { ProfitLine } from '@/entities/report';
 import type { ReactNode } from 'react';
 import { ReportHeadCell } from './ReportHeadCell';
+import { CARD } from './chartPalette';
+import { money } from './reportFormat';
 
 function LinesTableHeader({ canViewCost }: { canViewCost: boolean }) {
   const { t } = useTranslation();
@@ -85,12 +87,12 @@ function ProfitLineRow({ line, canViewCost }: ProfitLineRowProps) {
       <QuietCell className="truncate">{line.investor?.name ?? '—'}</QuietCell>
       <QuietCell className="max-w-[120px] truncate">{line.location.name}</QuietCell>
       <QuietCell className="max-w-[120px] truncate">{line.category.name}</QuietCell>
-      <MoneyCell value={formatMoney(line.salePrice)} />
-      <MoneyCell value={formatMoney(line.refunded)} className="font-normal text-slate" />
-      {canViewCost && <MoneyCell value={formatMoney(line.cost)} className="font-normal text-slate" />}
-      <MoneyCell value={formatMoney(line.profit)} className={isReturn ? 'text-destructive' : ''} />
-      <MoneyCell value={formatMoney(line.investorShare)} className="font-normal text-slate" />
-      <MoneyCell value={formatMoney(line.businessShare)} className="font-normal text-slate" />
+      <MoneyCell value={money(line.salePrice)} />
+      <MoneyCell value={money(line.refunded)} className="font-normal text-slate" />
+      {canViewCost && <MoneyCell value={money(line.cost)} className="font-normal text-slate" />}
+      <MoneyCell value={money(line.profit)} className={isReturn ? 'text-destructive' : ''} />
+      <MoneyCell value={money(line.investorShare)} className="font-normal text-slate" />
+      <MoneyCell value={money(line.businessShare)} className="font-normal text-slate" />
     </TableRow>
   );
 }
@@ -106,14 +108,14 @@ export function ProfitLinesTable({ lines, canViewCost }: ProfitLinesTableProps) 
 
   if (lines.length === 0) {
     return (
-      <Card className="p-10 text-center">
+      <Card className={cn(CARD, 'p-10 text-center')}>
         <p className="text-[13px] text-slate">{t('reports.noLines')}</p>
       </Card>
     );
   }
 
   return (
-    <Card className="overflow-hidden">
+    <Card className={cn(CARD, 'overflow-hidden')}>
       <div className="p-5 sm:p-6">
         <h3 className="text-[15px] font-semibold tracking-[-0.01em] text-ink">{t('reports.detailedLines')}</h3>
       </div>

@@ -1,8 +1,8 @@
 import { useState, useRef, useEffect, type KeyboardEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
-import { Loader2 } from 'lucide-react';
-import { Input, CameraScanButton } from '@/shared/ui';
+import { Loader2, ScanLine } from 'lucide-react';
+import { Input, CameraScanButton, Label } from '@/shared/ui';
 import { useItemByCode, SCAN_CODE_REGEX, type Item } from '@/entities/item';
 import type { DeviceCartLine } from '../model/types';
 
@@ -89,19 +89,33 @@ export function SellScanInput({
   };
 
   return (
-    <div className="relative flex-1">
-      <Input
-        ref={inputRef}
-        value={value}
-        onChange={(e) => setValue(e.target.value)}
-        onKeyDown={handleKeyDown}
-        placeholder={t('sell.scanPlaceholder')}
-        disabled={isPending}
-        className="pr-20 h-10 text-sm font-mono tracking-tight"
-      />
-      <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
-        {isPending && <Loader2 className="h-4 w-4 animate-spin text-slate" />}
-        <CameraScanButton onScan={(code) => handleScan(code, () => setValue(''))} />
+    <div className="space-y-1 flex-1">
+      <div className="flex items-center justify-between">
+        <Label htmlFor="pos-scan-input">{t('sell.scanInputLabel')}</Label>
+        <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-emerald-600">
+          <span className="relative flex h-1.5 w-1.5">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
+          </span>
+          {t('sell.scannerReady')}
+        </span>
+      </div>
+      <div className="relative">
+        <ScanLine className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate/70 pointer-events-none" />
+        <Input
+          id="pos-scan-input"
+          ref={inputRef}
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder={t('sell.scanPlaceholder')}
+          disabled={isPending}
+          className="pl-9 pr-20 h-10 text-sm font-mono tracking-tight"
+        />
+        <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+          {isPending && <Loader2 className="h-4 w-4 animate-spin text-slate" />}
+          <CameraScanButton onScan={(code) => handleScan(code, () => setValue(''))} />
+        </div>
       </div>
     </div>
   );

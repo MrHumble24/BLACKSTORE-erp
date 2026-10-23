@@ -8,6 +8,7 @@ interface AttributeFormDialogProps {
   onOpenChange: (open: boolean) => void;
   categoryId: number;
   attribute?: CategoryAttribute | null;
+  defaultSortOrder?: number;
 }
 
 /** Dialog for adding a category attribute or editing an existing one. */
@@ -16,6 +17,7 @@ export function AttributeFormDialog({
   onOpenChange,
   categoryId,
   attribute,
+  defaultSortOrder,
 }: AttributeFormDialogProps) {
   const { t } = useTranslation();
 
@@ -32,6 +34,7 @@ export function AttributeFormDialog({
             key={attribute ? `edit-${attribute.id}` : 'create'}
             categoryId={categoryId}
             attribute={attribute ?? null}
+            defaultSortOrder={defaultSortOrder}
             onClose={() => onOpenChange(false)}
           />
         )}

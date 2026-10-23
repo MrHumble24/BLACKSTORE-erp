@@ -8,15 +8,30 @@ import { ItemFormDialog } from '@/features/manage-items';
 import { ItemsFilters } from './ItemsFilters';
 import { ItemsTable } from './ItemsTable';
 
-function ItemsHeader({ onAdd, canReceiveBatch }: { onAdd: () => void; canReceiveBatch: boolean }) {
+function ItemsHeader({
+  onAdd,
+  canReceiveBatch,
+  total,
+}: {
+  onAdd: () => void;
+  canReceiveBatch: boolean;
+  total: number;
+}) {
   const { t } = useTranslation();
 
   return (
     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
       <div className="space-y-1">
-        <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-ink">
-          {t('items.title')}
-        </h1>
+        <div className="flex items-center gap-3">
+          <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-ink">
+            {t('items.title')}
+          </h1>
+          {total > 0 && (
+            <span className="inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded-full bg-studio-mist border border-hairline-silver/60 text-slate">
+              {total}
+            </span>
+          )}
+        </div>
         <p className="text-xs text-slate">{t('items.subtitle')}</p>
       </div>
       {canReceiveBatch && (
@@ -55,8 +70,8 @@ export function ItemsPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <ItemsHeader onAdd={() => setAddDialogOpen(true)} canReceiveBatch={canReceiveBatch} />
+    <div className="space-y-5">
+      <ItemsHeader onAdd={() => setAddDialogOpen(true)} canReceiveBatch={canReceiveBatch} total={total} />
       <ItemsFilters filters={filters} onChange={handleFilterChange} />
 
       <ItemsTable

@@ -1,5 +1,6 @@
 import { Prisma, ReturnResult, SaleStatus, ShareType } from '@prisma/client';
-import { buildLinesForSale, ProfitLine, ReportSaleRow, sumLines } from './profit-lines';
+import { heatmapBuckets, lowMargin, summarize } from './profit-analytics';
+import { buildLinesForSale, groupLinesByDate, ProfitLine, ReportSaleRow, sumLines } from './profit-lines';
 
 const d = (v: string | number) => new Prisma.Decimal(v);
 const LOCATION = { id: 1, name: 'Shop' };
@@ -212,5 +213,64 @@ describe('buildLinesForSale', () => {
     // the SALE line is dated in January, the RETURN line in February
     expect(saleLine(lines).profitDate.getMonth()).toBe(0);
     expect(returnLine(lines).profitDate.getMonth()).toBe(1);
+  });
+
+  describe('analytics helpers (read-only KPIs, no cost)', () => {
+    const returned = (id: number) => ({
+      ...sale({
+        status: SaleStatus.RETURNED,
+        returns: [{ id: 7, saleItemId: 10, quantity: 1, refundAmount: '1500', result: ReturnResult.BACK_TO_STOCK, date: new Date('2026-02-05') }],
+      }),
+      id,
+    });
+
+    it('summarize counts distinct sales, units sold (SALE only) and returns', () => {
+      const lines = [
+        ...buildLinesForSale(sale({ items: [item({ id: 10 }), item({ id: 11 })] })),
+        ...buildLinesForSale(returned(2)),
+      ];
+      expect(summarize(lines)).toEqual({ transactions: 2, unitsSold: 3, returnCount: 1 });
+    });
+
+    it('heatmapBuckets groups SALE lines by local weekday×hour and skips empty cells', () => {
+      const sat = buildLinesForSale(sale({ payments: [{ amount: '1500', date: new Date(2026, 0, 10, 14) }] })); // Sat 14:00
+      const mon = buildLinesForSale({ ...sale({ payments: [{ amount: '1500', date: new Date(2026, 0, 12, 9) }] }), id: 2 }); // Mon 09:00
+      const buckets = heatmapBuckets([...sat, ...mon]);
+      expect(buckets).toHaveLength(2);
+      expect(buckets[0]).toMatchObject({ weekday: 1, hour: 9, count: 1 }); // Monday sorts first
+      expect(buckets[0]?.sales.toString()).toBe('1500');
+      expect(buckets[1]).toMatchObject({ weekday: 6, hour: 14, count: 1 });
+    });
+
+    it('lowMargin flags SALE lines under the threshold, worst margin first', () => {
+      const lines = buildLinesForSale(
+        sale({
+          items: [
+            item({ id: 10, unitPrice: '1000', unitCost: '950' }), // 5%
+            item({ id: 11, unitPrice: '1000', unitCost: '920' }), // 8%
+            item({ id: 12, unitPrice: '1000', unitCost: '800' }), // 20% — excluded
+          ],
+        }),
+      );
+      const low = lowMargin(lines, 10);
+      expect(low).toHaveLength(2);
+      expect(low[0]).toMatchObject({ saleItemId: 10, marginPct: 5 });
+      expect(low[1]).toMatchObject({ saleItemId: 11, marginPct: 8 });
+    });
+  });
+
+  it('groupLinesByDate aggregates sales and profits chronologically by ISO date', () => {
+    const lines = buildLinesForSale(
+      sale({
+        status: SaleStatus.RETURNED,
+        returns: [{ id: 7, saleItemId: 10, quantity: 1, refundAmount: '1500', result: ReturnResult.BACK_TO_STOCK, date: new Date('2026-02-05') }],
+      }),
+    );
+    const daily = groupLinesByDate(lines);
+    expect(daily).toHaveLength(2);
+    expect(daily[0]?.date).toBe('2026-01-10');
+    expect(daily[0]?.sales.toString()).toBe('1500');
+    expect(daily[1]?.date).toBe('2026-02-05');
+    expect(daily[1]?.sales.toString()).toBe('0');
   });
 });

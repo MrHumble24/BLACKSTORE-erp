@@ -132,7 +132,7 @@ export class CategoriesService {
     });
   }
 
-  /** Updates an attribute's label, options, required or sortOrder; key and type stay fixed. */
+  /** Updates an attribute's label, options, required, sortOrder, type; only the key is frozen once items exist. A type change is safe: item values are a JSON column keyed by `key` and re-validated only on the next item edit, so existing rows persist. A key change orphans those values, so it is blocked while items exist. */
   async updateAttribute(
     categoryId: number,
     attrId: number,
@@ -144,11 +144,28 @@ export class CategoriesService {
       select: attributeSelect,
     });
     if (!before) throw new NotFoundException('Attribute not found');
-    const options =
-      dto.options === undefined
-        ? undefined
-        : this.resolveOptions(before.type, dto.options);
+    const keyChanged = dto.key !== undefined && dto.key !== before.key;
+    const typeChanged = dto.type !== undefined && dto.type !== before.type;
     return this.prisma.$transaction(async (tx) => {
+      // A key change orphans item values stored under the old key, so block it
+      // once items exist. Checked before resolveOptions so this message wins.
+      if (keyChanged) {
+        const items = await tx.item.count({
+          where: { productModel: { categoryId } },
+        });
+        if (items > 0) {
+          throw new BadRequestException(
+            'Cannot change attribute key while the category has items',
+          );
+        }
+      }
+      // Resolve options against the new (effective) type and recompute whenever the
+      // type changes: forces options on TEXT/NUMBER→SELECT, clears them on SELECT→other.
+      const effectiveType = dto.type ?? before.type;
+      const options =
+        dto.options === undefined && !typeChanged
+          ? undefined
+          : this.resolveOptions(effectiveType, dto.options);
       const attribute = await tx.categoryAttribute.update({
         where: { id: attrId },
         data: { ...dto, options },

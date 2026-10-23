@@ -160,7 +160,7 @@ export function AppSidebar() {
     <aside className="w-64 shrink-0 border-r border-hairline-silver/70 bg-gallery-white min-h-[calc(100vh-3.5rem)] p-4 flex flex-col justify-between">
       <SidebarNavList />
       <div className="p-3 text-[11px] text-slate tracking-[-0.01em] text-center border-t border-hairline-silver/60">
-        BLACKSTORE
+        BLACKSTORE ERP
       </div>
     </aside>
   );

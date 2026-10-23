@@ -44,6 +44,7 @@ export interface ProfitLine {
   profitDate: Date;
   item: { id: number; code: string; model: string } | null;
   productModel: string;
+  model: { id: number; name: string };
   quantity: number;
   investor: { id: number; name: string } | null;
   location: { id: number; name: string };
@@ -117,6 +118,7 @@ function context(sale: ReportSaleRow, item: ReportItem) {
   return {
     item: item.item ? { id: item.item.id, code: identifierCode(item.item.identifiers), model: model?.name ?? '' } : null,
     productModel: model?.name ?? '',
+    model: model ? { id: model.id, name: model.name } : { id: 0, name: '' },
     investor: item.investor ? { id: item.investor.id, name: item.investor.name } : null,
     location: sale.location,
     category: model?.category ?? { id: 0, name: '' },
@@ -215,4 +217,28 @@ export function groupLines(lines: ProfitLine[], key: (l: ProfitLine) => { id: nu
     groups.set(id, g);
   }
   return [...groups.values()];
+}
+
+/** One daily bucket for charting trend over time. */
+export interface DailyTrendAcc {
+  date: string;
+  quantity: number;
+  sales: Prisma.Decimal;
+  cost: Prisma.Decimal;
+  profit: Prisma.Decimal;
+}
+
+/** Groups lines by ISO calendar date (YYYY-MM-DD), ordered chronologically. */
+export function groupLinesByDate(lines: ProfitLine[]): DailyTrendAcc[] {
+  const map = new Map<string, DailyTrendAcc>();
+  for (const line of lines) {
+    const date = line.profitDate.toISOString().slice(0, 10);
+    const g = map.get(date) ?? { date, quantity: 0, sales: ZERO, cost: ZERO, profit: ZERO };
+    g.quantity += signedQuantity(line);
+    g.sales = g.sales.plus(line.salePrice);
+    g.cost = g.cost.plus(line.cost);
+    g.profit = g.profit.plus(line.profit);
+    map.set(date, g);
+  }
+  return [...map.values()].sort((a, b) => a.date.localeCompare(b.date));
 }
