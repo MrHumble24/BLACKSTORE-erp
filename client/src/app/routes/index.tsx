@@ -18,6 +18,8 @@ import { TransfersPage, NewTransferPage, TransferDetailPage } from '@/pages/tran
 import { StockCountsPage, StockCountDetailPage } from '@/pages/stock-counts';
 import { ExpensesPage } from '@/pages/expenses';
 import { AuditLogPage } from '@/pages/audit-log';
+import { ImportPage } from '@/pages/import-stock';
+import { BackupsPage } from '@/pages/backups';
 import { SellPage } from '@/pages/sell';
 import { SalesPage, SaleDetailPage, ReceiptPage } from '@/pages/sales';
 import { CustomersPage, CustomerDetailPage } from '@/pages/customers';
@@ -68,6 +70,8 @@ const PROTECTED_ROUTES: RouteConfig[] = [
   { path: 'consignments/:id', permission: 'consign', Component: ConsignmentDetailPage },
   { path: 'reports/profit', permission: 'view_profit', Component: ProfitReportPage },
   { path: 'reports/investors', permission: 'view_profit', Component: InvestorReportPage },
+  { path: 'items/import', permission: 'manage_prices', Component: ImportPage },
+  { path: 'backups', permission: 'manage_backups', Component: BackupsPage },
 ];
 
 /** Redirects already authenticated users away from public pages. */
