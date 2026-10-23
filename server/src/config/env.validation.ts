@@ -6,6 +6,7 @@ import {
   IsString,
   Min,
   MinLength,
+  ValidateIf,
   validateSync,
 } from 'class-validator';
 
@@ -32,6 +33,29 @@ export class EnvironmentVariables {
 
   @IsIn(['development', 'production', 'test'])
   NODE_ENV: string = 'development';
+
+  // ── Backups (F07) ──────────────────────────────────────────
+  // Where encrypted daily dumps are written. Defaults to a local folder.
+  @IsString()
+  BACKUP_DIR: string = './backups';
+
+  // A second copy on separate storage (network/cloud mount); off when empty.
+  @IsString()
+  BACKUP_SECOND_DIR: string = '';
+
+  // openssl passphrase for the dumps; required in production, optional elsewhere.
+  @ValidateIf((o: EnvironmentVariables) => o.NODE_ENV === 'production')
+  @IsNotEmpty({ message: 'BACKUP_PASSPHRASE is required in production' })
+  @IsString()
+  @MinLength(16, { message: 'BACKUP_PASSPHRASE must be at least 16 characters' })
+  BACKUP_PASSPHRASE: string = '';
+
+  // Telegram off-site copy; skipped with a warning when either is empty.
+  @IsString()
+  TELEGRAM_BOT_TOKEN: string = '';
+
+  @IsString()
+  TELEGRAM_BACKUP_CHAT_ID: string = '';
 }
 
 /** Used by ConfigModule: fails startup with a list of every bad or missing variable. */

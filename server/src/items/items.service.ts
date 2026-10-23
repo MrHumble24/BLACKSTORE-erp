@@ -39,6 +39,8 @@ export interface ReceiveOpts {
   source?: { batchId?: number; walkInSellerId?: number };
   // Walk-in buyers hand over the cash, so they may enter pricePaid without manage_prices (W5 step 2).
   allowPriceWithoutPermission?: boolean;
+  // Audit action for the created item; defaults to 'create'. The stock import sets 'import' (FR-7).
+  auditAction?: string;
 }
 
 /** Serialized devices: list, scan, create, edit, prices, identifiers and status (PRD F03). */
@@ -147,7 +149,13 @@ export class ItemsService {
       },
     });
     await this.audit.log(
-      { userId: actor.id, action: 'create', entity: 'Item', entityId: row.id, after: row },
+      {
+        userId: actor.id,
+        action: opts.auditAction ?? 'create',
+        entity: 'Item',
+        entityId: row.id,
+        after: row,
+      },
       tx,
     );
     return toItem(row, hasPermission(actor, 'view_cost'));
