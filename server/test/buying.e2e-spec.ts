@@ -21,6 +21,11 @@ describe('Buying (e2e)', () => {
   let batchItemId = 0;
   let batchLineId = 0;
   let walkInItemId = 0;
+  let pastBatchId = 0;
+  const extraItemIds: number[] = []; // devices created by the remove/reprice tests
+  const repriceImei = `88${Date.now()}`.slice(0, 15);
+  const soldImei = `44${Date.now()}`.slice(0, 15);
+  const removeImei = `33${Date.now()}`.slice(0, 15);
 
   beforeAll(async () => {
     app = await createTestApp();
@@ -36,10 +41,11 @@ describe('Buying (e2e)', () => {
     await prisma.purchaseLine.deleteMany({
       where: { OR: [{ productModelId: modelId }, { item: { productModelId: modelId } }] },
     });
-    const itemIds = [batchItemId, walkInItemId].filter((id) => id > 0);
+    const itemIds = [batchItemId, walkInItemId, ...extraItemIds].filter((id) => id > 0);
     if (itemIds.length) await prisma.item.deleteMany({ where: { id: { in: itemIds } } });
     await prisma.walkInSeller.deleteMany({ where: { phone: walkSellerPhone } });
-    if (batchId) await prisma.batch.deleteMany({ where: { id: batchId } });
+    const batchIds = [batchId, pastBatchId].filter((id) => id > 0);
+    if (batchIds.length) await prisma.batch.deleteMany({ where: { id: { in: batchIds } } });
     if (supplierId) await prisma.supplier.deleteMany({ where: { id: supplierId } });
     await prisma.productModel.deleteMany({ where: { id: modelId } });
     await cleanupUsers(prisma, [phone, adminPhone]);
@@ -149,5 +155,95 @@ describe('Buying (e2e)', () => {
       })
       .expect(409);
     expect((dup.body as { message: string }).message).toContain('(IN_STOCK)');
+  });
+
+  // Adds one more device of modelId to the batch and tracks it for cleanup.
+  const addBatchDevice = async (imei: string) => {
+    const staff = await staffAgent();
+    const res = await staff
+      .post(`/api/batches/${batchId}/items`)
+      .send({
+        productModelId: modelId,
+        attributes: { storage: '128GB', color: 'Black' },
+        identifiers: [{ type: 'IMEI', value: imei }],
+      })
+      .expect(201);
+    const id = (res.body as { id: number }).id;
+    extraItemIds.push(id);
+    return id;
+  };
+
+  it('rejects a glued scan (two IMEIs in one) with 400', async () => {
+    const staff = await staffAgent();
+    const res = await staff
+      .post(`/api/batches/${batchId}/items`)
+      .send({
+        productModelId: modelId,
+        attributes: { storage: '128GB', color: 'Black' },
+        identifiers: [{ type: 'IMEI', value: '005363194336779002373484739940' }],
+      })
+      .expect(400);
+    expect((res.body as { message: string }).message).toContain('glued together');
+  });
+
+  it('PATCH /batches/:id/lines prices every line of the model; bogus model is 404', async () => {
+    const agent = await adminAgent();
+    await addBatchDevice(repriceImei);
+
+    const res = await agent
+      .patch(`/api/batches/${batchId}/lines`)
+      .send({ productModelId: modelId, unitPrice: '1200' })
+      .expect(200);
+    const lines = (res.body as { lines: Array<{ unitPrice?: string; item: { id: number } | null }> }).lines;
+    const modelLines = lines.filter((l) => l.item !== null);
+    expect(modelLines.length).toBeGreaterThanOrEqual(2);
+    for (const line of modelLines) expect(line.unitPrice).toBe('1200.00');
+
+    await agent
+      .patch(`/api/batches/${batchId}/lines`)
+      .send({ productModelId: 999_999, unitPrice: '1200' })
+      .expect(404);
+  });
+
+  it('Staff cannot edit a batch older than 3 days (403)', async () => {
+    const admin = await adminAgent();
+    const own = await prisma.investor.findUniqueOrThrow({ where: { code: 'OWN' } });
+    const sklad = await prisma.location.findFirstOrThrow({ where: { isActive: true } });
+    const fiveDaysAgo = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString();
+    const batch = await admin
+      .post('/api/batches')
+      .send({ supplierId, investorId: own.id, locationId: sklad.id, arrivalDate: fiveDaysAgo })
+      .expect(201);
+    pastBatchId = (batch.body as { id: number }).id;
+    expect((batch.body as { isLocked: boolean }).isLocked).toBe(true);
+
+    const staff = await staffAgent();
+    const res = await staff
+      .post(`/api/batches/${pastBatchId}/items`)
+      .send({
+        productModelId: modelId,
+        attributes: { storage: '128GB', color: 'Black' },
+        identifiers: [{ type: 'IMEI', value: `22${Date.now()}`.slice(0, 15) }],
+      })
+      .expect(403);
+    expect((res.body as { message: string }).message).toContain('edit_past_records');
+  });
+
+  it('DELETE a device line removes the item (happy path); a sold device is 409', async () => {
+    const admin = await adminAgent();
+
+    // 409: a device already moved on (status SOLD) cannot be removed.
+    const soldId = await addBatchDevice(soldImei);
+    await prisma.item.update({ where: { id: soldId }, data: { status: 'SOLD' } });
+    const soldLine = await prisma.purchaseLine.findFirstOrThrow({ where: { itemId: soldId } });
+    const conflict = await admin.delete(`/api/batches/${batchId}/lines/${soldLine.id}`).expect(409);
+    expect((conflict.body as { message: string }).message).toContain('cannot be removed');
+
+    // Happy path: a fresh IN_STOCK device and its line are removed, 204.
+    const removeId = await addBatchDevice(removeImei);
+    const removeLine = await prisma.purchaseLine.findFirstOrThrow({ where: { itemId: removeId } });
+    await admin.delete(`/api/batches/${batchId}/lines/${removeLine.id}`).expect(204);
+    expect(await prisma.item.findUnique({ where: { id: removeId } })).toBeNull();
+    expect(await prisma.purchaseLine.findUnique({ where: { id: removeLine.id } })).toBeNull();
   });
 });

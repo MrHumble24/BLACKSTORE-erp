@@ -4,13 +4,14 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { CostSplitMethod, Prisma } from '@prisma/client';
 import { AuditService } from '../audit/audit.service';
 import type { PublicUser } from '../common/auth-user';
 import { parsePastDate } from '../common/dates';
 import { hasPermission } from '../common/permissions';
 import { PrismaService } from '../prisma/prisma.service';
 import { assertActive } from '../items/item-queries';
+import { assertBatchEditable } from './batch-lock';
 import { batchDetailSelect, batchSummarySelect, toBatch, toBatchSummary } from './batch-shape';
 import { CreateBatchDto } from './dto/create-batch.dto';
 import { QueryBatchesDto } from './dto/query-batches.dto';
@@ -86,6 +87,8 @@ export class BatchesService {
     const updated = await this.prisma.$transaction(async (tx) => {
       const before = await tx.batch.findUnique({ where: { id }, select: batchDetailSelect });
       if (!before) throw new NotFoundException('Batch not found');
+      assertBatchEditable(before, actor);
+      this.assertSplitChosen(dto, before);
       await tx.batch.update({
         where: { id },
         data: {
@@ -104,6 +107,21 @@ export class BatchesService {
       return after;
     });
     return toBatch(updated, hasPermission(actor, 'view_cost'));
+  }
+
+  /** 400 when the resulting extra cost is > 0 but no split method is chosen (FR-18). */
+  private assertSplitChosen(
+    dto: UpdateBatchDto,
+    current: { extraCostTotal: Prisma.Decimal; costSplitMethod: CostSplitMethod },
+  ) {
+    const total =
+      dto.extraCostTotal !== undefined ? new Prisma.Decimal(dto.extraCostTotal) : current.extraCostTotal;
+    const method = dto.costSplitMethod ?? current.costSplitMethod;
+    if (total.greaterThan(0) && method === CostSplitMethod.NONE) {
+      throw new BadRequestException(
+        'Choose how to split the extra cost (EQUAL or BY_PRICE) or set it to 0',
+      );
+    }
   }
 
   /** 400 if the supplier, investor or location is inactive or missing. */

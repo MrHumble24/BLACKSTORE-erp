@@ -1,7 +1,9 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
+  HttpCode,
   Param,
   ParseIntPipe,
   Patch,
@@ -16,6 +18,7 @@ import { CreateBatchAccessoryDto } from './dto/create-batch-accessory.dto';
 import { CreateBatchItemDto } from './dto/create-batch-item.dto';
 import { CreateBatchDto } from './dto/create-batch.dto';
 import { QueryBatchesDto } from './dto/query-batches.dto';
+import { RepriceModelDto } from './dto/reprice-model.dto';
 import { UpdateBatchDto } from './dto/update-batch.dto';
 import { UpdateLineDto } from './dto/update-line.dto';
 
@@ -84,5 +87,26 @@ export class BatchesController {
     @CurrentUser() actor: PublicUser,
   ) {
     return this.lines.updateLine(id, lineId, dto, actor);
+  }
+
+  @Patch(':id/lines')
+  @Permissions('manage_prices')
+  repriceModel(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: RepriceModelDto,
+    @CurrentUser() actor: PublicUser,
+  ) {
+    return this.lines.repriceModel(id, dto, actor);
+  }
+
+  @Delete(':id/lines/:lineId')
+  @Permissions('delete_records')
+  @HttpCode(204)
+  removeLine(
+    @Param('id', ParseIntPipe) id: number,
+    @Param('lineId', ParseIntPipe) lineId: number,
+    @CurrentUser() actor: PublicUser,
+  ) {
+    return this.lines.removeLine(id, lineId, actor);
   }
 }
