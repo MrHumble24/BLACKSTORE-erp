@@ -1,17 +1,18 @@
-import { useState, useRef, type RefObject } from 'react';
+import { useState, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
 import { ScanLine } from 'lucide-react';
-import { ScanCodeInput } from '@/shared/ui';
-import { getApiErrorMessage } from '@/shared/api';
+import { Button, ScanCodeInput } from '@/shared/ui';
 import { normalizeMoney } from '@/shared/lib';
 import { useAuthStore } from '@/entities/session';
 import { useCategories, type Category } from '@/entities/category';
-import { useAddBatchItem, type BatchItemIdentifier } from '@/entities/batch';
-import { IMEI_REGEX, formatAttributes, type ItemCondition } from '@/entities/item';
+import { type BatchItemIdentifier } from '@/entities/batch';
+import { formatAttributes, type Item, type ItemCondition } from '@/entities/item';
 import { createBatchScanSchema, type BatchScanValues } from '../model/batch.schema';
+import { useScanTarget, codeIdentifierType } from '../model/useScanTarget';
 import { BatchScanSettingsFields } from './BatchScanSettingsFields';
 
 /** Form setup for the one-time scan settings; attribute rules depend on the chosen category. */
@@ -37,9 +38,9 @@ function useBatchScanForm(
 /** Form instance shape returned by useBatchScanForm. */
 type ScanForm = ReturnType<typeof useBatchScanForm>;
 
-/** Decides the identifier type for a typed or scanned code: 15 digits → IMEI, else SERIAL. */
+/** Wraps an entered code as the item identifier sent when creating a device line. */
 function toScanIdentifier(code: string): BatchItemIdentifier {
-  return { type: IMEI_REGEX.test(code) ? 'IMEI' : 'SERIAL', value: code };
+  return { type: codeIdentifierType(code), value: code };
 }
 
 /** Builds the POST /batches/:id/items payload from validated one-time settings. */
@@ -60,39 +61,33 @@ function buildLinePayload(
   };
 }
 
-/** Validates one-time settings, adds the line, toasts the code and refocuses input. */
+/** Routes a code to the waiting phone or creates a new line; warns when a save is running. */
 function useScanLineSubmit(
-  batchId: number,
   canManagePrices: boolean,
   serializedCategories: Category[],
   form: ScanForm,
-  onScanned: () => void,
-  inputRef: RefObject<HTMLInputElement | null>,
+  scan: ReturnType<typeof useScanTarget>,
+  dualSim: boolean,
 ) {
   const { t } = useTranslation();
-  const { mutate: addLine, isPending } = useAddBatchItem();
+  const { target, submitNewLine, submitIdentifier, isPending } = scan;
 
   const submitLine = (rawCode: string) => {
-    // A scanner doubles up on retries: drop codes that arrive while a request runs.
-    if (isPending) return;
+    if (isPending) {
+      toast.warning(t('batches.scanBusy'));
+      return;
+    }
     const normalized = rawCode.trim().toUpperCase();
     if (!normalized) return;
-
+    if (target) {
+      submitIdentifier(normalized);
+      return;
+    }
     void form.trigger().then((settingsValid) => {
       if (!settingsValid) return;
       const values = form.getValues();
       const category = serializedCategories.find((c) => c.id === values.categoryId);
-      addLine(
-        { id: batchId, payload: buildLinePayload(values, normalized, category, canManagePrices) },
-        {
-          onSuccess: () => {
-            toast.success(t('batches.scanSuccess', { code: normalized }));
-            onScanned();
-            inputRef.current?.focus();
-          },
-          onError: (err) => toast.error(getApiErrorMessage(err) ?? t('common.error')),
-        },
-      );
+      submitNewLine(buildLinePayload(values, normalized, category, canManagePrices), dualSim);
     });
   };
 
@@ -111,7 +106,67 @@ function ScanPanelHeader() {
   );
 }
 
-/** One-time settings (FR-14, W1 steps 2–3) plus the always-focused scan input. */
+/** Row shown while the panel waits for the second code of the phone just created. */
+function WaitingSecondCodeRow({ code, onSkip }: { code: string; onSkip: () => void }) {
+  const { t } = useTranslation();
+
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-2xl border border-apple-blue/30 bg-apple-blue/5 px-3 py-2.5">
+      <p className="text-xs text-ink">{t('batches.waitingSecondCode', { code })}</p>
+      <Button variant="outline" size="sm" onClick={onSkip} className="h-7 px-3 rounded-full text-xs">
+        {t('batches.skip')}
+      </Button>
+    </div>
+  );
+}
+
+/** Small card under the input: the last created phone, all its codes and a link to it. */
+function LastPhoneCard({ item }: { item: Item }) {
+  const { t } = useTranslation();
+  const codes = item.identifiers.map((identifier) => identifier.value).join(' · ');
+
+  return (
+    <div className="space-y-1 rounded-2xl border border-hairline-silver/60 bg-studio-mist/40 px-3 py-2.5">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-xs font-medium text-ink">{item.productModel.name}</p>
+        <Link to={`/items/${item.id}`} className="text-[11px] text-apple-blue hover:underline">
+          {t('batches.openItem')}
+        </Link>
+      </div>
+      <p className="break-words text-[11px] text-slate">{codes}</p>
+    </div>
+  );
+}
+
+/** "Add code to last phone" button plus the card of that last phone. */
+function LastPhoneSection({
+  lastItem,
+  waitForLastItem,
+  isPending,
+}: {
+  lastItem: Item | null;
+  waitForLastItem: () => void;
+  isPending: boolean;
+}) {
+  const { t } = useTranslation();
+
+  return (
+    <>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={waitForLastItem}
+        disabled={!lastItem || isPending}
+        className="h-8 px-4 rounded-full border-hairline-silver bg-gallery-white text-ink hover:bg-studio-mist text-xs font-normal"
+      >
+        {t('batches.addCodeToLast')}
+      </Button>
+      {lastItem && <LastPhoneCard item={lastItem} />}
+    </>
+  );
+}
+
+/** One-time settings plus the always-focused scan input, waiting row and last phone card. */
 export function BatchScanPanel({ batchId }: { batchId: number }) {
   const { t } = useTranslation();
   const canManagePrices = useAuthStore((state) => state.hasPermission('manage_prices'));
@@ -119,12 +174,19 @@ export function BatchScanPanel({ batchId }: { batchId: number }) {
   const serializedCategories = categories.filter((c) => c.isSerialized);
   const form = useBatchScanForm(serializedCategories, t);
   const [code, setCode] = useState('');
+  const [dualSim, setDualSim] = useState(false);
   // Scanning is a one-hand flow: the input must regain focus after every code.
   const inputRef = useRef<HTMLInputElement>(null);
+  const scan = useScanTarget({
+    batchId,
+    onSuccess: () => {
+      setCode('');
+      inputRef.current?.focus();
+    },
+  });
   const { submitLine, isPending } = useScanLineSubmit(
-    batchId, canManagePrices, serializedCategories, form, () => setCode(''), inputRef,
+    canManagePrices, serializedCategories, form, scan, dualSim,
   );
-
   return (
     <section className="rounded-[28px] border border-hairline-silver/70 bg-gallery-white p-6 space-y-4 shadow-none">
       <ScanPanelHeader />
@@ -133,6 +195,8 @@ export function BatchScanPanel({ batchId }: { batchId: number }) {
         categories={serializedCategories}
         canManagePrices={canManagePrices}
         disabled={isPending}
+        dualSim={dualSim}
+        onDualSimChange={setDualSim}
       />
       <ScanCodeInput
         id="batch-scan-input"
@@ -143,6 +207,12 @@ export function BatchScanPanel({ batchId }: { batchId: number }) {
         inputRef={inputRef}
         placeholder={t('batches.scanPlaceholder')}
         hint={t('batches.scanHelp')}
+      />
+      {scan.target && <WaitingSecondCodeRow code={scan.target.code} onSkip={scan.skipTarget} />}
+      <LastPhoneSection
+        lastItem={scan.lastItem}
+        waitForLastItem={scan.waitForLastItem}
+        isPending={isPending}
       />
     </section>
   );

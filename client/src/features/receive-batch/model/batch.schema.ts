@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import type { CategoryAttribute } from '@/entities/category';
 import { validateRequiredAttributes, type ItemCondition } from '@/entities/item';
-import { POSITIVE_MONEY_PATTERN } from '@/shared/lib';
+import { isStrictlyPositiveMoney, POSITIVE_MONEY_PATTERN } from '@/shared/lib';
 import type { CostSplitMethod } from '@/entities/batch';
 
 type TFn = (k: string, options?: Record<string, unknown>) => string;
@@ -38,6 +38,14 @@ export function createBatchFormSchema(t: TFn, withCostFields: boolean) {
           code: z.ZodIssueCode.custom,
           message: t('batches.validation.extraCostInvalid'),
           path: ['extraCostTotal'],
+        });
+      }
+      // Extra cost with "not split" would count for nothing: make the user choose a split.
+      if (isStrictlyPositiveMoney(extra) && (values.costSplitMethod ?? 'NONE') === 'NONE') {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: t('batches.validation.splitRequired'),
+          path: ['costSplitMethod'],
         });
       }
     });

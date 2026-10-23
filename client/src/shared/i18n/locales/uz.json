@@ -406,6 +406,14 @@
     "scanPlaceholder": "Skanerlang yoki kiriting",
     "scanHelp": "Har bir kiritilgan kod yangi qator qo'shadi (15 raqam → IMEI)",
     "scanSuccess": "{{code}} qabul qilindi",
+    "dualSim": "Dual SIM: har telefon uchun 2 ta IMEI",
+    "waitingSecondCode": "{{code}} uchun ikkinchi kod kutilmoqda",
+    "secondCodeAdded": "{{code}} shu telefonga qo'shildi",
+    "addCodeToLast": "Kodni oxirgi telefonga qo'shish",
+    "scanBusy": "Avvalgi kod saqlanmoqda, uni qaytadan skanerlang",
+    "skip": "O'tkazib yuborish",
+    "openItem": "Qurilmani ochish",
+    "repriceSoldNote": "Bu qurilma allaqachon sotilgan. O'sha savdo foydasi o'zgarmaydi.",
     "addAccessory": "Aksessuar qo'shish",
     "addAccessories": "Aksessualarni qo'shish",
     "accessoryAddedSuccess": "Aksessuar qatori qo'shildi",
@@ -425,6 +433,7 @@
     "validation": {
       "supplierRequired": "Yetkazib beruvchi tanlanishi shart",
       "extraCostInvalid": "Qo'shimcha xarajat formati noto'g'ri",
+      "splitRequired": "Qo'shimcha xarajatni taqsimlash usulini tanlang yoki uni 0 ga o'rnating",
       "unitCostInvalid": "Birlik tannarxi formati noto'g'ri",
       "unitPriceRequired": "Sotish narxi kiritilishi shart",
       "unitPriceInvalid": "Narx formati noto'g'ri"

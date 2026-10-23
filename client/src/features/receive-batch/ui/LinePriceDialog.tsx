@@ -42,6 +42,12 @@ interface LinePriceContentProps {
   onClose: () => void;
 }
 
+/** True when the line is a device that already left stock; its sale profit stays fixed. */
+function isSoldLine(line: BatchLine): boolean {
+  const status = line.item?.status;
+  return status === 'DEBT' || status === 'SOLD' || status === 'RETURNED';
+}
+
 /** Single unit-price field; device lines also reprice the item, accessory lines adjust avgCost. */
 function LinePriceContent({ batchId, line, onClose }: LinePriceContentProps) {
   const { t } = useTranslation();
@@ -80,6 +86,9 @@ function LinePriceContent({ batchId, line, onClose }: LinePriceContentProps) {
           error={form.formState.errors.unitPrice?.message}
         />
         <p className="text-[11px] text-slate">{t('batches.lineModel', { model: line.productModel.name })}</p>
+        {isSoldLine(line) && (
+          <p className="text-[11px] text-slate">{t('batches.repriceSoldNote')}</p>
+        )}
         <DialogFormFooter onClose={onClose} isPending={isPending} />
       </form>
     </Form>

@@ -9,10 +9,11 @@ import { useAuthStore } from '@/entities/session';
 import { ItemStatusBadge, type ItemStatus } from '@/entities/item';
 import type { BatchLine } from '@/entities/batch';
 
-/** Code cell: a device shows its first identifier, accessory lines show the unit count. */
+/** Code cell: a device shows all its identifiers, accessory lines show the unit count. */
 function codeDisplay(line: BatchLine): string {
   if (line.item) {
-    return line.item.identifiers[0]?.value ?? `#${line.item.id}`;
+    const codes = line.item.identifiers.map((identifier) => identifier.value).join(' · ');
+    return codes || `#${line.item.id}`;
   }
   return `× ${line.quantity}`;
 }
