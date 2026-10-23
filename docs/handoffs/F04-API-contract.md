@@ -81,3 +81,29 @@ No DELETE anywhere (BR-12). Deactivate suppliers instead.
 - Staff may generate label codes at receiving time (FR-15 names Admin; Admin still can). Tell us if labels must be Admin-only.
 - Buy-back of our own `SOLD` device is supported (above); allowed by PRD BR-9 (not an amendment — BR-9 already permits Sold → In stock via walk-in buy-back).
 - Extra costs are split over devices only; accessories carry no share.
+
+## F04-BE-03 changes (batch logic fixes)
+
+Added after batch 20 showed ghost devices from glued scans. Overrides the "No DELETE anywhere" line above for one case: a batch line may be removed while nothing happened to it yet.
+
+### Types (added fields)
+
+```ts
+interface BatchSummary { ...; isLocked: boolean; unpricedLines?: number }  // unpricedLines with view_cost only
+interface Batch extends BatchSummary { ... }
+```
+
+### Endpoints
+
+| Method | Path | Permission | Body | Response |
+| --- | --- | --- | --- | --- |
+| DELETE | /batches/:id/lines/:lineId | delete_records | – | 204. Device line: item must be `IN_STOCK` with no sale, consignment, transfer or stock-count record, else 409 `Device #N was already sold, handed over or moved; it cannot be removed`. The item and its identifiers are deleted. Accessory line: stock at the batch location must hold `≥ quantity`, else 409 `Only N units are left at <location>; the line cannot be removed`; quantity is decremented, `avgCost` unchanged. Re-split runs after. |
+| PATCH | /batches/:id/lines | manage_prices | `{ productModelId; unitPrice }` | `Batch`. Reprices every line of that model (device lines by the item's model, accessory lines by the line's model) with the single-line rules. 404 if the batch has no line of that model. |
+
+### Rules
+
+- **Glued scans**: any identifier value that starts with 15 digits and is longer than 15 characters → 400 `Code looks like two scans glued together; scan again`. `SERIAL` is 4–20 chars (`SYSTEM_CODE` stays 4–40). Applies to every endpoint that takes identifiers.
+- **Locked batches (FR-29)**: a batch whose `arrivalDate` is before the start of today − 3 days is locked (`isLocked: true`). `POST .../items`, `POST .../accessories`, `PATCH /batches/:id`, `PATCH .../lines`, `PATCH .../lines/:lineId` and `DELETE .../lines/:lineId` on it need `edit_past_records`; otherwise 403 `This batch is older than 3 days; editing it requires the edit_past_records permission`.
+- **Split NONE with extra cost**: `PATCH /batches/:id` is refused with 400 `Choose how to split the extra cost (EQUAL or BY_PRICE) or set it to 0` when the resulting `extraCostTotal > 0` and `costSplitMethod = NONE`.
+- **Accessory reprice cap**: `avgCost += (new − old) × min(lineQuantity, currentQuantity) / currentQuantity` (replaces the formula above), so a correction never moves the average by more than the price change itself.
+- **Dual IMEI**: no new endpoint. The client adds the second IMEI or the serial with `POST /items/:id/identifiers` (F03); caps stay 2 IMEI + 1 SERIAL + 1 SYSTEM_CODE.
