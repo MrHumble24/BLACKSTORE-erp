@@ -36,10 +36,52 @@ function BatchCostFields({ batch }: { batch: Batch }) {
   );
 }
 
+interface UnpricedBadgeProps {
+  batch: Batch;
+  /** Price-all needs manage_prices; without it the badge is informational only. */
+  clickable: boolean;
+  onOpenPriceAll: () => void;
+}
+
+/** Warning pill for lines still at price 0 (view_cost); clickable opens the price-all dialog. */
+function UnpricedBadge({ batch, clickable, onOpenPriceAll }: UnpricedBadgeProps) {
+  const { t } = useTranslation();
+  if (!batch.unpricedLines) return null;
+
+  const className = 'px-3 py-1.5 rounded-full text-[11px] bg-launch-orange/10 text-launch-orange border border-launch-orange/20 font-medium';
+  if (!clickable) {
+    return (
+      <Badge variant="secondary" className={className}>
+        {t('batches.unpricedLines', { count: batch.unpricedLines })}
+      </Badge>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={onOpenPriceAll}
+      title={t('batches.priceAllTitle')}
+      className={`inline-flex items-center rounded-full h-8 hover:bg-launch-orange/20 transition-colors ${className}`}
+    >
+      {t('batches.unpricedLines', { count: batch.unpricedLines })}
+    </button>
+  );
+}
+
+interface BatchHeaderCardProps {
+  batch: Batch;
+  /** Omitted when the batch is locked for this user, which hides the Edit button. */
+  onEdit?: () => void;
+  /** Opens the price-all dialog (manage_prices only). */
+  onOpenPriceAll?: () => void;
+}
+
 /** Header card: supplier, owner, location, date, note; costs and split with view_cost only. */
-export function BatchHeaderCard({ batch, onEdit }: { batch: Batch; onEdit: () => void }) {
+export function BatchHeaderCard({ batch, onEdit, onOpenPriceAll }: BatchHeaderCardProps) {
   const { t } = useTranslation();
   const canViewCost = useAuthStore((state) => state.hasPermission('view_cost'));
+  const canManagePrices = useAuthStore((state) => state.hasPermission('manage_prices'));
 
   return (
     <div className="space-y-3">
@@ -48,15 +90,26 @@ export function BatchHeaderCard({ batch, onEdit }: { batch: Batch; onEdit: () =>
         <h1 className="text-2xl md:text-3xl font-semibold font-sf-pro-display tracking-tight text-ink">
           {batch.supplier.name}
         </h1>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={onEdit}
-          className="h-8 px-4 rounded-full border-hairline-silver bg-gallery-white text-ink hover:bg-studio-mist hover:border-steel text-xs font-normal gap-1.5"
-        >
-          <Pencil className="h-3 w-3 text-apple-blue" />
-          <span>{t('batches.editBatch')}</span>
-        </Button>
+        <div className="flex items-center gap-2">
+          {canViewCost && (
+            <UnpricedBadge
+              batch={batch}
+              clickable={Boolean(canManagePrices && onOpenPriceAll)}
+              onOpenPriceAll={onOpenPriceAll ?? (() => undefined)}
+            />
+          )}
+          {onEdit && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onEdit}
+              className="h-8 px-4 rounded-full border-hairline-silver bg-gallery-white text-ink hover:bg-studio-mist hover:border-steel text-xs font-normal gap-1.5"
+            >
+              <Pencil className="h-3 w-3 text-apple-blue" />
+              <span>{t('batches.editBatch')}</span>
+            </Button>
+          )}
+        </div>
       </div>
       <div className="rounded-[28px] border border-hairline-silver/70 bg-gallery-white p-5 grid grid-cols-2 md:grid-cols-3 gap-4">
         <HeaderField label={t('batches.supplier')} value={batch.supplier.name} />

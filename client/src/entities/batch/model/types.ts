@@ -18,8 +18,12 @@ export interface BatchSummary {
   deviceCount: number;
   accessoryUnits: number;
   costSplitMethod: CostSplitMethod;
+  /** True when arrivalDate is older than 3 days (needs edit_past_records to change). */
+  isLocked: boolean;
   extraCostTotal?: string;
   itemsCost?: string;
+  /** Lines with unitPrice = 0, view_cost only. */
+  unpricedLines?: number;
 }
 
 /** One batch line: either a device (itemId set, quantity = 1) or an accessory line. */
@@ -60,6 +64,12 @@ export interface UpdateBatchPayload {
   note?: string;
   extraCostTotal?: string;
   costSplitMethod?: CostSplitMethod;
+}
+
+/** Price-all body: reprice every line of one model (manage_prices). */
+export interface RepriceModelPayload {
+  productModelId: number;
+  unitPrice: string;
 }
 
 /** purchasePrice needs manage_prices (403 if sent without it). */

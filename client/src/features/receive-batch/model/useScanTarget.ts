@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { getApiErrorMessage } from '@/shared/api';
 import {
@@ -15,6 +16,20 @@ import { useAddBatchItem, type AddBatchItemPayload } from '@/entities/batch';
 export interface ScanTarget {
   itemId: number;
   code: string;
+}
+
+/** Toast failure handler; when the API cites item #N, adds a link to that device. */
+export function useScanErrorToast(): FailHandler {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  return (error) => {
+    const message = getApiErrorMessage(error) ?? t('common.error');
+    // 409 duplicates cite the owner, e.g. "already belongs to item #42": jump there.
+    const existing = message.match(/#(\d+)/);
+    toast.error(message, existing ? {
+      action: { label: t('batches.openItem'), onClick: () => navigate(`/items/${existing[1]}`) },
+    } : undefined);
+  };
 }
 
 interface UseScanTargetOptions {
@@ -82,7 +97,7 @@ export function useScanTarget({ batchId, onSuccess }: UseScanTargetOptions) {
   const { t } = useTranslation();
   const [target, setTarget] = useState<ScanTarget | null>(null);
   const [lastItem, setLastItem] = useState<Item | null>(null);
-  const fail = (error: unknown) => toast.error(getApiErrorMessage(error) ?? t('common.error'));
+  const fail = useScanErrorToast();
 
   const line = useCreateLine(batchId, (item, code, dualSim) => {
     setLastItem(item);

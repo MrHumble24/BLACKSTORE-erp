@@ -107,12 +107,23 @@ function ScanPanelHeader() {
 }
 
 /** Row shown while the panel waits for the second code of the phone just created. */
-function WaitingSecondCodeRow({ code, onSkip }: { code: string; onSkip: () => void }) {
+function WaitingSecondCodeRow({
+  code,
+  model,
+  onSkip,
+}: {
+  code: string;
+  model: string | null;
+  onSkip: () => void;
+}) {
   const { t } = useTranslation();
 
   return (
-    <div className="flex items-center justify-between gap-3 rounded-2xl border border-apple-blue/30 bg-apple-blue/5 px-3 py-2.5">
-      <p className="text-xs text-ink">{t('batches.waitingSecondCode', { code })}</p>
+    <div className="flex items-center justify-between gap-3 rounded-2xl border border-pricing-blue/40 bg-pricing-blue/10 px-3 py-2.5">
+      <div>
+        {model && <p className="text-[11px] font-medium text-ink">{model}</p>}
+        <p className="text-xs text-ink">{t('batches.waitingSecondCode', { code })}</p>
+      </div>
       <Button variant="outline" size="sm" onClick={onSkip} className="h-7 px-3 rounded-full text-xs">
         {t('batches.skip')}
       </Button>
@@ -166,6 +177,26 @@ function LastPhoneSection({
   );
 }
 
+/**
+ * Panel-local dual-SIM switch; switching it off abandons a waiting target so the
+ * next scan starts a new phone instead of attaching to the previous one.
+ */
+function useDualSimState(clearPendingTarget: () => void) {
+  const [dualSim, setDualSim] = useState(false);
+  const onDualSimChange = (next: boolean) => {
+    setDualSim(next);
+    if (!next) clearPendingTarget();
+  };
+  return { dualSim, onDualSimChange };
+}
+
+/** Model name of the phone currently waiting for its second code, if known. */
+function targetModelOf(scan: ReturnType<typeof useScanTarget>): string | null {
+  return scan.target && scan.lastItem?.id === scan.target.itemId
+    ? scan.lastItem.productModel.name
+    : null;
+}
+
 /** One-time settings plus the always-focused scan input, waiting row and last phone card. */
 export function BatchScanPanel({ batchId }: { batchId: number }) {
   const { t } = useTranslation();
@@ -174,7 +205,6 @@ export function BatchScanPanel({ batchId }: { batchId: number }) {
   const serializedCategories = categories.filter((c) => c.isSerialized);
   const form = useBatchScanForm(serializedCategories, t);
   const [code, setCode] = useState('');
-  const [dualSim, setDualSim] = useState(false);
   // Scanning is a one-hand flow: the input must regain focus after every code.
   const inputRef = useRef<HTMLInputElement>(null);
   const scan = useScanTarget({
@@ -184,6 +214,7 @@ export function BatchScanPanel({ batchId }: { batchId: number }) {
       inputRef.current?.focus();
     },
   });
+  const { dualSim, onDualSimChange } = useDualSimState(scan.skipTarget);
   const { submitLine, isPending } = useScanLineSubmit(
     canManagePrices, serializedCategories, form, scan, dualSim,
   );
@@ -196,7 +227,7 @@ export function BatchScanPanel({ batchId }: { batchId: number }) {
         canManagePrices={canManagePrices}
         disabled={isPending}
         dualSim={dualSim}
-        onDualSimChange={setDualSim}
+        onDualSimChange={onDualSimChange}
       />
       <ScanCodeInput
         id="batch-scan-input"
@@ -208,12 +239,10 @@ export function BatchScanPanel({ batchId }: { batchId: number }) {
         placeholder={t('batches.scanPlaceholder')}
         hint={t('batches.scanHelp')}
       />
-      {scan.target && <WaitingSecondCodeRow code={scan.target.code} onSkip={scan.skipTarget} />}
-      <LastPhoneSection
-        lastItem={scan.lastItem}
-        waitForLastItem={scan.waitForLastItem}
-        isPending={isPending}
-      />
+      {scan.target && (
+        <WaitingSecondCodeRow code={scan.target.code} model={targetModelOf(scan)} onSkip={scan.skipTarget} />
+      )}
+      <LastPhoneSection lastItem={scan.lastItem} waitForLastItem={scan.waitForLastItem} isPending={isPending} />
     </section>
   );
 }
