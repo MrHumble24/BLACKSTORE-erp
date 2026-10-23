@@ -98,6 +98,7 @@ export interface CreateReturnPayload {
 export interface SaleFilters {
   status?: SaleStatus;
   customerId?: number;
+  partnerId?: number;
   locationId?: number;
   from?: string;
   to?: string;

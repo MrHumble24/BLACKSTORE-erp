@@ -20,3 +20,9 @@ export function isPositiveMoney(value: string): boolean {
   const num = Number(normalizeMoney(value));
   return Number.isFinite(num) && num >= 0;
 }
+
+/** True when the string is money > 0 (used for prices that must not be zero). */
+export function isStrictlyPositiveMoney(value: string): boolean {
+  const num = Number(normalizeMoney(value));
+  return Number.isFinite(num) && num > 0;
+}

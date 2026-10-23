@@ -21,6 +21,9 @@ import { AuditLogPage } from '@/pages/audit-log';
 import { SellPage } from '@/pages/sell';
 import { SalesPage, SaleDetailPage, ReceiptPage } from '@/pages/sales';
 import { CustomersPage, CustomerDetailPage } from '@/pages/customers';
+import { PartnersPage, PartnerDetailPage } from '@/pages/partners';
+import { NewConsignmentPage, ConsignmentDetailPage } from '@/pages/consignments';
+import { ProfitReportPage, InvestorReportPage } from '@/pages/reports';
 import { ReceiptSettingsPage } from '@/pages/settings';
 import type { Permission } from '@/shared/config/permissions';
 import { ProtectedRoute } from './ProtectedRoute';
@@ -59,6 +62,12 @@ const PROTECTED_ROUTES: RouteConfig[] = [
   { path: 'stock-counts/:id', permission: 'stock_count', Component: StockCountDetailPage },
   { path: 'expenses', permission: 'manage_expenses', Component: ExpensesPage },
   { path: 'audit-log', permission: 'view_audit_log', Component: AuditLogPage },
+  { path: 'partners', permission: 'consign', Component: PartnersPage },
+  { path: 'partners/:id', permission: 'consign', Component: PartnerDetailPage },
+  { path: 'consignments/new', permission: 'consign', Component: NewConsignmentPage },
+  { path: 'consignments/:id', permission: 'consign', Component: ConsignmentDetailPage },
+  { path: 'reports/profit', permission: 'view_profit', Component: ProfitReportPage },
+  { path: 'reports/investors', permission: 'view_profit', Component: InvestorReportPage },
 ];
 
 /** Redirects already authenticated users away from public pages. */
@@ -105,6 +114,7 @@ export function AppRoutes() {
             }
           />
         ))}
+        <Route path="reports" element={<Navigate to="/reports/profit" replace />} />
       </Route>
 
       {/* Label route stays outside AppShell so the printed page contains only the label. */}
