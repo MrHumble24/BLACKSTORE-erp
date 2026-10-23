@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import type { UseFormReturn } from 'react-hook-form';
-import { SelectField, TextField } from '@/shared/ui';
+import { Label, SelectField, Switch, TextField } from '@/shared/ui';
 import { useAuthStore } from '@/entities/session';
 import type { Category } from '@/entities/category';
 import { useProductModels } from '@/entities/product-model';
@@ -12,6 +12,9 @@ interface BatchScanSettingsFieldsProps {
   categories: Category[];
   canManagePrices: boolean;
   disabled: boolean;
+  /** Dual-SIM waiting mode for the next scan (panel-local setting). */
+  dualSim: boolean;
+  onDualSimChange: (dualSim: boolean) => void;
 }
 
 /** Condition dropdown + the purchase price input (cost: manage_prices AND view_cost). */
@@ -93,6 +96,31 @@ function ScanSettingSelects({
   );
 }
 
+/** Panel-local switch that makes the next scan wait for a second IMEI or serial. */
+function DualSimToggle({
+  dualSim,
+  onChange,
+  disabled,
+}: {
+  dualSim: boolean;
+  onChange: (dualSim: boolean) => void;
+  disabled: boolean;
+}) {
+  const { t } = useTranslation();
+
+  return (
+    <div className="flex items-center justify-between rounded-2xl border border-hairline-silver/60 bg-studio-mist/40 px-3 py-2.5">
+      <Label htmlFor="batch-dual-sim" className="text-xs">{t('batches.dualSim')}</Label>
+      <Switch
+        id="batch-dual-sim"
+        checked={dualSim}
+        onCheckedChange={onChange}
+        disabled={disabled}
+      />
+    </div>
+  );
+}
+
 /**
  * One-time scan settings (FR-14/W1 steps 2-3): product model, condition, optional
  * purchase price (manage_prices) and the category's attribute values.
@@ -102,6 +130,8 @@ export function BatchScanSettingsFields({
   categories,
   canManagePrices,
   disabled,
+  dualSim,
+  onDualSimChange,
 }: BatchScanSettingsFieldsProps) {
   const { setValue, formState: { errors } } = form;
   const categoryId = form.watch('categoryId');
@@ -110,6 +140,7 @@ export function BatchScanSettingsFields({
 
   return (
     <div className="space-y-3">
+      <DualSimToggle dualSim={dualSim} onChange={onDualSimChange} disabled={disabled} />
       <ScanSettingSelects
         form={form}
         categories={categories}

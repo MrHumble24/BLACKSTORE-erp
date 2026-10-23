@@ -406,6 +406,14 @@
     "scanPlaceholder": "Scan or enter",
     "scanHelp": "Each entered code adds a line (15 digits = IMEI)",
     "scanSuccess": "{{code}} received",
+    "dualSim": "Dual SIM: 2 IMEIs per phone",
+    "waitingSecondCode": "Waiting for the second code of {{code}}",
+    "secondCodeAdded": "{{code}} added to the same phone",
+    "addCodeToLast": "Add code to last phone",
+    "scanBusy": "Still saving the previous code, scan it again",
+    "skip": "Skip",
+    "openItem": "Open device",
+    "repriceSoldNote": "This device was already sold. The profit of that sale does not change.",
     "addAccessory": "Add accessory",
     "addAccessories": "Add accessories",
     "accessoryAddedSuccess": "Accessory line added",
@@ -425,6 +433,7 @@
     "validation": {
       "supplierRequired": "Select a supplier",
       "extraCostInvalid": "Invalid extra costs format",
+      "splitRequired": "Choose a method to split the extra cost, or set it to 0",
       "unitCostInvalid": "Invalid unit cost format",
       "unitPriceRequired": "Sale price is required",
       "unitPriceInvalid": "Invalid price format"
