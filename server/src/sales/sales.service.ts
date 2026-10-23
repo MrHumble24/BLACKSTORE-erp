@@ -30,7 +30,8 @@ export class SalesService {
         ? { gte: query.from ? new Date(query.from) : undefined, lte: query.to ? endOfDay(query.to) : undefined }
         : undefined;
     const where: Prisma.SaleWhereInput = {
-      partnerId: null, // partner-shop sales are F06, not this list
+      // Without partnerId the list hides partner-shop sales (null); with it, only that partner's.
+      partnerId: query.partnerId ?? null,
       status: query.status,
       customerId: query.customerId,
       locationId: query.locationId,

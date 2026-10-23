@@ -218,10 +218,10 @@ model ProductModel {
   lowStockThreshold Int? // alert when stock drops below this (#7)
   isActive          Boolean  @default(true) // false = hidden from pick-lists, kept for history
 
-  items         Item[]
-  stock         AccessoryStock[]
-  saleItems     SaleItem[]
-  purchaseLines PurchaseLine[]
+  items               Item[]
+  stock               AccessoryStock[]
+  saleItems           SaleItem[]
+  purchaseLines       PurchaseLine[]
   transferAccessories TransferAccessory[]
 
   @@unique([categoryId, name])
@@ -367,14 +367,14 @@ model WalkInSeller {
 // ─────────────────────────────────────────────
 
 model Transfer {
-  id             Int            @id @default(autoincrement())
+  id             Int                 @id @default(autoincrement())
   fromLocationId Int
-  fromLocation   Location       @relation("TransferFrom", fields: [fromLocationId], references: [id])
+  fromLocation   Location            @relation("TransferFrom", fields: [fromLocationId], references: [id])
   toLocationId   Int
-  toLocation     Location       @relation("TransferTo", fields: [toLocationId], references: [id])
+  toLocation     Location            @relation("TransferTo", fields: [toLocationId], references: [id])
   userId         Int
-  user           User           @relation(fields: [userId], references: [id])
-  date           DateTime       @default(now())
+  user           User                @relation(fields: [userId], references: [id])
+  date           DateTime            @default(now())
   note           String?
   items          TransferItem[]
   accessories    TransferAccessory[]
@@ -435,6 +435,7 @@ model Sale {
 
   @@index([status])
   @@index([createdAt])
+  @@index([partnerId]) // partner debt aggregation and the /sales?partnerId filter (F07)
 }
 
 // One line of a sale: a device (itemId) OR accessories (productModelId + quantity)
@@ -516,6 +517,8 @@ model Consignment {
   dueDate    DateTime? // null = no time limit; can be changed later
   note       String?
   items      ConsignmentItem[]
+
+  @@index([partnerId])
 }
 
 model ConsignmentItem {
@@ -565,15 +568,15 @@ model StockCountScan {
 }
 
 model LedgerEntry {
-  id       Int        @id @default(autoincrement())
-  type     LedgerType
-  category String // "Rent", "Salary", "Delivery" ...
-  amount   Decimal    @db.Decimal(12, 2)
-  date     DateTime   @default(now())
-  note     String?
-  countsInProfit Boolean @default(false) // Admin confirms this INCOME adds to net profit (BR-5); always false for EXPENSE
-  userId   Int
-  user     User       @relation(fields: [userId], references: [id])
+  id             Int        @id @default(autoincrement())
+  type           LedgerType
+  category       String // "Rent", "Salary", "Delivery" ...
+  amount         Decimal    @db.Decimal(12, 2)
+  date           DateTime   @default(now())
+  note           String?
+  countsInProfit Boolean    @default(false) // Admin confirms this INCOME adds to net profit (BR-5); always false for EXPENSE
+  userId         Int
+  user           User       @relation(fields: [userId], references: [id])
 }
 
 // Key-value settings: Telegram backup chat id, notification chat id, etc.

@@ -53,7 +53,7 @@ describe('buildLine (sale lines)', () => {
 
     it('rejects an item that is not in stock', async () => {
       const tx = mockTx({ item: { findUnique: jest.fn().mockResolvedValue({ ...device, status: ItemStatus.SOLD }) } });
-      await expect(buildLine(tx, { itemId: 7, unitPrice: '1500' }, 1, true)).rejects.toThrow('not in stock');
+      await expect(buildLine(tx, { itemId: 7, unitPrice: '1500' }, 1, true)).rejects.toThrow('Item is not IN_STOCK');
     });
 
     it('rejects an item at another location', async () => {
