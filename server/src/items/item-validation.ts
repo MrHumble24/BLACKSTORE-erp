@@ -66,7 +66,10 @@ function validateAttributeValue(def: AttributeDef, value: unknown): string | num
 }
 
 const IMEI_RE = /^\d{15}$/;
-const CODE_RE = /^[A-Z0-9-]{4,40}$/;
+const SERIAL_RE = /^[A-Z0-9-]{4,20}$/;
+const SYSTEM_CODE_RE = /^[A-Z0-9-]{4,40}$/;
+// 15 digits followed by at least one more char: the scanner glued two scans into one (IMEI+IMEI or IMEI+serial).
+const GLUED_RE = /^\d{15}.+$/;
 
 /** Trims and upper-cases an identifier value before save and lookup (FR-2). */
 export function normalizeIdentifier(value: string): string {
@@ -76,9 +79,17 @@ export function normalizeIdentifier(value: string): string {
 /** Normalizes and format-checks one identifier; returns the value to store. */
 export function validateIdentifier(type: IdentifierType, rawValue: string): string {
   const value = normalizeIdentifier(rawValue);
+  // Catch glued scans for every type before the per-type format check (clearer error).
+  if (GLUED_RE.test(value)) {
+    throw new BadRequestException('Code looks like two scans glued together; scan again');
+  }
   if (type === IdentifierType.IMEI) {
     if (!IMEI_RE.test(value)) throw new BadRequestException('IMEI must be 15 digits');
-  } else if (!CODE_RE.test(value)) {
+  } else if (type === IdentifierType.SERIAL) {
+    if (!SERIAL_RE.test(value)) {
+      throw new BadRequestException('SERIAL must be 4–20 chars of A-Z, 0-9 and -');
+    }
+  } else if (!SYSTEM_CODE_RE.test(value)) {
     throw new BadRequestException(`${type} must be 4–40 chars of A-Z, 0-9 and -`);
   }
   return value;

@@ -1,4 +1,5 @@
 import { Prisma } from '@prisma/client';
+import { isPastBatch } from './batch-lock';
 
 /** Lines loaded with just the fields the summary counts need (no per-batch second query). */
 const summaryLineSelect = {
@@ -58,6 +59,7 @@ function header(row: SummaryRow | DetailRow) {
     arrivalDate: row.arrivalDate.toISOString(),
     note: row.note,
     costSplitMethod: row.costSplitMethod,
+    isLocked: isPastBatch(row),
   };
 }
 
@@ -66,6 +68,11 @@ function itemsCost(lines: { unitPrice: Prisma.Decimal; quantity: number }[]) {
   return lines
     .reduce((sum, l) => sum.plus(l.unitPrice.times(l.quantity)), new Prisma.Decimal(0))
     .toFixed(2);
+}
+
+/** Lines still waiting for a price (unitPrice 0); a cost key (view_cost only). */
+function unpricedLines(lines: { unitPrice: Prisma.Decimal }[]) {
+  return lines.filter((l) => l.unitPrice.isZero()).length;
 }
 
 /** BatchSummary; cost keys (extraCostTotal, itemsCost) present only with view_cost. */
@@ -78,7 +85,12 @@ export function toBatchSummary(row: SummaryRow, canViewCost: boolean) {
       .reduce((sum, l) => sum + l.quantity, 0),
   };
   if (!canViewCost) return base;
-  return { ...base, extraCostTotal: row.extraCostTotal.toFixed(2), itemsCost: itemsCost(row.lines) };
+  return {
+    ...base,
+    extraCostTotal: row.extraCostTotal.toFixed(2),
+    itemsCost: itemsCost(row.lines),
+    unpricedLines: unpricedLines(row.lines),
+  };
 }
 
 /** One BatchLine; device lines take their model from the item, accessories from the line. */
@@ -109,5 +121,10 @@ export function toBatch(row: DetailRow, canViewCost: boolean) {
     lines: row.lines.map((l) => toBatchLine(l, canViewCost)),
   };
   if (!canViewCost) return base;
-  return { ...base, extraCostTotal: row.extraCostTotal.toFixed(2), itemsCost: itemsCost(row.lines) };
+  return {
+    ...base,
+    extraCostTotal: row.extraCostTotal.toFixed(2),
+    itemsCost: itemsCost(row.lines),
+    unpricedLines: unpricedLines(row.lines),
+  };
 }
