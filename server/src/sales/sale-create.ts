@@ -13,12 +13,17 @@ export interface BuiltLine {
   decrement: { productModelId: number; locationId: number; quantity: number } | null; // accessory stock to lower
 }
 
-/** Validates one line and builds its row; exactly one of itemId / productModelId is required. */
+/**
+ * Validates one line and builds its row; exactly one of itemId / productModelId is required.
+ * `allowedStatus` is the device status the item must be in (IN_STOCK for a normal sale,
+ * AT_PARTNER for a consignment sale); accessory lines ignore it.
+ */
 export async function buildLine(
   tx: Tx,
   line: CreateSaleLineDto,
   locationId: number,
   canManagePrices: boolean,
+  allowedStatus: ItemStatus = ItemStatus.IN_STOCK,
 ): Promise<BuiltLine> {
   const hasItem = line.itemId != null;
   const hasModel = line.productModelId != null;
@@ -26,22 +31,23 @@ export async function buildLine(
     throw new BadRequestException('A sale line needs exactly one of itemId or productModelId');
   }
   return hasItem
-    ? buildDeviceLine(tx, line, locationId, canManagePrices)
+    ? buildDeviceLine(tx, line, locationId, canManagePrices, allowedStatus)
     : buildAccessoryLine(tx, line, locationId);
 }
 
-/** Device line (W2): item must be IN_STOCK at the location; price floor enforced unless manage_prices. */
+/** Device line (W2): item must be in `allowedStatus` at the location; price floor enforced unless manage_prices. */
 async function buildDeviceLine(
   tx: Tx,
   line: CreateSaleLineDto,
   locationId: number,
   canManagePrices: boolean,
+  allowedStatus: ItemStatus,
 ): Promise<BuiltLine> {
   if (line.quantity !== undefined) throw new BadRequestException('A device line cannot set quantity');
   const itemId = line.itemId as number; // guaranteed by buildLine's xor check
   const item = await tx.item.findUnique({ where: { id: itemId }, select: sellDeviceSelect });
   if (!item) throw new NotFoundException('Item not found');
-  if (item.status !== ItemStatus.IN_STOCK) throw new BadRequestException('Item is not in stock');
+  if (item.status !== allowedStatus) throw new BadRequestException(`Item is not ${allowedStatus}`);
   if (item.locationId !== locationId) throw new BadRequestException('Item is not at this location');
   const unitPrice = new Prisma.Decimal(line.unitPrice);
   // minSalePrice null = no floor; below a set floor is refused for users without manage_prices (FR-20).

@@ -28,12 +28,17 @@ export function parsePastDate(iso: string | undefined): Date | undefined {
 export function parseTodayOrFutureDate(iso: string | undefined): Date | undefined {
   if (!iso) return undefined;
   const date = parseIso(iso);
-  const startOfToday = new Date();
-  startOfToday.setHours(0, 0, 0, 0);
-  if (date.getTime() < startOfToday.getTime()) {
+  if (date.getTime() < startOfToday().getTime()) {
     throw new BadRequestException('Date cannot be in the past');
   }
   return date;
+}
+
+/** Start (local midnight) of the current day; used for due-date and overdue checks. */
+export function startOfToday(): Date {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d;
 }
 
 /**

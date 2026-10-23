@@ -21,6 +21,13 @@ export class QuerySalesDto extends PaginationQueryDto {
   @Min(1)
   locationId?: number;
 
+  // When given, returns only that partner's sales; without it partner sales stay hidden.
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  partnerId?: number;
+
   @IsOptional()
   @IsISO8601()
   from?: string;

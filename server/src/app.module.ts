@@ -6,6 +6,7 @@ import { AuditModule } from './audit/audit.module';
 import { AuthModule } from './auth/auth.module';
 import { BatchesModule } from './batches/batches.module';
 import { CategoriesModule } from './categories/categories.module';
+import { ConsignmentsModule } from './consignments/consignments.module';
 import { CustomersModule } from './customers/customers.module';
 import { ItemsModule } from './items/items.module';
 import { PrismaExceptionFilter } from './common/prisma-exception.filter';
@@ -14,8 +15,10 @@ import { HealthModule } from './health/health.module';
 import { InvestorsModule } from './investors/investors.module';
 import { LedgerModule } from './ledger/ledger.module';
 import { LocationsModule } from './locations/locations.module';
+import { PartnersModule } from './partners/partners.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { ProductModelsModule } from './product-models/product-models.module';
+import { ReportsModule } from './reports/reports.module';
 import { StockCountsModule } from './stock-counts/stock-counts.module';
 import { SalesModule } from './sales/sales.module';
 import { SettingsModule } from './settings/settings.module';
@@ -45,6 +48,9 @@ import { WalkInPurchasesModule } from './walk-in-purchases/walk-in-purchases.mod
     LedgerModule,
     CustomersModule,
     SalesModule,
+    PartnersModule,
+    ConsignmentsModule,
+    ReportsModule,
     SettingsModule,
     HealthModule,
   ],
