@@ -10,6 +10,7 @@ import type {
   BatchFilters,
   CreateBatchPayload,
   UpdateBatchPayload,
+  RepriceModelPayload,
   AddBatchItemPayload,
   AddBatchAccessoryPayload,
   UpdateBatchLinePayload,
@@ -133,6 +134,29 @@ export function useUpdateBatchLine() {
     }) => {
       const { data } = await api.patch<BatchLine>(`/batches/${id}/lines/${lineId}`, payload);
       return data;
+    },
+    onSuccess: (_, variables) => invalidateAfterBatchWrite(queryClient, variables.id),
+  });
+}
+
+/** Reprices every line of one model (manage_prices); same refresh set as a priced line. */
+export function usePriceBatchModel() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, payload }: { id: number; payload: RepriceModelPayload }) => {
+      const { data } = await api.patch<Batch>(`/batches/${id}/lines`, payload);
+      return data;
+    },
+    onSuccess: (_, variables) => invalidateAfterBatchWrite(queryClient, variables.id),
+  });
+}
+
+/** Removes one batch line (delete_records); the server deletes the item or trims stock. */
+export function useRemoveBatchLine() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, lineId }: { id: number; lineId: number }) => {
+      await api.delete(`/batches/${id}/lines/${lineId}`);
     },
     onSuccess: (_, variables) => invalidateAfterBatchWrite(queryClient, variables.id),
   });

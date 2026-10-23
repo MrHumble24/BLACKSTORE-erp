@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { Pencil } from 'lucide-react';
+import { Pencil, Trash2 } from 'lucide-react';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
   Button, TableLoadingRow, TableEmptyRow,
@@ -8,6 +8,8 @@ import { formatMoney } from '@/shared/lib';
 import { useAuthStore } from '@/entities/session';
 import { ItemStatusBadge, type ItemStatus } from '@/entities/item';
 import type { BatchLine } from '@/entities/batch';
+import { useState } from 'react';
+import { RemoveLineDialog } from '@/features/receive-batch';
 
 /** Code cell: a device shows all its identifiers, accessory lines show the unit count. */
 function codeDisplay(line: BatchLine): string {
@@ -43,17 +45,41 @@ function SetPriceButton({ line, onClick }: SetPriceButtonProps) {
   );
 }
 
+/** Trash action; a device is only removable while it stayed untouched in stock. */
+function DeleteLineButton({ line, onClick }: { line: BatchLine; onClick: (line: BatchLine) => void }) {
+  const { t } = useTranslation();
+  const removable = !line.item || line.item.status === 'IN_STOCK';
+  if (!removable) return null;
+
+  return (
+    <Button
+      variant="ghost"
+      size="sm"
+      aria-label={t('batches.removeLine')}
+      title={line.item ? t('batches.removeDeviceButton') : t('batches.removeAccessoryButton')}
+      onClick={() => onClick(line)}
+      className="h-7 w-7 p-0 rounded-full text-slate hover:text-launch-orange hover:bg-launch-orange/10"
+    >
+      <Trash2 className="h-3.5 w-3.5" />
+    </Button>
+  );
+}
+
 /** One line row; unit price and extra cost appear only with view_cost. */
 function LineRow({
   line,
   canViewCost,
   canManagePrices,
+  canDelete,
   onSetPrice,
+  onDelete,
 }: {
   line: BatchLine;
   canViewCost: boolean;
   canManagePrices: boolean;
+  canDelete: boolean;
   onSetPrice: (line: BatchLine) => void;
+  onDelete: (line: BatchLine) => void;
 }) {
   const status = statusOf(line);
 
@@ -73,23 +99,37 @@ function LineRow({
         </>
       )}
       <TableCell className="text-right">
-        {canManagePrices && <SetPriceButton line={line} onClick={onSetPrice} />}
+        <div className="flex items-center justify-end gap-1.5">
+          {canManagePrices && <SetPriceButton line={line} onClick={onSetPrice} />}
+          {canDelete && <DeleteLineButton line={line} onClick={onDelete} />}
+        </div>
       </TableCell>
     </TableRow>
   );
 }
 
 interface BatchLinesTableProps {
+  batchId: number;
   lines: BatchLine[];
   isLoading: boolean;
+  /** True when the batch is locked for this user; hides price and remove actions. */
+  locked: boolean;
   onSetPrice: (line: BatchLine) => void;
 }
 
 /** Batch lines table: model, code or qty, status; cost columns view_cost, set price manage_prices. */
-export function BatchLinesTable({ lines, isLoading, onSetPrice }: BatchLinesTableProps) {
+export function BatchLinesTable({
+  batchId,
+  lines,
+  isLoading,
+  locked,
+  onSetPrice,
+}: BatchLinesTableProps) {
   const { t } = useTranslation();
   const canViewCost = useAuthStore((state) => state.hasPermission('view_cost'));
-  const canManagePrices = useAuthStore((state) => state.hasPermission('manage_prices'));
+  const canManagePrices = useAuthStore((state) => state.hasPermission('manage_prices')) && !locked;
+  const canDelete = useAuthStore((state) => state.hasPermission('delete_records')) && !locked;
+  const [lineToRemove, setLineToRemove] = useState<BatchLine | null>(null);
   const colSpan = 3 + (canViewCost ? 2 : 0) + 1;
 
   return (
@@ -120,11 +160,21 @@ export function BatchLinesTable({ lines, isLoading, onSetPrice }: BatchLinesTabl
               line={line}
               canViewCost={canViewCost}
               canManagePrices={canManagePrices}
+              canDelete={canDelete}
               onSetPrice={onSetPrice}
+              onDelete={setLineToRemove}
             />
           ))}
         </TableBody>
       </Table>
+      <RemoveLineDialog
+        open={lineToRemove !== null}
+        onOpenChange={(open) => {
+          if (!open) setLineToRemove(null);
+        }}
+        batchId={batchId}
+        line={lineToRemove}
+      />
     </div>
   );
 }

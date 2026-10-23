@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import type { CategoryAttribute } from '@/entities/category';
 import { validateRequiredAttributes, type ItemCondition } from '@/entities/item';
-import { isStrictlyPositiveMoney, POSITIVE_MONEY_PATTERN } from '@/shared/lib';
+import { isStrictlyPositiveMoney, getTodayIso, POSITIVE_MONEY_PATTERN } from '@/shared/lib';
 import type { CostSplitMethod } from '@/entities/batch';
 
 type TFn = (k: string, options?: Record<string, unknown>) => string;
@@ -31,6 +31,13 @@ export function createBatchFormSchema(t: TFn, withCostFields: boolean) {
       costSplitMethod: z.enum(['NONE', 'EQUAL', 'BY_PRICE'] as const).optional(),
     })
     .superRefine((values, ctx) => {
+      if (values.arrivalDate > getTodayIso()) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: t('batches.validation.arrivalFuture'),
+          path: ['arrivalDate'],
+        });
+      }
       if (!withCostFields) return;
       const extra = values.extraCostTotal?.trim() ?? '';
       if (extra !== '' && !POSITIVE_MONEY_PATTERN.test(extra)) {
@@ -117,6 +124,23 @@ export interface LinePriceValues {
 /** Localized schema for the batch line unit price. */
 export function createLinePriceSchema(t: TFn) {
   return z.object({
+    unitPrice: z
+      .string()
+      .min(1, { message: t('batches.validation.unitPriceRequired') })
+      .regex(POSITIVE_MONEY_PATTERN, { message: t('batches.validation.unitPriceInvalid') }),
+  });
+}
+
+/** Form values for repricing every line of one model. */
+export interface PriceAllValues {
+  productModelId: number;
+  unitPrice: string;
+}
+
+/** Localized schema for the price-all dialog: model required, valid positive price. */
+export function createPriceAllSchema(t: TFn) {
+  return z.object({
+    productModelId: z.number().min(1, t('items.validation.modelRequired')),
     unitPrice: z
       .string()
       .min(1, { message: t('batches.validation.unitPriceRequired') })
