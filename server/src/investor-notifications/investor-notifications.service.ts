@@ -4,7 +4,7 @@ import { errorMessage, safeSend } from '../common/telegram';
 import { TelegramConfigService } from '../integrations/telegram-config.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { InvestorReportService } from '../reports/investor-report.service';
-import { buildInvestorReportText, previousMonth } from './investor-messages';
+import { buildInvestorReportText, investorReportData, previousMonth } from './investor-messages';
 
 /**
  * 09:00 server-local on the 1st of each month. Named const so it is easy to find and could be made
@@ -54,13 +54,7 @@ export class InvestorNotificationsService {
       for (const inv of investors) {
         const row = rowById.get(inv.id);
         if (!row || !inv.telegramChatId) continue; // no activity this month → send nothing
-        const text = buildInvestorReportText({
-          month,
-          investorName: inv.name,
-          sales: row.sales,
-          profit: row.profit,
-          share: row.investorShare,
-        });
+        const text = buildInvestorReportText(investorReportData(month, inv.name, row));
         // eslint-disable-next-line no-await-in-loop -- sequential sends; one failure must not stop the rest
         await safeSend(this.logger, token, inv.telegramChatId, text, 'Investor report');
       }

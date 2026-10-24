@@ -52,6 +52,7 @@ export async function handleStatus(update: BotUpdate, ctx: CommandContext, keybo
 
 /** Why `/status` must stay silent for this update, or null when it may answer (the FR-29 gate). */
 function statusIgnoreReason(update: BotUpdate, ctx: CommandContext): string | null {
+  if (update.chat.type !== 'private') return 'not a private chat'; // a group may share the alerts chat id
   if (!ctx.ownerSnapshotEnabled) return 'owner snapshot feature is off';
   if (!ctx.alertChatId) return 'no alerts chat is configured';
   if (update.chatId !== ctx.alertChatId) return 'sender is not the alerts chat';
@@ -62,7 +63,8 @@ function statusIgnoreReason(update: BotUpdate, ctx: CommandContext): string | nu
  * `/start <token>`: links the sender's chat to their Customer/Investor record FIRST, then resolves
  * the (possibly new) role so the reply already carries the new menu. A valid token confirms; an
  * absent/used/expired/unknown token gets the same generic reply (no reason leaked). Plain `/start`
- * re-sends the menu. Never returns business data and is NOT gated on ownerSnapshot.
+ * re-sends the menu. Never returns business data and is NOT gated on ownerSnapshot. Only a private
+ * chat is linked: in a group the token is left unused and the generic reply is sent.
  *
  * No AuditLog row is written here: a /start link is a self-service mutation by an external Telegram
  * user, not an app user, so there is no actor to attribute. This is the one sanctioned exception to
@@ -70,7 +72,8 @@ function statusIgnoreReason(update: BotUpdate, ctx: CommandContext): string | nu
  */
 export async function handleStart(update: BotUpdate, ctx: CommandContext): Promise<boolean> {
   const token = update.text.trim().split(/\s+/)[1]; // the argument after `/start`, if any
-  const ref = token ? await ctx.linkToken.linkChat(token, update.chatId) : null;
+  const canLink = token && update.chat.type === 'private';
+  const ref = canLink ? await ctx.linkToken.linkChat(token, update.chatId) : null;
   const { keyboard } = await menuFor(update, ctx);
   if (!token) return sendMenuOrWelcome(update, ctx, keyboard, '/start');
   const reply = ref ? START_LINKED_REPLY : START_GENERIC_REPLY;
@@ -85,13 +88,16 @@ export async function handleStart(update: BotUpdate, ctx: CommandContext): Promi
  */
 export async function handleButton(button: Button, update: BotUpdate, ctx: CommandContext, menu: Menu) {
   const available = buttonRows(menu.role, ctx.features).flat().includes(button);
-  if (available && button === BUTTONS.status) return handleStatus(update, ctx, menu.keyboard); // same gates + logs
-  const reply = available && button !== BUTTONS.status ? buttonReply(button, ctx, menu.role) : null;
-  if (!reply) {
-    ctx.logger.log('button ignored: not available for this chat');
-    return sendMenuOrWelcome(update, ctx, menu.keyboard, 'Bot button');
-  }
+  if (button === BUTTONS.status) return available ? handleStatus(update, ctx, menu.keyboard) : ignoreButton(update, ctx, menu);
+  const reply = available ? buttonReply(button, ctx, menu.role) : null;
+  if (!reply) return ignoreButton(update, ctx, menu);
   return safeSend(ctx.logger, ctx.token, update.chatId, await reply, 'Bot button', menu.keyboard ?? undefined);
+}
+
+/** A button this chat may not use: logged, then the chat gets its current menu (or "Welcome") back. */
+function ignoreButton(update: BotUpdate, ctx: CommandContext, menu: Menu) {
+  ctx.logger.log('button ignored: not available for this chat');
+  return sendMenuOrWelcome(update, ctx, menu.keyboard, 'Bot button');
 }
 
 /** The report text behind a button, read only for the sender's own ids; null when the role lacks it. */

@@ -1,11 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
-import { Prisma, SaleStatus } from '@prisma/client';
+import { SaleStatus } from '@prisma/client';
 import { errorMessage, safeSend } from '../common/telegram';
 import { TelegramConfigService } from '../integrations/telegram-config.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { SettingsService } from '../settings/settings.service';
-import { debtBalanceOf, debtSaleSelect, sumPaid } from '../sales/sale-totals';
+import { debtBalanceOf, debtSaleSelect, sumPaid, totalDebt } from '../sales/sale-totals';
 import type { SaleDetailRow } from '../sales/sale-shape';
 import {
   buildDebtReminderText,
@@ -80,7 +80,7 @@ export class CustomerNotificationsService {
         },
       });
       for (const c of customers) {
-        const owed = c.sales.reduce((sum, s) => sum.plus(debtBalanceOf(s)), new Prisma.Decimal(0));
+        const owed = totalDebt(c.sales);
         if (!c.telegramChatId || !owed.gt(0)) continue;
         // eslint-disable-next-line no-await-in-loop -- sequential sends; one failure must not stop the rest
         await safeSend(this.logger, token, c.telegramChatId, buildDebtReminderText(shop, owed.toFixed(2)), 'Customer reminder');

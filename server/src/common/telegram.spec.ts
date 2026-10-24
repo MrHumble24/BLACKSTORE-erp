@@ -1,4 +1,4 @@
-import { errorMessage, getBotUpdates, safeSend } from './telegram';
+import { clampMessage, errorMessage, getBotUpdates, safeSend } from './telegram';
 
 /** getBotUpdates: maps every chat-carrying update; only message text is a command; never throws. */
 describe('getBotUpdates', () => {
@@ -146,5 +146,27 @@ describe('errorMessage', () => {
   it('reads an Error message, else stringifies', () => {
     expect(errorMessage(new Error('boom'))).toBe('boom');
     expect(errorMessage('plain')).toBe('plain');
+  });
+});
+
+/** clampMessage: keeps a message under Telegram's limit, cutting on a line boundary. */
+describe('clampMessage', () => {
+  it('returns a short text unchanged', () => {
+    expect(clampMessage('a\nb', 10)).toBe('a\nb');
+  });
+
+  it('cuts a long text at the last newline before max and appends the dropped-line count', () => {
+    const text = ['aaaa', 'bbbb', 'cccc', 'dddd'].join('\n'); // 19 chars
+    expect(clampMessage(text, 12)).toBe('aaaa\nbbbb\n… +2');
+  });
+
+  it('is applied by safeSend so an over-long reply still sends', async () => {
+    const fetchMock = jest.fn().mockResolvedValue({ ok: true });
+    global.fetch = fetchMock as unknown as typeof fetch;
+    const logger = { warn: jest.fn() } as unknown as import('@nestjs/common').Logger;
+    await safeSend(logger, 't', 'c', Array(2000).fill('line').join('\n'), 'Bot');
+    const body = JSON.parse((fetchMock.mock.calls[0] as [string, { body: string }])[1].body);
+    expect(body.text.length).toBeLessThanOrEqual(4096);
+    expect(body.text).toMatch(/… \+\d+$/);
   });
 });

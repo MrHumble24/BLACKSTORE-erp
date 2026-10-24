@@ -38,6 +38,11 @@ export function debtBalanceOf(sale: {
   return balanceOf(sale.total, sumPaid(sale.payments), sumRefunded(sale.returns));
 }
 
+/** Total outstanding debt over several `debtSaleSelect` rows (e.g. one customer's DEBT sales). */
+export function totalDebt(sales: Parameters<typeof debtBalanceOf>[0][]): Prisma.Decimal {
+  return sales.reduce((sum, s) => sum.plus(debtBalanceOf(s)), new Prisma.Decimal(0));
+}
+
 /**
  * Cash actually handed back on a return (F13 drawer math). A refund first cancels the
  * sale's outstanding debt; only the excess over that balance leaves the cash drawer.

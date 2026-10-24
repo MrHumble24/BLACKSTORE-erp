@@ -122,6 +122,13 @@ describe('routeUpdate', () => {
       expect(log.mock.calls.flat().join(' ')).not.toMatch(/999|111/);
     });
 
+    it('ignores typed /status in a group even when its id is the alerts chat', async () => {
+      await routeUpdate(update('/status', OWNER, 'group'), ctx);
+      expect(ownerSnapshot).not.toHaveBeenCalled();
+      expect(sendMessage).not.toHaveBeenCalled();
+      expect(log).toHaveBeenCalledWith('/status ignored: not a private chat');
+    });
+
     it('logs "/status answered" only when the reply was sent', async () => {
       await routeUpdate(update('/status'), ctx);
       expect(log).toHaveBeenCalledWith('/status answered');
@@ -160,6 +167,12 @@ describe('routeUpdate', () => {
       linkChat.mockResolvedValueOnce(null);
       await routeUpdate(update('/start used'), ctx);
       expect(sendMessage).toHaveBeenCalledWith('t', OWNER, 'Welcome', OWNER_KB);
+    });
+
+    it('in a group: links nothing (token stays usable) and sends the generic "Welcome"', async () => {
+      await routeUpdate(update('/start abc123', STRANGER, 'group'), ctx);
+      expect(linkChat).not.toHaveBeenCalled();
+      expect(sendMessage).toHaveBeenCalledWith('t', STRANGER, 'Welcome', REMOVE);
     });
 
     it('plain /start: stranger gets "Welcome" + keyboard removal, a known role gets the menu', async () => {

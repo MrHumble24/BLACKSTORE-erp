@@ -32,12 +32,11 @@ describe('BotReportsService', () => {
 
   it('debtors: sums per customer, sorts desc, top 10, total over all', async () => {
     const rows = Array.from({ length: 11 }, (_, i) => ({
-      customerId: i + 1,
-      customer: { name: `C${i + 1}` },
+      customer: { id: i + 1, name: `C${i + 1}` },
       ...debtSale(100 + i),
     }));
-    rows.push({ customerId: 1, customer: { name: 'C1' }, ...debtSale(500, 100, 50) }); // C1: 100 + 350
-    rows.push({ customerId: 99, customer: { name: 'Paid' }, ...debtSale(10, 10) }); // balance 0 → not a debtor
+    rows.push({ customer: { id: 1, name: 'C1' }, ...debtSale(500, 100, 50) }); // C1: 100 + 350
+    rows.push({ customer: { id: 99, name: 'Paid' }, ...debtSale(10, 10) }); // balance 0 → not a debtor
     sale.findMany.mockResolvedValue(rows);
     const text = await service.debtors();
     const lines = text.split('\n').filter((l) => l.startsWith('•'));

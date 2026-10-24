@@ -17,6 +17,15 @@ export interface InvestorReportData {
   share: string; // this investor's own investorShare
 }
 
+/** Report data from one investor's own investor-report row (sales, profit, their share). */
+export function investorReportData(
+  month: string,
+  investorName: string,
+  row: { sales: string; profit: string; investorShare: string },
+): InvestorReportData {
+  return { month, investorName, sales: row.sales, profit: row.profit, share: row.investorShare };
+}
+
 /** Bilingual monthly report for ONE investor: period + their sales, profit and share. */
 export function buildInvestorReportText(data: InvestorReportData): string {
   const name = escapeHtml(data.investorName);

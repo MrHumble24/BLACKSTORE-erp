@@ -4,10 +4,10 @@ import { buildLowStockDigest, lowStockLines } from '../accessory-stock/low-stock
 import { startOfToday } from '../common/dates';
 import { buildDebtReminderText } from '../customer-notifications/customer-messages';
 import { deviceName, warrantyItemSelect } from '../customer-notifications/warranty-select';
-import { buildInvestorReportText } from '../investor-notifications/investor-messages';
+import { buildInvestorReportText, investorReportData } from '../investor-notifications/investor-messages';
 import { PrismaService } from '../prisma/prisma.service';
 import { InvestorReportService } from '../reports/investor-report.service';
-import { debtBalanceOf, debtSaleSelect } from '../sales/sale-totals';
+import { debtSaleSelect, totalDebt } from '../sales/sale-totals';
 import { SettingsService } from '../settings/settings.service';
 import {
   buildDebtorsText,
@@ -46,15 +46,18 @@ export class BotReportsService {
   async debtors(): Promise<string> {
     const sales = await this.prisma.sale.findMany({
       where: { status: SaleStatus.DEBT, customerId: { not: null } },
-      select: { customerId: true, customer: { select: { name: true } }, ...debtSaleSelect },
+      select: { customer: { select: { id: true, name: true } }, ...debtSaleSelect },
     });
-    const byCustomer = new Map<number, { name: string; owed: Prisma.Decimal }>();
+    const byCustomer = new Map<number, { name: string; sales: typeof sales }>();
     for (const s of sales) {
-      if (!s.customerId || !s.customer) continue;
-      const acc = byCustomer.get(s.customerId) ?? { name: s.customer.name, owed: ZERO };
-      byCustomer.set(s.customerId, { ...acc, owed: acc.owed.plus(debtBalanceOf(s)) });
+      if (!s.customer) continue;
+      const acc = byCustomer.get(s.customer.id) ?? { name: s.customer.name, sales: [] };
+      acc.sales.push(s);
+      byCustomer.set(s.customer.id, acc);
     }
-    const owing = [...byCustomer.values()].filter((d) => d.owed.gt(0));
+    const owing = [...byCustomer.values()]
+      .map((d) => ({ name: d.name, owed: totalDebt(d.sales) }))
+      .filter((d) => d.owed.gt(0));
     owing.sort((a, b) => b.owed.comparedTo(a.owed));
     const total = owing.reduce((sum, d) => sum.plus(d.owed), ZERO);
     const top: DebtorLine[] = owing.slice(0, TOP_DEBTORS).map((d) => ({ name: d.name, amount: d.owed.toFixed(2) }));
@@ -67,7 +70,7 @@ export class BotReportsService {
       where: { customerId, status: SaleStatus.DEBT },
       select: debtSaleSelect,
     });
-    const owed = sales.reduce((sum, s) => sum.plus(debtBalanceOf(s)), ZERO);
+    const owed = totalDebt(sales);
     const shop = await this.shopName();
     return owed.gt(0) ? buildDebtReminderText(shop, owed.toFixed(2)) : buildNoDebtText(shop);
   }
@@ -89,13 +92,7 @@ export class BotReportsService {
     const report = await this.investorReport.report({ month, investorId }, false);
     const row = report.rows.find((r) => r.investor.id === investorId);
     if (!row) return buildNoActivityText(month);
-    return buildInvestorReportText({
-      month,
-      investorName,
-      sales: row.sales,
-      profit: row.profit,
-      share: row.investorShare,
-    });
+    return buildInvestorReportText(investorReportData(month, investorName, row));
   }
 
   /** Shop name for customer texts, from the receipt settings (same source as the F17 reminders). */

@@ -56,6 +56,19 @@ export async function sendMessage(
   return res.ok;
 }
 
+/**
+ * Keeps a message under Telegram's 4096-char limit (an over-long text makes the whole send fail).
+ * Cuts at the last newline before `max` and appends `… +N`, N = lines dropped.
+ * ponytail: a single line longer than `max` is hard-cut (rare; our messages are line-based).
+ */
+export function clampMessage(text: string, max = 4000): string {
+  if (text.length <= max) return text;
+  const cut = text.lastIndexOf('\n', max);
+  const kept = text.slice(0, cut > 0 ? cut : max);
+  const dropped = text.split('\n').length - kept.split('\n').length;
+  return `${kept}\n… +${dropped}`;
+}
+
 /** Human-readable message from an unknown thrown value, for a log line. */
 export function errorMessage(e: unknown): string {
   return e instanceof Error ? e.message : String(e);
@@ -66,6 +79,7 @@ export function errorMessage(e: unknown): string {
  * by every per-recipient cron (customer reminders, investor reports); `label` names the caller in the
  * log line (e.g. 'Customer reminder', 'Investor report'). Behaviour: a failed send or a thrown error
  * is warned and swallowed — the loop keeps going and nothing propagates out. Returns true when sent.
+ * The text is clamped to Telegram's length limit here, so every sender is covered.
  * The log line carries only the label and the error, never the chat id or text (Logging rule).
  */
 export async function safeSend(
@@ -77,7 +91,7 @@ export async function safeSend(
   replyMarkup?: ReplyMarkup,
 ): Promise<boolean> {
   try {
-    if (await sendMessage(token, chatId, text, replyMarkup)) return true;
+    if (await sendMessage(token, chatId, clampMessage(text), replyMarkup)) return true;
     logger.warn(`${label} failed to send`);
   } catch (e) {
     logger.warn(`${label} errored: ${errorMessage(e)}`);
