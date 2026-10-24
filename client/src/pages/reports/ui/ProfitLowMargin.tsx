@@ -12,7 +12,7 @@ interface ProfitLowMarginProps {
 /** Colours the margin badge by severity: red under 5%, amber under 15%, else neutral. */
 function marginTone(pct: number): string {
   if (pct < 5) return 'bg-destructive/10 text-destructive';
-  if (pct < 15) return 'bg-amber-100 text-amber-700';
+  if (pct < 15) return 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20';
   return 'bg-studio-mist text-slate';
 }
 

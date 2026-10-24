@@ -95,7 +95,7 @@ export function SellConfirmDialog({
             type="button"
             onClick={onConfirm}
             disabled={isPending}
-            className="flex-1 h-11 rounded-full text-sm font-semibold bg-pricing-blue hover:bg-[#0077ed] text-gallery-white shadow-sm cursor-pointer"
+            className="flex-1 h-11 rounded-full text-sm font-semibold bg-pricing-blue hover:bg-pricing-blue/90 text-white shadow-sm cursor-pointer"
           >
             {isPending ? t('common.loading') : t('sell.confirmComplete')}
           </Button>

@@ -10,22 +10,22 @@ const buttonVariants = cva(
       variant: {
         // Pricing Blue conversion control (Apple Style Reference)
         default:
-          'bg-pricing-blue text-gallery-white hover:bg-[#0077ed] active:bg-[#0066cc] font-medium border-0 shadow-none',
+          'bg-pricing-blue text-white hover:bg-pricing-blue/90 active:bg-pricing-blue/80 font-medium border-0 shadow-none',
         // Outlined Explore Pill: restrained hairline border, transparent/white fill, ink text
         outline:
-          'border border-hairline-silver bg-gallery-white text-ink hover:bg-studio-mist hover:border-steel font-normal transition-colors shadow-none',
+          'border border-hairline-silver bg-gallery-white text-ink hover:bg-control-gray/50 hover:border-steel font-normal transition-colors shadow-none',
         // Control Gray secondary pill
         secondary:
-          'bg-control-gray text-ink hover:bg-[#dedee0] font-normal border-0 shadow-none',
+          'bg-control-gray text-ink hover:bg-control-gray/80 font-normal border-0 shadow-none',
         // Quiet ghost utility button
         ghost:
           'text-slate hover:text-ink hover:bg-control-gray/50 font-normal border-0 shadow-none',
         // Apple Blue text control / link
         link:
-          'text-apple-blue hover:text-[#0055b3] hover:underline p-0 h-auto font-normal border-0 shadow-none',
+          'text-apple-blue hover:text-apple-blue/80 hover:underline p-0 h-auto font-normal border-0 shadow-none',
         // Launch Orange status/destructive button
         destructive:
-          'bg-launch-orange text-gallery-white hover:bg-[#9e3a00] font-normal border-0 shadow-none',
+          'bg-launch-orange text-white hover:bg-launch-orange/90 font-normal border-0 shadow-none',
       },
       size: {
         default: 'h-9 px-5 text-xs font-medium',

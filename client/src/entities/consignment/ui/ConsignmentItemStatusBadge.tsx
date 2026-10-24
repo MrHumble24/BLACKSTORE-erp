@@ -9,7 +9,7 @@ interface ConsignmentItemStatusBadgeProps {
 
 const statusStyles: Record<ConsignmentItemStatus, string> = {
   AT_PARTNER: 'bg-apple-blue/10 text-apple-blue border border-apple-blue/20 font-medium',
-  SOLD: 'bg-ink text-gallery-white border-0 font-medium',
+  SOLD: 'bg-ink text-white dark:bg-control-gray dark:text-ink border-0 font-medium',
   RETURNED: 'bg-control-gray/60 text-slate border-0 font-normal',
 };
 

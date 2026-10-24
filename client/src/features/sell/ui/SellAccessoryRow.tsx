@@ -75,7 +75,7 @@ function AccessoryInputs({ form, options }: AccessoryInputsProps) {
           onValueChange={form.setSelectedModelId}
           disabled={options.length === 0}
         >
-          <SelectTrigger className="h-10 bg-surface-card">
+          <SelectTrigger className="h-10 bg-gallery-white">
             <SelectValue placeholder={options.length === 0 ? t('sell.noAccessoriesInStock') : t('sell.selectAccessory')} />
           </SelectTrigger>
           <SelectContent>
@@ -132,7 +132,7 @@ export function SellAccessoryRow({
   const options = stockList.map((s) => ({ value: String(s.productModel.id), label: `${s.productModel.name} (${s.quantity})` }));
 
   return (
-    <div className="rounded-xl border border-hairline-silver/60 bg-surface-card/60 p-3.5 backdrop-blur-sm space-y-2">
+    <div className="rounded-2xl border border-hairline-silver/70 bg-gallery-white p-4 space-y-3">
       <div className="flex items-center gap-1.5 text-xs font-semibold text-slate uppercase tracking-wider">
         <Plus className="h-3.5 w-3.5" />
         <span>{t('sell.addAccessory')}</span>

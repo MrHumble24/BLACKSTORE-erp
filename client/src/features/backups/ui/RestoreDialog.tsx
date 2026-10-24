@@ -58,7 +58,7 @@ function RestoreContent({ backup, onClose }: { backup: Backup; onClose: () => vo
         <p className="text-[11px] text-slate">{t('backups.fileName')}</p>
         <p className="text-xs font-medium text-ink">{backup.fileName}</p>
       </div>
-      <p className="rounded-2xl border border-amber-300 bg-amber-50 p-3 text-xs font-medium text-amber-900">
+      <p className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs font-medium text-amber-700 dark:text-amber-300">
         {t('backups.restoreWarning')}
       </p>
       <FormError message={error} />

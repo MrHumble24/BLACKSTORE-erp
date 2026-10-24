@@ -8,7 +8,7 @@ interface SaleStatusBadgeProps {
 }
 
 const statusStyles: Record<SaleStatus, string> = {
-  PAID: 'bg-ink text-gallery-white border-0 font-medium',
+  PAID: 'bg-ink text-white dark:bg-control-gray dark:text-ink border-0 font-medium',
   DEBT: 'bg-launch-orange/10 text-launch-orange border border-launch-orange/20 font-medium',
   RETURNED: 'bg-control-gray/60 text-slate border-0 font-normal',
 };

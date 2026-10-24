@@ -23,7 +23,7 @@ function UsersPageHeader({ onAddUser }: UsersPageHeaderProps) {
       </div>
       <Button
         onClick={onAddUser}
-        className="gap-2 bg-pricing-blue hover:bg-[#0077ed] text-gallery-white rounded-full text-xs font-medium px-5 h-9 shrink-0 shadow-none border-0 cursor-pointer transition-colors"
+        className="gap-2 bg-pricing-blue hover:bg-pricing-blue/90 text-white rounded-full text-xs font-medium px-5 h-9 shrink-0 shadow-none border-0 cursor-pointer transition-colors"
       >
         <Plus className="h-3.5 w-3.5" />
         <span>{t('users.addUser')}</span>

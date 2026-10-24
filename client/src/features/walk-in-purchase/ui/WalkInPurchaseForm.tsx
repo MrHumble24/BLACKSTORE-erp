@@ -40,8 +40,8 @@ function DuplicateWarningBanner({ warning }: { warning: DuplicateWarning | null 
   if (!warning) return null;
 
   return (
-    <div className="rounded-2xl bg-amber-50 border border-amber-300 p-3 flex items-start gap-2 text-xs font-medium text-amber-900">
-      <TriangleAlert className="h-4 w-4 shrink-0 text-amber-600" />
+    <div className="rounded-2xl bg-amber-500/10 border border-amber-500/30 p-3 flex items-start gap-2 text-xs font-medium text-amber-700 dark:text-amber-300">
+      <TriangleAlert className="h-4 w-4 shrink-0 text-amber-500" />
       <span>
         {t('walkIn.alreadyInSystem', {
           item: `#${warning.id}`,

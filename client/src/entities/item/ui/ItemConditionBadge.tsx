@@ -8,9 +8,9 @@ interface ItemConditionBadgeProps {
 }
 
 const conditionStyles: Record<ItemCondition, string> = {
-  NEW: 'bg-sky-50 text-sky-700 border-sky-200/70 font-medium',
-  USED: 'bg-zinc-100 text-zinc-600 border-zinc-200 font-normal',
-  REFURBISHED: 'bg-violet-50 text-violet-700 border-violet-200/70 font-medium',
+  NEW: 'bg-sky-500/10 text-sky-700 dark:text-sky-400 border-sky-500/20 font-medium',
+  USED: 'bg-control-gray text-slate border-hairline-silver/60 font-normal',
+  REFURBISHED: 'bg-violet-500/10 text-violet-700 dark:text-violet-400 border-violet-500/20 font-medium',
 };
 
 /**

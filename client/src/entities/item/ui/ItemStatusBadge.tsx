@@ -9,25 +9,25 @@ interface ItemStatusBadgeProps {
 
 const statusStyles: Record<ItemStatus, { pill: string; dot?: string }> = {
   IN_STOCK: {
-    pill: 'bg-emerald-50 text-emerald-800 border-emerald-200/70 font-medium',
+    pill: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20 font-medium',
     dot: 'bg-emerald-500',
   },
   AT_PARTNER: {
-    pill: 'bg-blue-50 text-blue-700 border-blue-200/70 font-medium',
+    pill: 'bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20 font-medium',
     dot: 'bg-blue-500',
   },
   DEBT: {
-    pill: 'bg-amber-50 text-amber-800 border-amber-200/70 font-medium',
+    pill: 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20 font-medium',
     dot: 'bg-amber-500',
   },
   SOLD: {
-    pill: 'bg-zinc-100 text-zinc-600 border-zinc-200 font-normal',
+    pill: 'bg-control-gray text-slate border-hairline-silver/60 font-normal',
   },
   RETURNED: {
-    pill: 'bg-slate-100 text-slate-600 border-slate-200 font-normal',
+    pill: 'bg-control-gray text-slate border-hairline-silver/60 font-normal',
   },
   DEFECTIVE: {
-    pill: 'bg-rose-50 text-rose-700 border-rose-200/80 font-medium',
+    pill: 'bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/20 font-medium',
     dot: 'bg-rose-500',
   },
 };

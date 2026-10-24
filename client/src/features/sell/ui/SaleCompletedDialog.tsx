@@ -79,7 +79,7 @@ export function SaleCompletedDialog({
           <Button
             type="button"
             onClick={handlePrint}
-            className="w-full h-11 rounded-full gap-2 text-sm font-semibold bg-pricing-blue hover:bg-[#0077ed] text-white cursor-pointer shadow-sm"
+            className="w-full h-11 rounded-full gap-2 text-sm font-semibold bg-pricing-blue hover:bg-pricing-blue/90 text-white cursor-pointer shadow-sm"
           >
             <Printer className="h-4 w-4" />
             <span>{t('sell.printReceipt')}</span>

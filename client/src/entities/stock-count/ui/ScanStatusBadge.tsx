@@ -3,7 +3,7 @@ import { Badge } from '@/shared/ui';
 import type { ScanStatus } from '../model/types';
 
 const statusStyles: Record<ScanStatus, string> = {
-  FOUND: 'bg-ink text-gallery-white border-0 font-medium',
+  FOUND: 'bg-ink text-white dark:bg-control-gray dark:text-ink border-0 font-medium',
   WRONG_LOCATION: 'bg-launch-orange/10 text-launch-orange border border-launch-orange/20 font-medium',
   UNKNOWN: 'bg-control-gray text-ink border-0 font-medium',
   DUPLICATE: 'bg-control-gray/60 text-slate border-0 font-normal',

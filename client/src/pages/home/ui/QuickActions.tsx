@@ -17,10 +17,10 @@ interface QuickAction {
 
 /** Primary operational shortcuts; each gated by the route's own permission. */
 const ACTIONS: QuickAction[] = [
-  { to: '/sell', labelKey: 'home.actions.newSale', icon: ShoppingCart, permission: 'sell', accent: 'text-[#0066cc]' },
-  { to: '/batches', labelKey: 'home.actions.receiveBatch', icon: PackagePlus, permission: 'receive_batch', accent: 'text-[#059669]' },
-  { to: '/purchases/walk-in', labelKey: 'home.actions.walkIn', icon: HandCoins, permission: 'buy_walk_in', accent: 'text-[#b64400]' },
-  { to: '/items', labelKey: 'home.actions.findItem', icon: Search, permission: 'view_stock', accent: 'text-[#8b5cf6]' },
+  { to: '/sell', labelKey: 'home.actions.newSale', icon: ShoppingCart, permission: 'sell', accent: 'text-apple-blue' },
+  { to: '/batches', labelKey: 'home.actions.receiveBatch', icon: PackagePlus, permission: 'receive_batch', accent: 'text-emerald-600 dark:text-emerald-400' },
+  { to: '/purchases/walk-in', labelKey: 'home.actions.walkIn', icon: HandCoins, permission: 'buy_walk_in', accent: 'text-launch-orange' },
+  { to: '/items', labelKey: 'home.actions.findItem', icon: Search, permission: 'view_stock', accent: 'text-purple-600 dark:text-purple-400' },
 ];
 
 /** Large tappable quick-action buttons, showing only those the user may use. */

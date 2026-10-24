@@ -9,9 +9,9 @@ import { CARD, NUM, money } from './homeStyle';
 function Tile({ label, value, note }: { label: string; value: string; note?: string }) {
   return (
     <Card className={cn(CARD, 'flex flex-col px-5 py-4')}>
-      <p className="text-[12px] font-medium text-[#5e6e82]">{label}</p>
+      <p className="text-[12px] font-medium text-slate">{label}</p>
       <p className={cn('mt-1.5 text-[1.5rem] font-semibold', NUM)}>{value}</p>
-      {note && <p className="mt-1 text-[12px] tabular-nums text-[#9da9bb]">{note}</p>}
+      {note && <p className="mt-1 text-[12px] tabular-nums text-slate/80">{note}</p>}
     </Card>
   );
 }

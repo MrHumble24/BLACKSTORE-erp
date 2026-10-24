@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Plus } from 'lucide-react';
 import { Button } from '@/shared/ui';
@@ -25,7 +26,7 @@ function AccessoriesHeader({ onAdd, canReceiveBatch }: { onAdd: () => void; canR
       {canReceiveBatch && (
         <Button
           onClick={onAdd}
-          className="gap-2 bg-pricing-blue hover:bg-[#0077ed] text-gallery-white rounded-full text-xs font-medium px-5 h-9 shrink-0 shadow-none border-0 cursor-pointer"
+          className="gap-2 bg-pricing-blue hover:bg-pricing-blue/90 text-white rounded-full text-xs font-medium px-5 h-9 shrink-0 shadow-none border-0 cursor-pointer"
         >
           <Plus className="h-3.5 w-3.5" />
           <span>{t('accessories.addStock')}</span>
@@ -41,24 +42,25 @@ function AccessoriesHeader({ onAdd, canReceiveBatch }: { onAdd: () => void; canR
 export function AccessoriesPage() {
   const canReceiveBatch = useAuthStore((state) => state.hasPermission('receive_batch'));
 
+  // Allow deep-linking a pre-filtered view (e.g. ?stockLevel=LOW_STOCK from the home page).
+  const [searchParams] = useSearchParams();
+  const stockLevels: StockLevelFilter[] = ['ALL', 'IN_STOCK', 'LOW_STOCK', 'OUT_OF_STOCK'];
+  const paramLevel = searchParams.get('stockLevel');
+  const initialStockLevel: StockLevelFilter =
+    paramLevel && stockLevels.includes(paramLevel as StockLevelFilter)
+      ? (paramLevel as StockLevelFilter)
+      : 'ALL';
+
   const [filters, setFilters] = useState<AccessoryStockFilters>({});
-  const [stockLevel, setStockLevel] = useState<StockLevelFilter>('ALL');
+  const [stockLevel, setStockLevel] = useState<StockLevelFilter>(initialStockLevel);
   const [page, setPage] = useState(1);
   const pageSize = 20;
 
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  const { data, isLoading } = useAccessoryStock(filters, page, pageSize);
+  const { data, isLoading } = useAccessoryStock({ ...filters, stockLevel }, page, pageSize);
   const total = data?.total ?? 0;
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
-
-  const filteredItems = useMemo(() => {
-    const raw = data?.items ?? [];
-    if (stockLevel === 'IN_STOCK') return raw.filter((i) => i.quantity > 0);
-    if (stockLevel === 'LOW_STOCK') return raw.filter((i) => i.quantity > 0 && i.quantity <= 3);
-    if (stockLevel === 'OUT_OF_STOCK') return raw.filter((i) => i.quantity === 0);
-    return raw;
-  }, [data?.items, stockLevel]);
 
   const handleFilterChange = (newFilters: AccessoryStockFilters) => {
     setFilters(newFilters);
@@ -79,7 +81,7 @@ export function AccessoriesPage() {
       />
 
       <AccessoriesTable
-        items={filteredItems}
+        items={data?.items ?? []}
         isLoading={isLoading}
         page={page}
         totalPages={totalPages}

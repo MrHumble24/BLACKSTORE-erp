@@ -121,7 +121,8 @@
     "needsAttention": "Требует внимания",
     "allClear": "Всё в порядке — ничего не требует внимания",
     "debtorsToChase": "{{count}} клиентов должны вам",
-    "overdueItems": "{{count}} товаров просрочено у партнёров"
+    "overdueItems": "{{count}} товаров просрочено у партнёров",
+    "lowStockAccessories": "{{count}} аксессуаров заканчивается"
   },
   "scan": {
     "placeholder": "IMEI или серийный номер...",
@@ -234,7 +235,7 @@
     "lowStock": "Мало на складе",
     "stockFilterAll": "Все остатки",
     "stockFilterInStock": "В наличии",
-    "stockFilterLowStock": "Мало на складе (≤3)",
+    "stockFilterLowStock": "Мало на складе",
     "stockFilterOutOfStock": "Нет в наличии (0)",
     "validation": {
       "modelRequired": "Выберите модель",
@@ -330,8 +331,11 @@
     "updatedSuccess": "Данные модели обновлены",
     "activate": "Активировать",
     "deactivate": "Деактивировать",
+    "lowStockThreshold": "Порог низкого остатка",
+    "lowStockThresholdPlaceholder": "Оставьте пустым, чтобы отключить",
     "validation": {
-      "nameRequired": "Введите название модели"
+      "nameRequired": "Введите название модели",
+      "thresholdPositive": "Порог должен быть целым положительным числом"
     }
   },
   "investors": {

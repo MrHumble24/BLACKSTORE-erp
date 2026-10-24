@@ -77,7 +77,7 @@ export function DeltaBadge({ current, previous, goodDirection = 'up', variant = 
   const up = rounded > 0;
   const good = up === (goodDirection === 'up');
   const Icon = up ? ArrowUpRight : ArrowDownRight;
-  const tone = good ? 'text-[#00864e]' : 'text-[#e63757]';
+  const tone = good ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400';
 
   if (variant === 'plain') {
     return (
@@ -92,7 +92,7 @@ export function DeltaBadge({ current, previous, goodDirection = 'up', variant = 
     <span
       className={cn(
         'inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[11px] font-semibold tabular-nums',
-        good ? 'bg-emerald-50 text-emerald-600' : 'bg-orange-50 text-destructive',
+        good ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-rose-500/10 text-destructive',
         className,
       )}
     >

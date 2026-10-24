@@ -30,7 +30,7 @@ export function ReportsNavTabs() {
             cn(
               'flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-medium tracking-tight transition-colors',
               isActive
-                ? 'bg-ink text-gallery-white shadow-sm'
+                ? 'bg-ink text-white dark:bg-control-gray dark:text-ink shadow-sm'
                 : 'text-slate hover:bg-control-gray/60 hover:text-ink',
             )
           }

@@ -115,7 +115,7 @@ function Totals({ sale, s }: { sale: Sale; s: ReceiptSettings }) {
 /** The printable receipt body, driven entirely by settings. Shared by the print page and the settings preview. */
 export function ReceiptDocument({ sale, settings }: { sale: Sale; settings: ReceiptSettings }) {
   return (
-    <div className="bg-white text-ink text-xs font-mono">
+    <div className="bg-white text-black text-xs font-mono">
       <Header sale={sale} s={settings} />
       <Items sale={sale} showWarranty={settings.showWarranty} />
       <Totals sale={sale} s={settings} />

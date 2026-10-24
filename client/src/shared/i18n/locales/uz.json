@@ -121,7 +121,8 @@
     "needsAttention": "E'tibor talab qiladi",
     "allClear": "Hammasi joyida — e'tibor talab qiladigan narsa yo'q",
     "debtorsToChase": "{{count}} ta mijoz sizdan qarzdor",
-    "overdueItems": "{{count}} ta mahsulot hamkorlarda muddati o'tgan"
+    "overdueItems": "{{count}} ta mahsulot hamkorlarda muddati o'tgan",
+    "lowStockAccessories": "{{count}} ta aksessuar kam qolgan"
   },
   "scan": {
     "placeholder": "IMEI yoki seriya raqami...",
@@ -234,7 +235,7 @@
     "lowStock": "Kam qolgan",
     "stockFilterAll": "Barcha qoldiqlar",
     "stockFilterInStock": "Mavjud",
-    "stockFilterLowStock": "Kam qolgan (≤3)",
+    "stockFilterLowStock": "Kam qolgan",
     "stockFilterOutOfStock": "Tugagan (0)",
     "validation": {
       "modelRequired": "Modelni tanlang",
@@ -330,8 +331,11 @@
     "updatedSuccess": "Model ma'lumotlari yangilandi",
     "activate": "Faollashtirish",
     "deactivate": "Nofaol qilish",
+    "lowStockThreshold": "Kam qolish chegarasi",
+    "lowStockThresholdPlaceholder": "Ogohlantirish kerak bo'lmasa, bo'sh qoldiring",
     "validation": {
-      "nameRequired": "Model nomini kiriting"
+      "nameRequired": "Model nomini kiriting",
+      "thresholdPositive": "Chegara musbat butun son bo'lishi kerak"
     }
   },
   "investors": {

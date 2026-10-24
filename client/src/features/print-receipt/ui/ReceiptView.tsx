@@ -64,7 +64,7 @@ export function ReceiptView({ sale, settings, onBack }: ReceiptViewProps) {
           <Button
             size="sm"
             onClick={() => window.print()}
-            className="gap-1.5 text-xs h-8 bg-pricing-blue hover:bg-[#0077ed] text-white cursor-pointer"
+            className="gap-1.5 text-xs h-8 bg-pricing-blue hover:bg-pricing-blue/90 text-white cursor-pointer"
           >
             <Printer className="h-4 w-4" />
             {t('receipt.print')}

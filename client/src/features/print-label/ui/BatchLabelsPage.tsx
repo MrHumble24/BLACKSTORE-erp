@@ -118,7 +118,7 @@ function ToolbarHeader({
         <Button
           onClick={() => window.print()}
           disabled={disabled}
-          className="gap-2 bg-pricing-blue hover:bg-[#0077ed] text-gallery-white rounded-full text-xs font-medium px-5 h-8 shadow-none"
+          className="gap-2 bg-pricing-blue hover:bg-pricing-blue/90 text-white rounded-full text-xs font-medium px-5 h-8 shadow-none"
         >
           <Printer className="h-3.5 w-3.5" />
           <span>{t('labels.printAll')}</span>

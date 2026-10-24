@@ -14,9 +14,9 @@ export function RecentSalesList({ sales }: { sales: DashboardRecentSale[] }) {
     <Card className={cn(CARD, 'flex flex-col p-5')}>
       <h2 className="text-[13px] font-semibold tracking-[-0.01em] text-ink">{t('home.recentSales')}</h2>
       {sales.length === 0 ? (
-        <p className="mt-6 text-center text-[13px] text-[#9da9bb]">{t('home.noRecentSales')}</p>
+        <p className="mt-6 text-center text-[13px] text-slate">{t('home.noRecentSales')}</p>
       ) : (
-        <ul className="mt-3 divide-y divide-[#edf2f9]">
+        <ul className="mt-3 divide-y divide-hairline-silver/60">
           {sales.map((sale) => (
             <li key={sale.id}>
               <Link
@@ -27,7 +27,7 @@ export function RecentSalesList({ sales }: { sales: DashboardRecentSale[] }) {
                   <p className="truncate text-[13px] font-medium text-ink">
                     {sale.customer ?? t('home.walkInCustomer')}
                   </p>
-                  <p className="text-[12px] tabular-nums text-[#9da9bb]">{formatDate(sale.date)}</p>
+                  <p className="text-[12px] tabular-nums text-slate">{formatDate(sale.date)}</p>
                 </div>
                 <div className="flex items-center gap-2.5">
                   <SaleStatusBadge status={sale.status} />

@@ -8,7 +8,7 @@ import {
 } from '@/shared/ui';
 import { useCategories } from '@/entities/category';
 import { useLocations } from '@/entities/location';
-import type { AccessoryStockFilters } from '@/entities/accessory-stock';
+import type { AccessoryStockFilters, StockLevel } from '@/entities/accessory-stock';
 
 interface Option {
   value: string;
@@ -46,7 +46,7 @@ function FilterSelect({
   );
 }
 
-export type StockLevelFilter = 'ALL' | 'IN_STOCK' | 'LOW_STOCK' | 'OUT_OF_STOCK';
+export type StockLevelFilter = StockLevel;
 
 interface AccessoriesFiltersProps {
   filters: AccessoryStockFilters;

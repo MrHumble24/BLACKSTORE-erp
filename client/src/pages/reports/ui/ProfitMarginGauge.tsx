@@ -45,7 +45,7 @@ export function ProfitMarginGauge({ totals, previous }: ProfitMarginGaugeProps) 
           </RadialBarChart>
         </ResponsiveContainer>
         <div className="pointer-events-none absolute inset-x-0 bottom-3 flex flex-col items-center">
-          <span className="font-sf-pro-display text-3xl font-bold tabular-nums tracking-[-0.03em] text-[#344050]">
+          <span className="font-sf-pro-display text-3xl font-bold tabular-nums tracking-[-0.03em] text-ink">
             {rounded}%
           </span>
           <span className="text-[11px] text-steel">{t('reports.profit')}</span>

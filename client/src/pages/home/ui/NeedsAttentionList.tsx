@@ -1,7 +1,7 @@
 import type { ComponentType } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { Wallet, Clock, CheckCircle2, ChevronRight } from 'lucide-react';
+import { Wallet, Clock, PackageX, CheckCircle2, ChevronRight } from 'lucide-react';
 import { Card } from '@/shared/ui';
 import { cn } from '@/shared/lib';
 import type { DashboardSummary } from '@/entities/dashboard';
@@ -25,7 +25,7 @@ function Row({ to, icon: Icon, title, accent }: AttentionRow) {
         <Icon className="h-4 w-4" />
       </span>
       <span className="flex-1 text-[13px] font-medium text-ink">{title}</span>
-      <ChevronRight className="h-4 w-4 text-[#9da9bb]" />
+      <ChevronRight className="h-4 w-4 text-slate" />
     </Link>
   );
 }
@@ -40,7 +40,7 @@ export function NeedsAttentionList({ summary }: { summary: DashboardSummary }) {
       to: '/customers',
       icon: Wallet,
       title: t('home.debtorsToChase', { count: summary.debts.debtorCount }),
-      accent: 'bg-[#b64400]/10 text-[#b64400]',
+      accent: 'bg-launch-orange/10 text-launch-orange',
     });
   }
   if (summary.partners.overdueCount > 0) {
@@ -48,7 +48,15 @@ export function NeedsAttentionList({ summary }: { summary: DashboardSummary }) {
       to: '/partners',
       icon: Clock,
       title: t('home.overdueItems', { count: summary.partners.overdueCount }),
-      accent: 'bg-[#8b5cf6]/10 text-[#8b5cf6]',
+      accent: 'bg-purple-500/10 text-purple-600 dark:text-purple-400',
+    });
+  }
+  if (summary.lowStockCount > 0) {
+    rows.push({
+      to: '/accessories?stockLevel=LOW_STOCK',
+      icon: PackageX,
+      title: t('home.lowStockAccessories', { count: summary.lowStockCount }),
+      accent: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
     });
   }
 
@@ -57,11 +65,11 @@ export function NeedsAttentionList({ summary }: { summary: DashboardSummary }) {
       <h2 className="text-[13px] font-semibold tracking-[-0.01em] text-ink">{t('home.needsAttention')}</h2>
       {rows.length === 0 ? (
         <div className="mt-6 flex flex-col items-center gap-2 text-center">
-          <CheckCircle2 className="h-7 w-7 text-[#059669]" />
-          <p className="text-[13px] text-[#9da9bb]">{t('home.allClear')}</p>
+          <CheckCircle2 className="h-7 w-7 text-emerald-600 dark:text-emerald-400" />
+          <p className="text-[13px] text-slate">{t('home.allClear')}</p>
         </div>
       ) : (
-        <div className="mt-2 divide-y divide-[#edf2f9]">
+        <div className="mt-2 divide-y divide-hairline-silver/60">
           {rows.map((row) => (
             <Row key={row.to} {...row} />
           ))}

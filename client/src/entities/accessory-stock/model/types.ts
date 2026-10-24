@@ -14,7 +14,12 @@ export interface AccessoryStock {
   };
   quantity: number;
   avgCost?: string;
+  /** Per-model low-stock threshold; null means no alert configured. */
+  lowStockThreshold: number | null;
 }
+
+/** Stock-level filter values accepted by GET /accessory-stock. */
+export type StockLevel = 'ALL' | 'IN_STOCK' | 'LOW_STOCK' | 'OUT_OF_STOCK';
 
 export interface AddAccessoryStockPayload {
   productModelId: number;
@@ -26,4 +31,5 @@ export interface AddAccessoryStockPayload {
 export interface AccessoryStockFilters {
   locationId?: number;
   categoryId?: number;
+  stockLevel?: StockLevel;
 }

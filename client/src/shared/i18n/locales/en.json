@@ -121,7 +121,8 @@
     "needsAttention": "Needs attention",
     "allClear": "All clear — nothing needs your attention",
     "debtorsToChase": "{{count}} customers owe you",
-    "overdueItems": "{{count}} items overdue at partners"
+    "overdueItems": "{{count}} items overdue at partners",
+    "lowStockAccessories": "{{count}} accessories low on stock"
   },
   "scan": {
     "placeholder": "IMEI or serial number...",
@@ -234,7 +235,7 @@
     "lowStock": "Low stock",
     "stockFilterAll": "All stock",
     "stockFilterInStock": "In stock",
-    "stockFilterLowStock": "Low stock (≤3)",
+    "stockFilterLowStock": "Low stock",
     "stockFilterOutOfStock": "Out of stock (0)",
     "validation": {
       "modelRequired": "Select a model",
@@ -330,8 +331,11 @@
     "updatedSuccess": "Model details updated",
     "activate": "Activate",
     "deactivate": "Deactivate",
+    "lowStockThreshold": "Low stock threshold",
+    "lowStockThresholdPlaceholder": "Leave empty for no alert",
     "validation": {
-      "nameRequired": "Model name is required"
+      "nameRequired": "Model name is required",
+      "thresholdPositive": "Threshold must be a positive whole number"
     }
   },
   "investors": {

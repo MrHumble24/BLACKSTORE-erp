@@ -91,14 +91,14 @@ function PaymentAmountField({ amount, total, paymentMethod, onChange }: PaymentA
       />
 
       {isOverpaying && (
-        <div className="flex items-center justify-between p-2.5 rounded-xl bg-emerald-50 border border-emerald-200/80 text-emerald-800 text-xs">
+        <div className="flex items-center justify-between p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 text-xs">
           <span className="font-medium">{t('sell.change')}:</span>
           <span className="font-mono font-bold text-sm tabular-nums">{formatMoney(diff)}</span>
         </div>
       )}
 
       {isUnderpaying && (
-        <div className="flex items-center justify-between p-2.5 rounded-xl bg-amber-50 border border-amber-200/80 text-amber-800 text-xs">
+        <div className="flex items-center justify-between p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-300 text-xs">
           <span className="font-medium">{t('sell.remainingDebt')}:</span>
           <span className="font-mono font-bold text-sm tabular-nums">{formatMoney(Math.abs(diff))}</span>
         </div>
@@ -110,9 +110,9 @@ function PaymentAmountField({ amount, total, paymentMethod, onChange }: PaymentA
 function SellTotalSummary({ total }: { total: string }) {
   const { t } = useTranslation();
   return (
-    <div className="rounded-2xl bg-ink text-gallery-white p-4 flex justify-between items-center shadow-none">
-      <span className="text-xs uppercase tracking-wider text-slate font-medium">{t('sell.summaryTotal')}</span>
-      <span className="text-2xl font-bold font-mono tracking-tight text-gallery-white tabular-nums">
+    <div className="rounded-2xl bg-ink text-white dark:bg-control-gray/60 dark:text-ink border border-transparent dark:border-hairline-silver/60 p-4 flex justify-between items-center shadow-none">
+      <span className="text-xs uppercase tracking-wider text-slate-300 dark:text-slate font-medium">{t('sell.summaryTotal')}</span>
+      <span className="text-2xl font-bold font-mono tracking-tight text-white dark:text-ink tabular-nums">
         {formatMoney(total)}
       </span>
     </div>
@@ -177,7 +177,7 @@ export function SellPaymentSection(props: SellPaymentSectionProps) {
           onChange={props.onPaymentAmountChange}
         />
         {isDebt && (
-          <div className="text-xs text-amber-800 font-medium bg-amber-50 p-2.5 rounded-xl border border-amber-200/80">
+          <div className="text-xs text-amber-700 dark:text-amber-300 font-medium bg-amber-500/10 p-2.5 rounded-xl border border-amber-500/30">
             {t('sell.debtNotice')}
           </div>
         )}
@@ -196,7 +196,7 @@ export function SellPaymentSection(props: SellPaymentSectionProps) {
           type="button"
           onClick={props.onSubmit}
           disabled={isSaveDisabled}
-          className="w-full h-11 text-sm font-semibold rounded-full bg-pricing-blue hover:bg-[#0077ed] text-gallery-white shadow-none cursor-pointer"
+          className="w-full h-11 text-sm font-semibold rounded-full bg-pricing-blue hover:bg-pricing-blue/90 text-white shadow-none cursor-pointer"
         >
           {props.isPending ? t('common.loading') : t('sell.submit')}
         </Button>

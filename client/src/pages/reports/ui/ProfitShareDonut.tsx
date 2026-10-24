@@ -58,7 +58,7 @@ export function ProfitShareDonut({ title, groups, centerCaption }: ProfitShareDo
             </ResponsiveContainer>
             <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
               <span className="text-[11px] text-steel">{centerCaption}</span>
-              <span className="font-sf-pro-display text-base font-semibold tabular-nums tracking-[-0.02em] text-[#344050]">
+              <span className="font-sf-pro-display text-base font-semibold tabular-nums tracking-[-0.02em] text-ink">
                 {money(total)}
               </span>
             </div>

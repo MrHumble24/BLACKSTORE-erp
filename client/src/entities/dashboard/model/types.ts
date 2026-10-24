@@ -29,6 +29,8 @@ export interface DashboardSummary {
   partners: {
     overdueCount: number;
   };
+  /** Accessories at or below their low-stock threshold across all locations. */
+  lowStockCount: number;
   /** Net profit this calendar month — present only with view_profit. */
   monthNetProfit?: string;
   recentSales: DashboardRecentSale[];

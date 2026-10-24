@@ -63,7 +63,7 @@ export function LoginForm() {
           <LoginFormFields register={register} errors={errors} disabled={isPending} />
           <Button
             type="submit"
-            className="w-full h-10 rounded-full bg-pricing-blue hover:bg-[#0077ed] text-gallery-white text-xs font-medium tracking-[-0.01em] mt-2 border-0 shadow-none cursor-pointer transition-colors"
+            className="w-full h-10 rounded-full bg-pricing-blue hover:bg-pricing-blue/90 text-white text-xs font-medium tracking-[-0.01em] mt-2 border-0 shadow-none cursor-pointer transition-colors"
             disabled={isPending}
           >
             {isPending ? t('auth.loggingIn') : t('auth.submit')}

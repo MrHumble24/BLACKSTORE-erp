@@ -7,8 +7,8 @@ import { DeltaBadge } from './chartKit';
 import { CARD, CHART } from './chartPalette';
 import { money } from './reportFormat';
 
-/** Premium numerals: SF Pro Display, tabular, in Falcon navy. */
-const NUM = 'font-sf-pro-display tabular-nums tracking-[-0.02em] text-[#344050]';
+/** Premium numerals: SF Pro Display, tabular, adapting to theme ink. */
+const NUM = 'font-sf-pro-display tabular-nums tracking-[-0.02em] text-ink';
 
 interface ProfitKpiBandProps {
   totals: ProfitTotals;
@@ -55,9 +55,9 @@ function NetProfitHighlight({ totals, previous, dailyTrends }: Pick<ProfitKpiBan
   return (
     <Card className={cn(CARD, 'flex flex-col overflow-hidden p-5 sm:p-6 lg:col-span-5')}>
       <div className="flex items-center justify-between gap-3">
-        <span className="text-[13px] font-medium text-[#5e6e82]">{t('reports.netProfit')}</span>
+        <span className="text-[13px] font-medium text-slate">{t('reports.netProfit')}</span>
         {netMargin && (
-          <span className="rounded-full bg-[#2c7be5]/10 px-2.5 py-0.5 text-[11px] font-semibold tabular-nums text-[#2c7be5]">
+          <span className="rounded-full bg-apple-blue/10 px-2.5 py-0.5 text-[11px] font-semibold tabular-nums text-apple-blue">
             {t('reports.netMargin')} {netMargin}
           </span>
         )}
@@ -109,9 +109,9 @@ function Stat({ label, value, previous, goodDirection, note, spark, sparkColor, 
   const hasPrev = previous != null && Number(previous) !== 0;
   return (
     <div className="flex flex-col px-5 py-4">
-      <p className="text-[12px] font-medium text-[#5e6e82]">{label}</p>
+      <p className="text-[12px] font-medium text-slate">{label}</p>
       <p className={cn('mt-1.5 text-[1.4rem] font-semibold', NUM)}>{valueText ?? money(value)}</p>
-      <p className="mt-1 flex items-center gap-1.5 text-[12px] text-[#9da9bb]">
+      <p className="mt-1 flex items-center gap-1.5 text-[12px] text-slate/80">
         {note ? <span className="tabular-nums">{note}</span> : hasPrev ? <span className="tabular-nums">{money(previous)}</span> : null}
         <DeltaBadge current={value} previous={previous} goodDirection={goodDirection} variant="plain" />
       </p>
@@ -131,7 +131,7 @@ function StatGrid({ totals, previous, dailyTrends, summary }: ProfitKpiBandProps
 
   return (
     <Card className={cn(CARD, 'overflow-hidden lg:col-span-7')}>
-      <div className="grid grid-cols-2 divide-x divide-y divide-[#edf2f9] sm:grid-cols-3">
+      <div className="grid grid-cols-2 divide-x divide-y divide-hairline-silver/60 sm:grid-cols-3">
         <Stat label={t('reports.sales')} value={totals.sales} previous={previous?.sales} spark={salesSpark} sparkColor={CHART.sales} />
         <Stat label={t('reports.profit')} value={totals.profit} previous={previous?.profit} note={grossMargin ? `${t('reports.margin')} ${grossMargin}` : null} spark={profitSpark} sparkColor={CHART.profit} />
         <Stat label={t('reports.expenses')} value={totals.expenses} previous={previous?.expenses} goodDirection="down" />

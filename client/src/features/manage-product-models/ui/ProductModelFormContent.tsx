@@ -32,6 +32,7 @@ function useProductModelForm(
     defaultValues: {
       categoryId: productModel?.categoryId ?? defaultCategoryId ?? 0,
       name: productModel?.name ?? '',
+      lowStockThreshold: productModel?.lowStockThreshold ?? null,
     },
   });
 }
@@ -47,8 +48,9 @@ export function ProductModelFormContent({
   const { mutate: update, isPending: isUpdating } = useUpdateProductModel();
 
   const { submit, apiError, isPending } = useCreateOrUpdate({
-    create: (p: { categoryId: number; name: string }, opt) => create(p, opt),
-    update: (p: { name: string }, opt) => {
+    create: (p: { categoryId: number; name: string; lowStockThreshold: number | null }, opt) =>
+      create(p, opt),
+    update: (p: { name: string; lowStockThreshold: number | null }, opt) => {
       if (productModel) update({ id: productModel.id, payload: p }, opt);
     },
     isPending: isCreating || isUpdating,
@@ -60,9 +62,10 @@ export function ProductModelFormContent({
   const form = useProductModelForm(t, productModel, defaultCategoryId);
 
   const onSubmit = form.handleSubmit((values) => {
+    const threshold = values.lowStockThreshold ?? null;
     submit(
-      { categoryId: values.categoryId, name: values.name.trim() },
-      { name: values.name.trim() },
+      { categoryId: values.categoryId, name: values.name.trim(), lowStockThreshold: threshold },
+      { name: values.name.trim(), lowStockThreshold: threshold },
     );
   });
 

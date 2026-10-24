@@ -40,8 +40,10 @@ function AccessoriesTableHeader({ canViewCost }: { canViewCost: boolean }) {
   );
 }
 
-function QuantityBadge({ quantity }: { quantity: number }) {
+/** Quantity cell with Out badge at zero and a Low badge when at/below the model's threshold. */
+function QuantityBadge({ quantity, lowStockThreshold }: { quantity: number; lowStockThreshold: number | null }) {
   const { t } = useTranslation();
+  const isLow = quantity > 0 && lowStockThreshold != null && quantity <= lowStockThreshold;
 
   if (quantity === 0) {
     return (
@@ -54,7 +56,7 @@ function QuantityBadge({ quantity }: { quantity: number }) {
     );
   }
 
-  if (quantity <= 3) {
+  if (isLow) {
     return (
       <div className="flex items-center justify-end gap-1.5">
         <span className="font-mono text-xs font-semibold text-ink">{quantity}</span>
@@ -85,7 +87,7 @@ function AccessoryRow({
       <TableCell className="text-slate text-xs">{item.productModel.category.name}</TableCell>
       <TableCell className="text-xs text-slate">{item.location.name}</TableCell>
       <TableCell className="text-right">
-        <QuantityBadge quantity={item.quantity} />
+        <QuantityBadge quantity={item.quantity} lowStockThreshold={item.lowStockThreshold} />
       </TableCell>
       {canViewCost && (
         <TableCell className="text-right font-mono text-xs text-ink">

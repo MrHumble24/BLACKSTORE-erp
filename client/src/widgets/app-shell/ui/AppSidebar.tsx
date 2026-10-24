@@ -28,7 +28,7 @@ function SidebarItem({ to, end, icon, label, onClick }: SidebarItemProps) {
         cn(
           'flex items-center gap-3 rounded-full px-4 py-2.5 text-xs font-medium tracking-[-0.01em] transition-all duration-150',
           isActive
-            ? 'bg-ink text-gallery-white'
+            ? 'bg-ink text-white dark:bg-control-gray dark:text-ink shadow-xs'
             : 'text-slate hover:bg-control-gray/60 hover:text-ink',
         )
       }
