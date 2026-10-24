@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Plus } from 'lucide-react';
 import { Button, Card, TablePagination, BackLink } from '@/shared/ui';
@@ -15,6 +15,17 @@ import { useBatches, BATCH_PAGE_SIZE, BatchSummaryTable } from '@/entities/batch
 import { SupplierFormDialog, SupplierPaymentDialog } from '@/features/manage-suppliers';
 import { SupplierDetailHeader } from './SupplierDetailHeader';
 import { SupplierPaymentsTable } from './SupplierPaymentsTable';
+
+/** "This is {{name}}'s account" link when the supplier is a linked investor (F26; server sends it with view_cost only). */
+function SupplierInvestorLine({ investor }: { investor: Supplier['investor'] }) {
+  const { t } = useTranslation();
+  if (!investor) return null;
+  return (
+    <Link to={`/investors/${investor.id}`} className="block text-xs text-apple-blue hover:underline">
+      {t('investors.account.supplierIsInvestor', { name: investor.name })}
+    </Link>
+  );
+}
 
 /** Balance stat card; money owed by the shop to this supplier (BR-8, view_cost only). */
 function SupplierBalanceCard({ supplier }: { supplier: Supplier }) {
@@ -86,7 +97,12 @@ function SupplierPaymentsSection({ supplier }: { supplier: Supplier }) {
         total={paymentPage?.total ?? 0}
         onPageChange={setPage}
       />
-      <SupplierPaymentDialog open={payOpen} onOpenChange={setPayOpen} supplierId={supplier.id} />
+      <SupplierPaymentDialog
+        open={payOpen}
+        onOpenChange={setPayOpen}
+        supplierId={supplier.id}
+        linkedInvestorName={supplier.investor?.name}
+      />
     </section>
   );
 }
@@ -121,6 +137,7 @@ export function SupplierDetailPage() {
   return (
     <div className="space-y-6">
       <SupplierDetailHeader supplier={supplier} onEdit={() => setEditOpen(true)} />
+      <SupplierInvestorLine investor={supplier.investor} />
       <SupplierBalanceCard supplier={supplier} />
       <SupplierBatchesSection supplierId={supplier.id} />
       <SupplierPaymentsSection supplier={supplier} />

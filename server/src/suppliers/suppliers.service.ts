@@ -26,13 +26,20 @@ export class SuppliersService {
     private readonly audit: AuditService,
   ) {}
 
-  /** Summary pick-list; active only unless all=true. */
+  /** Summary pick-list; active only unless all=true. `investorId` = the linked investor (F26), or null. */
   async findAll(all: boolean) {
-    return this.prisma.supplier.findMany({
+    const rows = await this.prisma.supplier.findMany({
       where: all ? {} : { isActive: true },
-      select: summarySelect,
+      select: { ...summarySelect, investor: { select: { id: true } } },
       orderBy: { name: 'asc' },
     });
+    return rows.map(({ id, name, country, isActive, investor }) => ({
+      id,
+      name,
+      country,
+      isActive,
+      investorId: investor?.id ?? null,
+    }));
   }
 
   /** Full supplier with the computed balance; 404 if missing. */
@@ -44,15 +51,18 @@ export class SuppliersService {
 
   /** Creates a supplier; duplicate name → 409 via the Prisma exception filter. */
   async create(dto: CreateSupplierDto, actor: PublicUser) {
-    const created = await this.prisma.$transaction(async (tx) => {
-      const supplier = await tx.supplier.create({ data: dto, select: fullSelect });
-      await this.audit.log(
-        { userId: actor.id, action: 'create', entity: 'Supplier', entityId: supplier.id, after: supplier },
-        tx,
-      );
-      return supplier;
-    });
+    const created = await this.prisma.$transaction((tx) => this.createInTx(tx, dto, actor.id));
     return this.withBalance(created, actor);
+  }
+
+  /** Creates and audits a supplier inside the caller's transaction (also used by investor create, F26). */
+  async createInTx(tx: Prisma.TransactionClient, dto: CreateSupplierDto, actorId: number) {
+    const supplier = await tx.supplier.create({ data: dto, select: fullSelect });
+    await this.audit.log(
+      { userId: actorId, action: 'create', entity: 'Supplier', entityId: supplier.id, after: supplier },
+      tx,
+    );
+    return supplier;
   }
 
   /** Updates a supplier; duplicate name → 409. */
@@ -73,11 +83,12 @@ export class SuppliersService {
   /**
    * Balance (BR-8) = Σ(unitPrice × quantity) over the supplier's batch lines − Σ payments.amount.
    * The product can't be a single Prisma aggregate, so lines are summed in memory; transfer
-   * fees are excluded as they never reach the supplier. Hidden without view_cost.
+   * fees are excluded as they never reach the supplier. Hidden without view_cost, like the linked
+   * investor (F26), whose account is built from this cost.
    */
   private async withBalance(supplier: FullSupplier, actor: PublicUser) {
     if (!hasPermission(actor, 'view_cost')) return supplier;
-    const [lines, paid] = await this.prisma.$transaction([
+    const [lines, paid, investor] = await this.prisma.$transaction([
       this.prisma.purchaseLine.findMany({
         where: { batch: { supplierId: supplier.id } },
         select: { unitPrice: true, quantity: true },
@@ -86,6 +97,7 @@ export class SuppliersService {
         where: { supplierId: supplier.id },
         _sum: { amount: true },
       }),
+      this.prisma.investor.findUnique({ where: { supplierId: supplier.id }, select: { id: true, name: true } }),
     ]);
     const owed = lines.reduce(
       (sum, l) => sum.plus(l.unitPrice.times(l.quantity)),
@@ -93,6 +105,6 @@ export class SuppliersService {
     );
     const { _sum } = paid;
     const balance = owed.minus(_sum.amount ?? new Prisma.Decimal(0));
-    return { ...supplier, balance: balance.toFixed(2) };
+    return { ...supplier, balance: balance.toFixed(2), investor };
   }
 }

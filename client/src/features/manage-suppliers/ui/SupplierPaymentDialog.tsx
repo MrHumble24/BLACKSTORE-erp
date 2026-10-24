@@ -6,6 +6,8 @@ interface SupplierPaymentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   supplierId: number;
+  /** Set when the supplier is an investor's account (F26): the fee switch replaces "Whose money". */
+  linkedInvestorName?: string;
 }
 
 /** Dialog for recording a payment (or negative correction) for a supplier. */
@@ -13,6 +15,7 @@ export function SupplierPaymentDialog({
   open,
   onOpenChange,
   supplierId,
+  linkedInvestorName,
 }: SupplierPaymentDialogProps) {
   const { t } = useTranslation();
 
@@ -26,6 +29,7 @@ export function SupplierPaymentDialog({
           <SupplierPaymentContent
             key={supplierId}
             supplierId={supplierId}
+            linkedInvestorName={linkedInvestorName}
             onClose={() => onOpenChange(false)}
           />
         )}

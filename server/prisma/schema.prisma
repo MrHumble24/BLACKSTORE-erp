@@ -206,6 +206,10 @@ model Investor {
   saleItems        SaleItem[]
   user             User?
   supplierPayments SupplierPayment[] // money sent abroad on this investor's behalf (F25)
+
+  // The same person's supplier record (F26): goods and money sent go through it. Never set on OWN.
+  supplierId Int?      @unique
+  supplier   Supplier? @relation(fields: [supplierId], references: [id])
 }
 
 model InvestorTransaction {
@@ -337,6 +341,7 @@ model Supplier {
   isActive Boolean           @default(true) // false = hidden from pick-lists, kept for history
   batches  Batch[]
   payments SupplierPayment[]
+  investor Investor? // set when this supplier is also an investor (F26)
 }
 
 model Batch {
@@ -388,7 +393,7 @@ model SupplierPayment {
   note       String?
   investorId Int? // whose money was sent (F25); null = the business's own money
   investor   Investor? @relation(fields: [investorId], references: [id])
-  feePaidBy  FeePayer  @default(BUSINESS) // who bears `fee`; INVESTOR only allowed when investorId is set
+  feePaidBy  FeePayer  @default(BUSINESS) // who bears `fee`; INVESTOR only allowed when investorId is set or the supplier is linked (F26)
 
   @@index([investorId])
 }

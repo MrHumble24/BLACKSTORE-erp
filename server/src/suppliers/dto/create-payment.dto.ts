@@ -39,7 +39,7 @@ export class CreatePaymentDto {
   @IsPositive()
   investorId?: number;
 
-  // Who bears the fee; INVESTOR requires investorId. Defaults to BUSINESS.
+  // Who bears the fee; INVESTOR requires investorId or a supplier linked to an investor (F26). Defaults to BUSINESS.
   @IsOptional()
   @IsEnum(FeePayer)
   feePaidBy?: FeePayer;

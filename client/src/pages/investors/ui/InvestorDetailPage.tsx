@@ -1,106 +1,17 @@
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Pencil, Plus } from 'lucide-react';
-import { Badge, Button, TablePagination, BackLink } from '@/shared/ui';
+import { BackLink } from '@/shared/ui';
 import { formatMoney } from '@/shared/lib';
-import {
-  useInvestor,
-  useInvestorTelegramLink,
-  useInvestorTelegramUnlink,
-  useInvestorTransactions,
-  type Investor,
-  type ShareType,
-} from '@/entities/investor';
+import { useAuthStore } from '@/entities/session';
+import { useInvestor, type Investor, type ShareType } from '@/entities/investor';
 import { InvestorFormDialog, InvestorTransactionDialog } from '@/features/manage-investors';
-import { TelegramInviteButton, TelegramLinkStatus } from '@/features/telegram-invite';
-import { InvestorTransactionsTable } from './InvestorTransactionsTable';
+import { InvestorDetailHeader } from './InvestorDetailHeader';
+import { InvestorTransactionsSection } from './InvestorTransactionsTable';
 import { InvestorMoneyCards } from './InvestorMoneyCards';
 import { InvestorSupplierPaymentsTable } from './InvestorSupplierPaymentsTable';
+import { InvestorAccount } from './InvestorAccount';
 import { InfoCard } from './InfoCard';
-
-const TRANSACTIONS_PAGE_SIZE = 20;
-
-/**
- * Telegram link status (with Unlink, even for inactive investors so they can be cleaned up) or the
- * invite button for a real, active investor; the business investor has no chat to link.
- * The page already requires manage_investors, which is also the unlink permission.
- */
-function InvestorTelegramInvite({ investor, onRefresh }: { investor: Investor; onRefresh: () => void }) {
-  const telegramLink = useInvestorTelegramLink();
-  const telegramUnlink = useInvestorTelegramUnlink();
-  if (investor.telegramLinked) {
-    return (
-      <TelegramLinkStatus
-        id={investor.id}
-        linkedAt={investor.telegramLinkedAt}
-        linkedBy={investor.telegramLinkedBy}
-        canUnlink
-        unlink={telegramUnlink}
-        onDone={onRefresh}
-      />
-    );
-  }
-  if (investor.isOwn || !investor.isActive) return null;
-  return (
-    <TelegramInviteButton
-      name={investor.name}
-      request={() => telegramLink.mutateAsync(investor.id)}
-      onClose={onRefresh}
-    />
-  );
-}
-
-/** Name with business/active badges and the Telegram, edit and add-transaction actions. */
-function InvestorDetailHeader({ investor, onEdit, onAddTx, onRefresh }: {
-  investor: Investor;
-  onEdit: () => void;
-  onAddTx: () => void;
-  onRefresh: () => void;
-}) {
-  const { t } = useTranslation();
-
-  return (
-    <div className="space-y-3">
-      <BackLink to="/investors" label={t('investors.backToList')} />
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <h1 className="text-2xl md:text-3xl font-semibold font-sf-pro-display tracking-tight text-ink">
-            {investor.name}
-          </h1>
-          {investor.isOwn && (
-            <Badge variant="secondary" className="px-2.5 py-0.5 text-[11px]">
-              {t('investors.business')}
-            </Badge>
-          )}
-          <Badge variant={investor.isActive ? 'active' : 'destructive'} className="px-2.5 py-0.5 text-[11px]">
-            {investor.isActive ? t('common.active') : t('common.inactive')}
-          </Badge>
-        </div>
-        <div className="flex items-center gap-2">
-          <InvestorTelegramInvite investor={investor} onRefresh={onRefresh} />
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onEdit}
-            className="h-8 px-4 rounded-full border-hairline-silver bg-gallery-white text-ink hover:bg-studio-mist hover:border-steel text-xs font-normal gap-1.5"
-          >
-            <Pencil className="h-3 w-3 text-apple-blue" />
-            <span>{t('investors.editInvestor')}</span>
-          </Button>
-          <Button
-            onClick={onAddTx}
-            className="gap-2 bg-pricing-blue hover:bg-pricing-blue/90 text-white rounded-full text-xs font-medium px-5 h-8 shadow-none border-0"
-          >
-            <Plus className="h-3.5 w-3.5" />
-            <span>{t('investors.addTransaction')}</span>
-          </Button>
-        </div>
-      </div>
-      <p className="text-xs text-slate">{t('investors.code')}: {investor.code}</p>
-    </div>
-  );
-}
 
 /** Translated share-type label for the read-only settings card. */
 function shareTypeLabel(shareType: ShareType | undefined, t: (k: string) => string): string {
@@ -135,53 +46,22 @@ function InvestorCards({ investor }: { investor: Investor }) {
   );
 }
 
-/** Transactions with pagination plus the two dialogs. */
-function InvestorDetailBody({
-  investor,
-  txOpen,
-  editOpen,
-  onTxOpenChange,
-  onEditOpenChange,
-}: {
-  investor: Investor;
-  txOpen: boolean;
-  editOpen: boolean;
-  onTxOpenChange: (open: boolean) => void;
-  onEditOpenChange: (open: boolean) => void;
-}) {
-  const [page, setPage] = useState(1);
-
-  const { data: txPage, isLoading } = useInvestorTransactions(
-    investor.id,
-    page,
-    TRANSACTIONS_PAGE_SIZE,
-  );
-  const totalPages = Math.ceil((txPage?.total ?? 0) / TRANSACTIONS_PAGE_SIZE) || 1;
-
+/** Unlinked investor: split cards, F25 money cards, transactions and "Sent to suppliers". */
+function PlainInvestorBody({ investor }: { investor: Investor }) {
   return (
     <>
-      <InvestorTransactionsTable transactions={txPage?.items ?? []} isLoading={isLoading} />
-      <TablePagination
-        page={page}
-        totalPages={totalPages}
-        total={txPage?.total ?? 0}
-        onPageChange={setPage}
-      />
+      <InvestorCards investor={investor} />
+      {investor.money && <InvestorMoneyCards money={investor.money} />}
+      <InvestorTransactionsSection investorId={investor.id} />
       <InvestorSupplierPaymentsTable investorId={investor.id} />
-
-      <InvestorFormDialog open={editOpen} onOpenChange={onEditOpenChange} investor={investor} />
-      <InvestorTransactionDialog
-        open={txOpen}
-        onOpenChange={onTxOpenChange}
-        investorId={investor.id}
-      />
     </>
   );
 }
 
 /**
- * Investor detail page: split settings, current balance and the money
- * transactions history (gated by manage_investors).
+ * Investor detail page (manage_investors). A linked investor (F26) gets the account view: one
+ * number, "Send money" and the statement; an unlinked one keeps the split cards and tables.
+ * The account needs view_cost (the server returns 403 without it), so other roles get the plain body.
  */
 export function InvestorDetailPage() {
   const { t } = useTranslation();
@@ -190,6 +70,8 @@ export function InvestorDetailPage() {
 
   const [txOpen, setTxOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
+  const [sendOpen, setSendOpen] = useState(false);
+  const canViewCost = useAuthStore((state) => state.hasPermission('view_cost'));
 
   const { data: investor, isLoading, refetch } = useInvestor(
     Number.isNaN(investorId) ? undefined : investorId,
@@ -208,24 +90,24 @@ export function InvestorDetailPage() {
     );
   }
 
+  const showAccount = Boolean(investor.supplier) && canViewCost;
+
   return (
     <div className="space-y-6">
       <InvestorDetailHeader
         investor={investor}
         onEdit={() => setEditOpen(true)}
         onAddTx={() => setTxOpen(true)}
+        onSendMoney={showAccount ? () => setSendOpen(true) : undefined}
         onRefresh={() => void refetch()}
       />
-
-      <InvestorCards investor={investor} />
-      {investor.money && <InvestorMoneyCards money={investor.money} />}
-      <InvestorDetailBody
-        investor={investor}
-        txOpen={txOpen}
-        editOpen={editOpen}
-        onTxOpenChange={setTxOpen}
-        onEditOpenChange={setEditOpen}
-      />
+      {showAccount ? (
+        <InvestorAccount investor={investor} sendOpen={sendOpen} onSendOpenChange={setSendOpen} />
+      ) : (
+        <PlainInvestorBody investor={investor} />
+      )}
+      <InvestorFormDialog open={editOpen} onOpenChange={setEditOpen} investor={investor} />
+      <InvestorTransactionDialog open={txOpen} onOpenChange={setTxOpen} investorId={investor.id} />
     </div>
   );
 }

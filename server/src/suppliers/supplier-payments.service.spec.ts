@@ -6,7 +6,7 @@ import { SupplierPaymentsService } from './supplier-payments.service';
 
 describe('SupplierPaymentsService (F25 investor money)', () => {
   const supplierPayment = { create: jest.fn(), findMany: jest.fn(), count: jest.fn() };
-  const supplier = { count: jest.fn() };
+  const supplier = { count: jest.fn(), findUnique: jest.fn() };
   const investor = { findUnique: jest.fn(), count: jest.fn() };
   const prisma = {
     supplierPayment,
@@ -14,7 +14,7 @@ describe('SupplierPaymentsService (F25 investor money)', () => {
     investor,
     // $transaction([...]) resolves each thenable; $transaction(cb) runs cb with the same mocks.
     $transaction: (arg: unknown) =>
-      Array.isArray(arg) ? Promise.all(arg) : (arg as (tx: unknown) => unknown)({ supplierPayment }),
+      Array.isArray(arg) ? Promise.all(arg) : (arg as (tx: unknown) => unknown)({ supplierPayment, supplier }),
   } as unknown as PrismaService;
   const audit = { log: jest.fn() } as unknown as AuditService;
   const service = new SupplierPaymentsService(prisma, audit);
@@ -29,6 +29,7 @@ describe('SupplierPaymentsService (F25 investor money)', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     supplier.count.mockResolvedValue(1);
+    supplier.findUnique.mockResolvedValue({ investor: { id: 4 } });
     investor.findUnique.mockResolvedValue({ isOwn: null, isActive: true });
     investor.count.mockResolvedValue(1);
     supplierPayment.create.mockResolvedValue(stored());
@@ -47,9 +48,23 @@ describe('SupplierPaymentsService (F25 investor money)', () => {
     expect(investor.findUnique).not.toHaveBeenCalled();
   });
 
-  it('400 for feePaidBy INVESTOR without an investor, before any DB call', async () => {
+  it('400 for feePaidBy INVESTOR without an investor on an unlinked supplier', async () => {
+    supplier.findUnique.mockResolvedValue({ investor: null });
     await expect(service.create(2, { amount: '1000', feePaidBy: 'INVESTOR' }, 1)).rejects.toThrow(BadRequestException);
-    expect(supplier.count).not.toHaveBeenCalled();
+    expect(supplier.findUnique).toHaveBeenCalledWith({ where: { id: 2 }, select: { investor: { select: { id: true } } } });
+    expect(supplierPayment.create).not.toHaveBeenCalled();
+  });
+
+  it('404 for an unknown supplier', async () => {
+    supplier.findUnique.mockResolvedValue(null);
+    await expect(service.create(2, { amount: '1000' }, 1)).rejects.toThrow(new NotFoundException('Supplier not found'));
+    expect(supplierPayment.create).not.toHaveBeenCalled();
+  });
+
+  it('stores feePaidBy INVESTOR without an investor on a linked supplier (F26)', async () => {
+    supplierPayment.create.mockResolvedValue(stored({ investorId: null, investor: null }));
+    await service.create(2, { amount: '1000', fee: '50', feePaidBy: 'INVESTOR' }, 1);
+    expect(createData()).toMatchObject({ investorId: undefined, feePaidBy: 'INVESTOR' });
   });
 
   it('404 for an unknown investor', async () => {

@@ -27,20 +27,38 @@ function useInvestorForm(t: (k: string) => string, investor: Investor | null) {
       code: investor?.code ?? '',
       shareType: investor?.shareType ?? 'NONE',
       shareValue: investor?.shareValue ?? '',
+      shipsDevices: true,
+      supplierId: investor?.supplier ? String(investor.supplier.id) : '',
     },
   });
 }
 
-/** Builds the contract payload; shareValue is only sent for PERCENT and FIXED_PER_ITEM. */
-function buildInvestorPayload(values: InvestorFormValues): CreateInvestorPayload | UpdateInvestorPayload {
-  if (values.shareType === 'NONE') {
-    return { name: values.name.trim(), code: values.code.trim(), shareType: 'NONE' };
-  }
+/** Share fields of the payload; shareValue is only sent for PERCENT and FIXED_PER_ITEM. */
+function shareFields(values: InvestorFormValues): Pick<CreateInvestorPayload, 'shareType' | 'shareValue'> {
+  return values.shareType === 'NONE'
+    ? { shareType: 'NONE' }
+    : { shareType: values.shareType, shareValue: values.shareValue.replace(',', '.') };
+}
+
+/** Create payload: identity, share and the "sends us devices" flag (F26). */
+function buildCreatePayload(values: InvestorFormValues): CreateInvestorPayload {
   return {
     name: values.name.trim(),
     code: values.code.trim(),
-    shareType: values.shareType,
-    shareValue: values.shareValue.replace(',', '.'),
+    ...shareFields(values),
+    shipsDevices: values.shipsDevices,
+  };
+}
+
+/** Update payload: identity, share and, only when it changed, the supplier link (null unlinks). */
+function buildUpdatePayload(values: InvestorFormValues, investor: Investor): UpdateInvestorPayload {
+  const current = investor.supplier ? String(investor.supplier.id) : '';
+  const linkChanged = !investor.isOwn && values.supplierId !== current;
+  return {
+    name: values.name.trim(),
+    code: values.code.trim(),
+    ...shareFields(values),
+    ...(linkChanged ? { supplierId: values.supplierId ? Number(values.supplierId) : null } : {}),
   };
 }
 
@@ -65,16 +83,15 @@ export function InvestorFormContent({ investor, onClose }: InvestorFormContentPr
 
   const form = useInvestorForm(t, investor);
 
-  const onSubmit = form.handleSubmit((values) => {
-    const payload = buildInvestorPayload(values);
-    submit(payload as CreateInvestorPayload, payload as UpdateInvestorPayload);
-  });
+  const onSubmit = form.handleSubmit((values) =>
+    submit(buildCreatePayload(values), investor ? buildUpdatePayload(values, investor) : undefined),
+  );
 
   return (
     <Form {...form}>
       <form onSubmit={onSubmit} className="space-y-4 pt-2">
         <FormError message={apiError} />
-        <InvestorFormFields disabled={isPending} />
+        <InvestorFormFields disabled={isPending} investor={investor} />
         <DialogFormFooter onClose={onClose} isPending={isPending} />
       </form>
     </Form>

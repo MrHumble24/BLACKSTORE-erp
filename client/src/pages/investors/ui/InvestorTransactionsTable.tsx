@@ -1,10 +1,17 @@
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-  TableLoadingRow, TableEmptyRow,
+  TableLoadingRow, TableEmptyRow, TablePagination,
 } from '@/shared/ui';
 import { formatMoney } from '@/shared/lib';
-import type { InvestorTransaction, InvestorTxType } from '@/entities/investor';
+import {
+  useInvestorTransactions,
+  type InvestorTransaction,
+  type InvestorTxType,
+} from '@/entities/investor';
+
+const TRANSACTIONS_PAGE_SIZE = 20;
 
 /** Translated label for a deposit/payout transaction type. */
 function txTypeLabel(type: InvestorTxType, t: (k: string) => string): string {
@@ -71,5 +78,24 @@ export function InvestorTransactionsTable({
         </TableBody>
       </Table>
     </div>
+  );
+}
+
+/** Deposits/withdrawals table with its own pagination (FR-10), used by both investor page variants. */
+export function InvestorTransactionsSection({ investorId }: { investorId: number }) {
+  const [page, setPage] = useState(1);
+  const { data: txPage, isLoading } = useInvestorTransactions(investorId, page, TRANSACTIONS_PAGE_SIZE);
+  const totalPages = Math.ceil((txPage?.total ?? 0) / TRANSACTIONS_PAGE_SIZE) || 1;
+
+  return (
+    <>
+      <InvestorTransactionsTable transactions={txPage?.items ?? []} isLoading={isLoading} />
+      <TablePagination
+        page={page}
+        totalPages={totalPages}
+        total={txPage?.total ?? 0}
+        onPageChange={setPage}
+      />
+    </>
   );
 }

@@ -1,8 +1,10 @@
 import {
   IsBoolean,
   IsEnum,
+  IsInt,
   IsNotEmpty,
   IsOptional,
+  IsPositive,
   IsString,
   Matches,
   MaxLength,
@@ -35,4 +37,10 @@ export class UpdateInvestorDto {
   @IsOptional()
   @IsBoolean()
   isActive?: boolean;
+
+  // Supplier record of the same person (F26); explicit null unlinks (IsOptional lets null through).
+  @IsOptional()
+  @IsInt()
+  @IsPositive()
+  supplierId?: number | null;
 }

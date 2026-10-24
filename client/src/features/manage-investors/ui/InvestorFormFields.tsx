@@ -4,7 +4,9 @@ import {
   FormField, FormItem, FormLabel, FormControl, FormMessage,
   Input, SelectField,
 } from '@/shared/ui';
+import type { Investor } from '@/entities/investor';
 import type { InvestorFormValues } from '../model/investor.schema';
+import { InvestorLinkFields } from './InvestorLinkFields';
 
 /** Investor name and code inputs. */
 function InvestorIdentityFields({ disabled }: { disabled: boolean }) {
@@ -107,14 +109,17 @@ function InvestorShareFields({ disabled }: { disabled: boolean }) {
 
 interface InvestorFormFieldsProps {
   disabled: boolean;
+  /** null when creating. */
+  investor: Investor | null;
 }
 
-/** Name, code, shareType select and the conditional shareValue input. */
-export function InvestorFormFields({ disabled }: InvestorFormFieldsProps) {
+/** Name, code, shareType select, the conditional shareValue input and the supplier link (F26). */
+export function InvestorFormFields({ disabled, investor }: InvestorFormFieldsProps) {
   return (
     <>
       <InvestorIdentityFields disabled={disabled} />
       <InvestorShareFields disabled={disabled} />
+      <InvestorLinkFields disabled={disabled} investor={investor} />
     </>
   );
 }

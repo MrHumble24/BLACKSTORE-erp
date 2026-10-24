@@ -76,6 +76,13 @@ export class InvestorsController {
     return this.supplierPayments.findAllForInvestor(id, query);
   }
 
+  /** The investor account (F26): owed amount and its lines; cost-based, so view_cost too. */
+  @Get(':id/account')
+  @Permissions('manage_investors', 'view_cost')
+  findAccount(@Param('id', ParseIntPipe) id: number, @Query() query: PaginationQueryDto) {
+    return this.investors.account(id, query);
+  }
+
   @Post(':id/transactions')
   @Permissions('manage_investors')
   createTransaction(

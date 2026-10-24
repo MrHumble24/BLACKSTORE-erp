@@ -27,7 +27,8 @@
     "toggleTheme": "Переключить тему",
     "search": "Поиск...",
     "noResults": "Ничего не найдено",
-    "select": "Выбрать"
+    "select": "Выбрать",
+    "more": "Ещё"
   },
   "nav": {
     "main": "Основная навигация",
@@ -453,7 +454,32 @@
     },
     "supplierPaymentsTitle": "Отправлено поставщикам",
     "noSupplierPayments": "Платежей поставщикам пока нет",
-    "supplier": "Поставщик"
+    "supplier": "Поставщик",
+    "shipsDevices": "Отправляет нам товар",
+    "supplierRecord": "Карточка поставщика",
+    "supplierNone": "Не привязана",
+    "account": {
+      "weOwe": "Мы должны {{name}}",
+      "theyOwe": "{{name}} должен нам",
+      "settled": "Всё рассчитано",
+      "hint": "Пришедший товар и доля прибыли прибавляют, отправленные деньги убавляют",
+      "sendMoney": "Отправить деньги",
+      "feeByInvestor": "Комиссию платит {{name}}",
+      "owesMore": "долг больше",
+      "owesLess": "долг меньше",
+      "empty": "Пока пусто. Товар и деньги появятся здесь.",
+      "cashTable": "Приход и расход",
+      "supplierIsInvestor": "Это счёт {{name}}",
+      "line": {
+        "goods": "Пришло {{count}} шт., {{amount}}",
+        "sent": "Отправлено {{amount}}",
+        "fee": "Комиссия за перевод {{amount}}",
+        "share": "Продан {{model}}, доля {{amount}}",
+        "return": "Возврат {{model}}, доля изменена на {{amount}}",
+        "cashIn": "Получено наличными {{amount}}",
+        "cashOut": "Выдано наличными {{amount}}"
+      }
+    }
   },
   "validation": {
     "nameRequired": "Имя обязательно для заполнения",

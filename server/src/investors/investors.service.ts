@@ -9,8 +9,11 @@ import type { PublicUser } from '../common/auth-user';
 import { hasPermission } from '../common/permissions';
 import { PrismaService } from '../prisma/prisma.service';
 import { LinkTokenService, TelegramLinkResult } from '../telegram-bot/link-token.service';
+import { PaginationQueryDto } from '../common/pagination-query.dto';
 import { CreateInvestorDto } from './dto/create-investor.dto';
 import { UpdateInvestorDto } from './dto/update-investor.dto';
+import { loadInvestorAccount } from './investor-account';
+import { InvestorLinkService } from './investor-link.service';
 
 // Everyone sees the summary; money fields (shareType/shareValue/balance) stay hidden.
 const summarySelect = {
@@ -25,6 +28,7 @@ const fullSelect = {
   ...summarySelect,
   shareType: true,
   shareValue: true,
+  supplier: { select: { id: true, name: true, isActive: true } }, // the same person's supplier record (F26)
 } satisfies Prisma.InvestorSelect;
 
 type FullInvestor = Prisma.InvestorGetPayload<{ select: typeof fullSelect }>;
@@ -38,6 +42,7 @@ export class InvestorsService {
     private readonly prisma: PrismaService,
     private readonly audit: AuditService,
     private readonly linkToken: LinkTokenService,
+    private readonly link: InvestorLinkService,
   ) {}
 
   /** Summary pick-list; active only unless all=true. Never exposes share or balance. */
@@ -101,12 +106,16 @@ export class InvestorsService {
     await this.linkToken.unlink(TelegramLinkKind.INVESTOR, id, actorId);
   }
 
-  /** Creates an investor. isOwn stays null (only the seeded OWN row is true). Duplicate code → 409. */
+  /**
+   * Creates an investor. isOwn stays null (only the seeded OWN row is true). Duplicate code → 409.
+   * shipsDevices links a supplier of the same name, reused or created in the same transaction (F26).
+   */
   async create(dto: CreateInvestorDto, actor: PublicUser) {
     const shareValue = resolveShareValue(dto.shareType, dto.shareValue);
     const created = await this.prisma.$transaction(async (tx) => {
+      const supplierId = dto.shipsDevices ? await this.link.supplierForNewInvestor(tx, dto.name, actor.id) : undefined;
       const investor = await tx.investor.create({
-        data: { name: dto.name, code: dto.code, shareType: dto.shareType, shareValue, isOwn: null },
+        data: { name: dto.name, code: dto.code, shareType: dto.shareType, shareValue, isOwn: null, supplierId },
         select: fullSelect,
       });
       await this.audit.log(
@@ -118,7 +127,10 @@ export class InvestorsService {
     return this.withMoney(created, actor);
   }
 
-  /** Updates an investor; isOwn never changes and the OWN investor can't be deactivated. */
+  /**
+   * Updates an investor; isOwn never changes and the OWN investor can't be deactivated. A given
+   * supplierId links that supplier (null unlinks, F26) after InvestorLinkService checks it.
+   */
   async update(id: number, dto: UpdateInvestorDto, actor: PublicUser) {
     const before = await this.prisma.investor.findUnique({
       where: { id },
@@ -136,9 +148,13 @@ export class InvestorsService {
         : undefined;
 
     const updated = await this.prisma.$transaction(async (tx) => {
+      if (dto.supplierId !== undefined) await this.link.assertLinkable(tx, before, dto.supplierId);
       const investor = await tx.investor.update({
         where: { id },
-        data: { name: dto.name, code: dto.code, shareType: dto.shareType, shareValue, isActive: dto.isActive },
+        data: {
+          name: dto.name, code: dto.code, shareType: dto.shareType, shareValue, isActive: dto.isActive,
+          supplierId: dto.supplierId,
+        },
         select: fullSelect,
       });
       await this.audit.log(
@@ -148,6 +164,21 @@ export class InvestorsService {
       return investor;
     });
     return this.withMoney(updated, actor);
+  }
+
+  /**
+   * The investor account (F26): one signed number and its lines; 404 unknown, 400 when no supplier
+   * is linked. The route needs view_cost, as the lines are built from purchase cost.
+   */
+  async account(id: number, query: PaginationQueryDto) {
+    const investor = await this.prisma.investor.findUnique({
+      where: { id },
+      select: { id: true, supplier: { select: { id: true, name: true } } },
+    });
+    if (!investor) throw new NotFoundException('Investor not found');
+    const { supplier } = investor;
+    if (!supplier) throw new BadRequestException('Investor is not linked to a supplier');
+    return loadInvestorAccount(this.prisma, { id, supplier }, query);
   }
 
   /**
@@ -194,7 +225,9 @@ export class InvestorsService {
 
   /**
    * Money sent abroad for the investor, fees charged to them, and their unsold stock at cost (F25).
-   * Supplier sums are signed, so correcting entries are included. Unsold = IN_STOCK | AT_PARTNER, valued
+   * Supplier sums are signed, so correcting entries are included. Fees count when feePaidBy is INVESTOR
+   * and the payment carries this investorId, or carries no investorId and goes to this investor's linked
+   * supplier (F26), the same rule as the account's FEE lines. Unsold = IN_STOCK | AT_PARTNER, valued
    * at purchasePrice + extraCost like the profit report; DEFECTIVE is only counted, its cost was booked as
    * a loss on return (BR-6).
    */
@@ -202,7 +235,10 @@ export class InvestorsService {
     const [{ _sum: sent }, { _sum: fees }, { _count: unsoldItems, _sum: unsold }, defectiveItems] = await Promise.all([
       this.prisma.supplierPayment.aggregate({ where: { investorId }, _sum: { amount: true } }),
       this.prisma.supplierPayment.aggregate({
-        where: { investorId, feePaidBy: FeePayer.INVESTOR },
+        where: {
+          feePaidBy: FeePayer.INVESTOR,
+          OR: [{ investorId }, { investorId: null, supplier: { investor: { is: { id: investorId } } } }],
+        },
         _sum: { fee: true },
       }),
       this.prisma.item.aggregate({

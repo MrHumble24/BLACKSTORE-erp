@@ -5,6 +5,7 @@ import type {
   Investor,
   InvestorTransaction,
   InvestorSupplierPayment,
+  InvestorAccount,
   CreateInvestorPayload,
   UpdateInvestorPayload,
   CreateInvestorTransactionPayload,
@@ -18,6 +19,8 @@ export const investorKeys = {
     [...investorKeys.all, 'transactions', { id, page, pageSize }] as const,
   supplierPayments: (id: number, page: number, pageSize: number) =>
     [...investorKeys.all, 'supplier-payments', { id, page, pageSize }] as const,
+  account: (id: number, page: number, pageSize: number) =>
+    [...investorKeys.all, 'account', { id, page, pageSize }] as const,
 };
 
 /**
@@ -72,6 +75,20 @@ export function useInvestorSupplierPayments(id: number | undefined, page = 1, pa
         `/investors/${id}/supplier-payments`,
         { params: { page: String(page), pageSize: String(pageSize) } },
       );
+      return data;
+    },
+  });
+}
+
+/** Fetches the investor account (owed number + one page of statement lines) for a linked investor (F26). */
+export function useInvestorAccount(id: number | undefined, page = 1, pageSize = 20) {
+  return useQuery({
+    queryKey: investorKeys.account(id ?? 0, page, pageSize),
+    enabled: id !== undefined,
+    queryFn: async () => {
+      const { data } = await api.get<InvestorAccount>(`/investors/${id}/account`, {
+        params: { page: String(page), pageSize: String(pageSize) },
+      });
       return data;
     },
   });

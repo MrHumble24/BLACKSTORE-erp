@@ -1,4 +1,4 @@
-import { IsEnum, IsNotEmpty, IsOptional, IsString, Matches, MaxLength } from 'class-validator';
+import { IsBoolean, IsEnum, IsNotEmpty, IsOptional, IsString, Matches, MaxLength } from 'class-validator';
 import { ShareType } from '@prisma/client';
 import { MONEY_REGEX } from '../../common/money';
 
@@ -21,4 +21,9 @@ export class CreateInvestorDto {
   @IsOptional()
   @Matches(MONEY_REGEX, { message: 'shareValue must be a non-negative decimal string' })
   shareValue?: string;
+
+  // Links a supplier of the same name, reused if unlinked or created (F26). Omitted = no supplier.
+  @IsOptional()
+  @IsBoolean()
+  shipsDevices?: boolean;
 }

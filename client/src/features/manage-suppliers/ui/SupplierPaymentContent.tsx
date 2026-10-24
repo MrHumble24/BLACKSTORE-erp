@@ -14,14 +14,29 @@ import {
 } from '../model/supplier.schema';
 import { SupplierPaymentFields } from './SupplierFormFields';
 import { SupplierPaymentOwnerFields } from './SupplierPaymentOwnerFields';
+import { SupplierPaymentFeeSwitch } from './SupplierPaymentFeeSwitch';
 
 interface SupplierPaymentContentProps {
   supplierId: number;
+  /** Linked investor (F26): no "Whose money", only "{{name}} pays the fee"; investorId is not sent. */
+  linkedInvestorName?: string;
   onClose: () => void;
 }
 
+/** Owner fields of the payload: investor + fee payer, or just the fee payer for a linked supplier. */
+function ownerFields(values: SupplierPaymentFormValues, linked: boolean) {
+  if (linked) return values.feePaidBy === 'INVESTOR' ? { feePaidBy: 'INVESTOR' as const } : {};
+  // '' = the business's own money: no investor and no fee payer are sent.
+  const investorId = values.investorId ? Number(values.investorId) : undefined;
+  return investorId ? { investorId, feePaidBy: values.feePaidBy } : {};
+}
+
 /** Form body for recording a supplier payment; wrong amounts are fixed with a correcting entry. */
-export function SupplierPaymentContent({ supplierId, onClose }: SupplierPaymentContentProps) {
+export function SupplierPaymentContent({
+  supplierId,
+  linkedInvestorName,
+  onClose,
+}: SupplierPaymentContentProps) {
   const { t } = useTranslation();
   const [todayIso] = useState(() => getTodayIso());
   const { mutate: createPayment, isPending: creating } = useCreateSupplierPayment();
@@ -32,10 +47,8 @@ export function SupplierPaymentContent({ supplierId, onClose }: SupplierPaymentC
       createPayment({ id: supplierId, payload }, {
         ...opt,
         onSuccess: () => {
-          // Investor money cards and "Sent to suppliers" are computed from these payments.
-          if (payload.investorId) {
-            void queryClient.invalidateQueries({ queryKey: investorKeys.all });
-          }
+          // Investor money cards, "Sent to suppliers" and the account statement are computed from these payments.
+          void queryClient.invalidateQueries({ queryKey: investorKeys.all });
           opt?.onSuccess?.();
         },
       }),
@@ -55,14 +68,12 @@ export function SupplierPaymentContent({ supplierId, onClose }: SupplierPaymentC
   });
 
   const onSubmit = form.handleSubmit((values) => {
-    // '' = the business's own money: no investor and no fee payer are sent.
-    const investorId = values.investorId ? Number(values.investorId) : undefined;
     submit({
       amount: normalizeMoney(values.amount),
       ...(values.fee.trim() ? { fee: normalizeMoney(values.fee) } : {}),
       ...(values.date?.trim() ? { date: values.date.trim() } : {}),
       ...(values.note.trim() ? { note: values.note.trim() } : {}),
-      ...(investorId ? { investorId, feePaidBy: values.feePaidBy } : {}),
+      ...ownerFields(values, Boolean(linkedInvestorName)),
     });
   });
 
@@ -74,12 +85,22 @@ export function SupplierPaymentContent({ supplierId, onClose }: SupplierPaymentC
           register={form.register}
           errors={form.formState.errors}
           disabled={isPending}
+          collapseMeta={Boolean(linkedInvestorName)}
         />
-        <SupplierPaymentOwnerFields
-          control={form.control}
-          setValue={form.setValue}
-          disabled={isPending}
-        />
+        {linkedInvestorName ? (
+          <SupplierPaymentFeeSwitch
+            control={form.control}
+            setValue={form.setValue}
+            disabled={isPending}
+            investorName={linkedInvestorName}
+          />
+        ) : (
+          <SupplierPaymentOwnerFields
+            control={form.control}
+            setValue={form.setValue}
+            disabled={isPending}
+          />
+        )}
         <DialogFormFooter onClose={onClose} isPending={isPending} />
       </form>
     </Form>

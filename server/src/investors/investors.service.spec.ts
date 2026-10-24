@@ -4,6 +4,7 @@ import { AuditService } from '../audit/audit.service';
 import type { PublicUser } from '../common/auth-user';
 import { PrismaService } from '../prisma/prisma.service';
 import { LinkTokenService } from '../telegram-bot/link-token.service';
+import { InvestorLinkService } from './investor-link.service';
 import { InvestorsService } from './investors.service';
 
 const user = (permissions: string[]): PublicUser =>
@@ -29,7 +30,10 @@ describe('InvestorsService', () => {
   } as unknown as PrismaService;
   const audit = { log: jest.fn() } as unknown as AuditService;
   const linkToken = { buildInviteLink: jest.fn(), unlink: jest.fn() };
-  const service = new InvestorsService(prisma, audit, linkToken as unknown as LinkTokenService);
+  const link = { assertLinkable: jest.fn(), supplierForNewInvestor: jest.fn() };
+  const service = new InvestorsService(
+    prisma, audit, linkToken as unknown as LinkTokenService, link as unknown as InvestorLinkService,
+  );
 
   // No transactions → balance is 0.00.
   const noTransactions = () =>
@@ -211,8 +215,12 @@ describe('InvestorsService', () => {
         unsoldAtCost: '2745.50',
         defectiveItems: 2,
       });
+      // F26: fees on payments to the linked supplier with no investorId count too.
       expect(supplierPayment.aggregate).toHaveBeenCalledWith({
-        where: { investorId: 4, feePaidBy: 'INVESTOR' },
+        where: {
+          feePaidBy: 'INVESTOR',
+          OR: [{ investorId: 4 }, { investorId: null, supplier: { investor: { is: { id: 4 } } } }],
+        },
         _sum: { fee: true },
       });
       expect(item.aggregate).toHaveBeenCalledWith(
@@ -243,6 +251,44 @@ describe('InvestorsService', () => {
       const result = await service.findOne(4, admin);
       expect(result).not.toHaveProperty('money');
       expect(item.aggregate).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('supplier link (F26)', () => {
+    const row = (over: object = {}) => ({ id: 4, name: 'Sardor', code: 'S', isOwn: null, isActive: true,
+      shareType: 'NONE', shareValue: new Prisma.Decimal('0'), supplier: null, ...over });
+
+    it('create with shipsDevices stores the resolved supplierId', async () => {
+      link.supplierForNewInvestor.mockResolvedValue(7);
+      investor.create.mockResolvedValue(row({ supplier: { id: 7, name: 'Sardor' } }));
+      const result = await service.create({ name: 'Sardor', code: 'S', shareType: 'NONE', shipsDevices: true }, admin);
+      expect(link.supplierForNewInvestor).toHaveBeenCalledWith(expect.anything(), 'Sardor', 1);
+      const [[{ data }]] = investor.create.mock.calls as [[{ data: { supplierId?: number } }]];
+      expect(data.supplierId).toBe(7);
+      expect(result.supplier).toEqual({ id: 7, name: 'Sardor' });
+    });
+
+    it('update with supplierId checks it, then writes it (null unlinks)', async () => {
+      investor.findUnique.mockResolvedValue(row({ supplier: { id: 7, name: 'Sardor' } }));
+      investor.update.mockResolvedValue(row());
+      await service.update(4, { supplierId: null }, admin);
+      expect(link.assertLinkable).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ id: 4 }), null);
+      const [[{ data }]] = investor.update.mock.calls as [[{ data: { supplierId?: number | null } }]];
+      expect(data.supplierId).toBeNull();
+    });
+
+    it('update without supplierId leaves the link alone', async () => {
+      investor.findUnique.mockResolvedValue(row());
+      investor.update.mockResolvedValue(row());
+      await service.update(4, { name: 'S2' }, admin);
+      expect(link.assertLinkable).not.toHaveBeenCalled();
+    });
+
+    it('account: 404 unknown, 400 not linked', async () => {
+      investor.findUnique.mockResolvedValue(null);
+      await expect(service.account(4, { page: 1, pageSize: 20 })).rejects.toThrow(NotFoundException);
+      investor.findUnique.mockResolvedValue({ id: 4, supplier: null });
+      await expect(service.account(4, { page: 1, pageSize: 20 })).rejects.toThrow('Investor is not linked to a supplier');
     });
   });
 });

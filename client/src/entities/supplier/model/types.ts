@@ -4,6 +4,8 @@ export interface SupplierSummary {
   name: string;
   country: string | null;
   isActive: boolean;
+  /** The investor this record is linked to (F26); null when free to link. */
+  investorId: number | null;
 }
 
 /** Full supplier with contact data and computed balance (BR-8); needs manage_suppliers. */
@@ -12,6 +14,8 @@ export interface Supplier extends SupplierSummary {
   note: string | null;
   /** Balance renders only for view_cost users (absent otherwise, never null). */
   balance?: string;
+  /** The investor whose account this supplier belongs to (F26); view_cost only, null when unlinked. */
+  investor?: { id: number; name: string } | null;
 }
 
 /** Who bears the transfer fee: the business (default) or the investor whose money was sent. */
@@ -52,6 +56,6 @@ export interface CreateSupplierPaymentPayload {
   date?: string;
   note?: string;
   investorId?: number;
-  /** INVESTOR only together with investorId. */
+  /** INVESTOR together with investorId, or alone when the supplier is linked to an investor (F26). */
   feePaidBy?: FeePayer;
 }

@@ -27,7 +27,8 @@
     "toggleTheme": "Toggle theme",
     "search": "Search...",
     "noResults": "No results found",
-    "select": "Select"
+    "select": "Select",
+    "more": "More"
   },
   "nav": {
     "main": "Main navigation",
@@ -453,7 +454,32 @@
     },
     "supplierPaymentsTitle": "Sent to suppliers",
     "noSupplierPayments": "No supplier payments yet",
-    "supplier": "Supplier"
+    "supplier": "Supplier",
+    "shipsDevices": "Sends us devices",
+    "supplierRecord": "Supplier record",
+    "supplierNone": "Not linked",
+    "account": {
+      "weOwe": "We owe {{name}}",
+      "theyOwe": "{{name}} owes us",
+      "settled": "All settled",
+      "hint": "Goods received and profit share add; money sent takes away",
+      "sendMoney": "Send money",
+      "feeByInvestor": "{{name}} pays the fee",
+      "owesMore": "we owe more",
+      "owesLess": "we owe less",
+      "empty": "Nothing yet. Goods and money will appear here.",
+      "cashTable": "Deposits and withdrawals",
+      "supplierIsInvestor": "This is {{name}}'s account",
+      "line": {
+        "goods": "{{count}} items arrived, {{amount}}",
+        "sent": "Sent {{amount}}",
+        "fee": "Transfer fee {{amount}}",
+        "share": "Sold {{model}}, share {{amount}}",
+        "return": "Returned {{model}}, share adjusted {{amount}}",
+        "cashIn": "Cash received {{amount}}",
+        "cashOut": "Cash paid {{amount}}"
+      }
+    }
   },
   "validation": {
     "nameRequired": "Name is required",

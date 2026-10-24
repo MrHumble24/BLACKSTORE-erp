@@ -55,17 +55,26 @@ export class SupplierPaymentsService {
     return { items: rows.map(toInvestorRow), total, page, pageSize };
   }
 
-  /** Records a payment; amount may be negative (correcting entry) but never 0. */
+  /**
+   * Records a payment; amount may be negative (correcting entry) but never 0. feePaidBy INVESTOR needs
+   * an investorId, or a supplier linked to an investor (F26: that investor bears the fee). The link is
+   * checked inside the transaction so an unlink can't slip in between. A fee stored as INVESTOR with no
+   * investorId belongs to whoever is linked at read time; unlinking orphans it (accepted).
+   */
   async create(supplierId: number, dto: CreatePaymentDto, actorId: number) {
     const { amount, fee } = parseAmounts(dto);
     const feePaidBy = dto.feePaidBy ?? FeePayer.BUSINESS;
-    if (feePaidBy === FeePayer.INVESTOR && dto.investorId === undefined) {
-      throw new BadRequestException('feePaidBy INVESTOR needs an investorId');
-    }
-    await this.assertSupplierExists(supplierId);
     if (dto.investorId !== undefined) await this.assertInvestorUsable(dto.investorId);
 
     const created = await this.prisma.$transaction(async (tx) => {
+      const supplier = await tx.supplier.findUnique({
+        where: { id: supplierId },
+        select: { investor: { select: { id: true } } },
+      });
+      if (!supplier) throw new NotFoundException('Supplier not found');
+      if (feePaidBy === FeePayer.INVESTOR && dto.investorId === undefined && !supplier.investor) {
+        throw new BadRequestException('feePaidBy INVESTOR needs an investorId');
+      }
       const payment = await tx.supplierPayment.create({
         data: {
           supplierId,

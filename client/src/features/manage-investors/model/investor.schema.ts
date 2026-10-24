@@ -14,6 +14,10 @@ export function createInvestorSchema(t: TFn) {
         message: t('investors.validation.shareTypeRequired'),
       }),
       shareValue: z.string(),
+      /** Create only: also create/link a supplier record of the same name (F26). */
+      shipsDevices: z.boolean(),
+      /** Edit only: linked supplier id as string; '' = not linked (F26). */
+      supplierId: z.string(),
     })
     .superRefine((values, ctx) => {
       if (values.shareType === 'NONE') {

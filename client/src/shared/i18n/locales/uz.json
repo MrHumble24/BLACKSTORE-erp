@@ -27,7 +27,8 @@
     "toggleTheme": "Mavzuni almashtirish",
     "search": "Qidiruv...",
     "noResults": "Hech narsa topilmadi",
-    "select": "Tanlang"
+    "select": "Tanlang",
+    "more": "Yana"
   },
   "nav": {
     "main": "Asosiy navigatsiya",
@@ -453,7 +454,32 @@
     },
     "supplierPaymentsTitle": "Yetkazib beruvchilarga yuborilgan",
     "noSupplierPayments": "Yetkazib beruvchilarga to'lovlar hali yo'q",
-    "supplier": "Yetkazib beruvchi"
+    "supplier": "Yetkazib beruvchi",
+    "shipsDevices": "Bizga tovar yuboradi",
+    "supplierRecord": "Yetkazib beruvchi kartasi",
+    "supplierNone": "Bog'lanmagan",
+    "account": {
+      "weOwe": "{{name}}ga qarzimiz",
+      "theyOwe": "{{name}} bizga qarzdor",
+      "settled": "Hisob teng",
+      "hint": "Kelgan tovar va foyda ulushi qo'shiladi, yuborilgan pul ayriladi",
+      "sendMoney": "Pul yuborish",
+      "feeByInvestor": "Komissiyani {{name}} to'laydi",
+      "owesMore": "qarz oshdi",
+      "owesLess": "qarz kamaydi",
+      "empty": "Hali hech narsa yo'q. Tovar va pul shu yerda ko'rinadi.",
+      "cashTable": "Kirim va chiqim",
+      "supplierIsInvestor": "Bu {{name}}ning hisobi",
+      "line": {
+        "goods": "{{count}} dona keldi, {{amount}}",
+        "sent": "{{amount}} yuborildi",
+        "fee": "O'tkazma komissiyasi {{amount}}",
+        "share": "{{model}} sotildi, ulush {{amount}}",
+        "return": "{{model}} qaytarildi, ulush {{amount}} o'zgardi",
+        "cashIn": "Naqd olindi {{amount}}",
+        "cashOut": "Naqd berildi {{amount}}"
+      }
+    }
   },
   "validation": {
     "nameRequired": "Ismni kiriting",

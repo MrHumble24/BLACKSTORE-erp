@@ -10,3 +10,10 @@ describe('InvestorsController DELETE :id/telegram-link (F24)', () => {
     expect(Reflect.getMetadata(PERMISSIONS_KEY, handler)).toEqual(['manage_investors']);
   });
 });
+
+describe('InvestorsController GET :id/account (F26)', () => {
+  it('needs both manage_investors and view_cost', () => {
+    const handler = InvestorsController.prototype.findAccount;
+    expect(Reflect.getMetadata(PERMISSIONS_KEY, handler)).toEqual(['manage_investors', 'view_cost']);
+  });
+});

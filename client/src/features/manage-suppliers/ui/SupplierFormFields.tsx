@@ -53,11 +53,40 @@ interface SupplierPaymentFieldsProps {
   register: UseFormRegister<SupplierPaymentFormValues>;
   errors: FieldErrors<SupplierPaymentFormValues>;
   disabled: boolean;
+  /** Linked-investor dialog (F26): date and note fold under "More"; amount and fee stay visible. */
+  collapseMeta?: boolean;
 }
 
-/** Amount (may be negative), fee and note inputs for the payment dialog. */
-export function SupplierPaymentFields({ register, errors, disabled }: SupplierPaymentFieldsProps) {
+/** Optional date (defaults to today) and note inputs of the payment dialog. */
+function PaymentMetaFields({ register, disabled }: SupplierPaymentFieldsProps) {
   const { t } = useTranslation();
+  return (
+    <>
+      <TextField
+        id="payment-date"
+        label={t('suppliers.date')}
+        type="date"
+        hint={t('investors.dateHelp')}
+        {...register('date')}
+        disabled={disabled}
+      />
+      {/* Full width in the fee/date grid of the regular dialog; no effect when folded. */}
+      <div className="md:col-span-2">
+        <TextField
+          id="payment-note"
+          label={t('suppliers.note')}
+          {...register('note')}
+          disabled={disabled}
+        />
+      </div>
+    </>
+  );
+}
+
+/** Amount (may be negative), fee, date and note inputs for the payment dialog. */
+export function SupplierPaymentFields(props: SupplierPaymentFieldsProps) {
+  const { t } = useTranslation();
+  const { register, errors, disabled, collapseMeta } = props;
 
   return (
     <div className="space-y-3">
@@ -68,10 +97,8 @@ export function SupplierPaymentFields({ register, errors, disabled }: SupplierPa
         error={errors.amount?.message}
         disabled={disabled}
       />
-
       <p className="text-[11px] text-slate -mt-1">{t('suppliers.amountHint')}</p>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <div className={collapseMeta ? '' : 'grid grid-cols-1 md:grid-cols-2 gap-3'}>
         <TextField
           id="payment-fee"
           label={t('suppliers.fee')}
@@ -79,22 +106,19 @@ export function SupplierPaymentFields({ register, errors, disabled }: SupplierPa
           error={errors.fee?.message}
           disabled={disabled}
         />
-        <TextField
-          id="payment-date"
-          label={t('suppliers.date')}
-          type="date"
-          hint={t('investors.dateHelp')}
-          {...register('date')}
-          disabled={disabled}
-        />
+        {collapseMeta ? (
+          <details className="pt-3">
+            <summary className="cursor-pointer text-xs text-apple-blue hover:underline">
+              {t('common.more')}
+            </summary>
+            <div className="space-y-3 pt-3">
+              <PaymentMetaFields {...props} />
+            </div>
+          </details>
+        ) : (
+          <PaymentMetaFields {...props} />
+        )}
       </div>
-
-      <TextField
-        id="payment-note"
-        label={t('suppliers.note')}
-        {...register('note')}
-        disabled={disabled}
-      />
     </div>
   );
 }
