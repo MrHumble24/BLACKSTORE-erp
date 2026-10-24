@@ -46,6 +46,20 @@ export class AuthService {
     return user;
   }
 
+  /**
+   * Re-authenticates an already-logged-in user by password, for destructive confirmations
+   * (F12 hard delete). Throws 401 if the user is gone or the password is wrong.
+   */
+  async verifyPassword(userId: number, password: string): Promise<void> {
+    const found = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { passwordHash: true },
+    });
+    if (!found || !(await bcrypt.compare(password, found.passwordHash))) {
+      throw new UnauthorizedException('Incorrect password');
+    }
+  }
+
   /** Resolves a session token to the active user, or null if the token is invalid or the user is gone/inactive. */
   async userFromSession(token: string): Promise<PublicUser | null> {
     let id: number;

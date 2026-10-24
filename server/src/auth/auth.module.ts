@@ -29,5 +29,6 @@ import { PermissionsGuard } from './permissions.guard';
     { provide: APP_GUARD, useClass: JwtAuthGuard },
     { provide: APP_GUARD, useClass: PermissionsGuard },
   ],
+  exports: [AuthService], // F12 super-admin re-authenticates the caller's password
 })
 export class AuthModule {}

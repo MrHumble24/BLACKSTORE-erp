@@ -8,5 +8,6 @@ import { BackupsService } from './backups.service';
   imports: [IntegrationsModule],
   controllers: [BackupsController],
   providers: [BackupsService],
+  exports: [BackupsService], // F12 super-admin takes a fresh backup before a hard delete
 })
 export class BackupsModule {}

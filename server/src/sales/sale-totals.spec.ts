@@ -1,6 +1,7 @@
 import { Prisma, SaleStatus } from '@prisma/client';
 import {
   balanceOf,
+  cashRefundOf,
   debtBalanceOf,
   saleStatusAfterPayment,
   saleStatusAfterReturn,
@@ -39,6 +40,16 @@ describe('sale-totals (BR-8)', () => {
         returns: [{ refundAmount: dec('40') }],
       }).toFixed(2),
     ).toBe('0.00');
+  });
+
+  it('cashRefund: debt-cancel refunds give 0 cash; only the excess over the balance leaves the drawer (F13)', () => {
+    // Fully-paid sale (balance 0): the whole refund is cash back.
+    expect(cashRefundOf(dec('50'), dec('0')).toFixed(2)).toBe('50.00');
+    // Debt sale, refund <= outstanding balance: pure debt cancel, no cash leaves the drawer.
+    expect(cashRefundOf(dec('80'), dec('100')).toFixed(2)).toBe('0.00');
+    expect(cashRefundOf(dec('100'), dec('100')).toFixed(2)).toBe('0.00');
+    // Refund above the outstanding balance: balance cancelled, the excess is cash back.
+    expect(cashRefundOf(dec('120'), dec('100')).toFixed(2)).toBe('20.00');
   });
 
   it('status after a payment: PAID only at a zero balance', () => {

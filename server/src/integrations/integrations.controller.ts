@@ -1,7 +1,7 @@
-import { Body, Controller, Delete, Get, HttpCode, Put, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Patch, Put, Post } from '@nestjs/common';
 import type { PublicUser } from '../common/auth-user';
 import { CurrentUser, Permissions } from '../common/decorators';
-import { SaveTelegramDto } from './dto/save-telegram.dto';
+import { SaveTelegramDto, UpdateTelegramSettingsDto } from './dto/save-telegram.dto';
 import { VerifyTelegramDto } from './dto/verify-telegram.dto';
 import { TelegramConfigService } from './telegram-config.service';
 
@@ -30,10 +30,16 @@ export class IntegrationsController {
     return { ok: true, bot: await this.telegram.verify(dto.token) };
   }
 
-  /** Verify + save the token (encrypted), chat ids and feature flags. */
+  /** Connect/replace the bot: verify + save the token (encrypted), chat ids and feature flags. */
   @Put()
   save(@Body() dto: SaveTelegramDto, @CurrentUser() actor: PublicUser) {
     return this.telegram.save(dto, actor.id);
+  }
+
+  /** Everyday settings change (no token): toggles + chat ids; keeps the stored bot. */
+  @Patch('settings')
+  updateSettings(@Body() dto: UpdateTelegramSettingsDto, @CurrentUser() actor: PublicUser) {
+    return this.telegram.updateSettings(dto, actor.id);
   }
 
   /** Clear the stored config (back to env fallback). */

@@ -16,13 +16,8 @@ export class TelegramFeaturesDto {
   lowStockDigest?: boolean;
 }
 
-/** Verify + save the Telegram bot token, chat ids and feature flags. */
-export class SaveTelegramDto {
-  @IsString()
-  @IsNotEmpty()
-  @MaxLength(200)
-  token!: string;
-
+/** Everyday Telegram settings (no token): toggles + chat ids. Needs a bot already configured. */
+export class UpdateTelegramSettingsDto {
   @IsOptional()
   @IsString()
   @MaxLength(100)
@@ -42,4 +37,12 @@ export class SaveTelegramDto {
   @ValidateNested()
   @Type(() => TelegramFeaturesDto)
   features?: TelegramFeaturesDto;
+}
+
+/** Connect/replace the bot: everything above plus a token to verify and store. */
+export class SaveTelegramDto extends UpdateTelegramSettingsDto {
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(200)
+  token!: string;
 }

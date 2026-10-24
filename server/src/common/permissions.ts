@@ -20,6 +20,7 @@ export const ALL_PERMISSIONS = [
   'manage_investors',
   'manage_suppliers',
   'manage_expenses',
+  'close_day', // F13: owner-only daily close / reconciliation (Admin + SuperAdmin, never Staff)
   'view_audit_log',
   'manage_backups',
   // Super-admin-only (F12): guarded by later tasks. Admin never gets these.

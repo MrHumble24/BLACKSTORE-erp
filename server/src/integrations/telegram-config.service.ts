@@ -5,7 +5,7 @@ import { AuditService } from '../audit/audit.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { EncryptedBlob, decrypt, encrypt, parseEncKey } from '../common/crypto';
 import { TelegramBot, TelegramChat, getMe, getUpdates } from '../common/telegram';
-import { SaveTelegramDto } from './dto/save-telegram.dto';
+import { SaveTelegramDto, UpdateTelegramSettingsDto } from './dto/save-telegram.dto';
 
 const TELEGRAM_KEY = 'telegram';
 
@@ -108,6 +108,32 @@ export class TelegramConfigService {
       enabled: dto.enabled ?? before.enabled,
       features: { lowStockDigest: dto.features?.lowStockDigest ?? before.features.lowStockDigest },
     };
+    await this.persist(next, before, actorId);
+    return this.toStatus(next);
+  }
+
+  /**
+   * Updates toggles / chat ids WITHOUT a token, keeping the stored bot. Requires a bot already
+   * configured (else 400) — there is nothing to attach these settings to otherwise.
+   */
+  async updateSettings(dto: UpdateTelegramSettingsDto, actorId: number): Promise<TelegramStatus> {
+    const before = await this.read();
+    if (!before.botTokenEnc) {
+      throw new BadRequestException('No Telegram bot is configured; connect a bot with a token first');
+    }
+    const next: TelegramConfig = {
+      ...before, // keeps botTokenEnc / botUsername / botName untouched
+      backupChatId: dto.backupChatId ?? before.backupChatId,
+      alertChatId: dto.alertChatId ?? before.alertChatId,
+      enabled: dto.enabled ?? before.enabled,
+      features: { lowStockDigest: dto.features?.lowStockDigest ?? before.features.lowStockDigest },
+    };
+    await this.persist(next, before, actorId);
+    return this.toStatus(next);
+  }
+
+  /** Upserts the 'telegram' row and audits the change (status snapshots only — never the token). */
+  private async persist(next: TelegramConfig, before: TelegramConfig, actorId: number): Promise<void> {
     await this.prisma.$transaction(async (tx) => {
       await tx.setting.upsert({
         where: { key: TELEGRAM_KEY },
@@ -119,7 +145,6 @@ export class TelegramConfigService {
         tx,
       );
     });
-    return this.toStatus(next);
   }
 
   /** Clears the stored config (back to env fallback); audited. */

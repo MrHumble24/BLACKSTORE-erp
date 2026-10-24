@@ -40,4 +40,9 @@ export class CreateLedgerEntryDto {
   @IsOptional()
   @IsBoolean()
   countsInProfit?: boolean;
+
+  // true = cash drawer, false = bank/card. Drives F13 reconciliation; defaults true in the service.
+  @IsOptional()
+  @IsBoolean()
+  inCash?: boolean;
 }

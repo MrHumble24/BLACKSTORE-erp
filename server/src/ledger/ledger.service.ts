@@ -15,6 +15,7 @@ const entrySelect = {
   date: true,
   note: true,
   countsInProfit: true,
+  inCash: true,
   user: { select: { id: true, name: true } },
 } satisfies Prisma.LedgerEntrySelect;
 
@@ -76,6 +77,7 @@ export class LedgerService {
           date: parsePastDate(dto.date) ?? new Date(),
           note: dto.note,
           countsInProfit,
+          inCash: dto.inCash ?? true,
           userId: actor.id,
         },
         select: entrySelect,
@@ -116,6 +118,7 @@ function toEntry(row: EntryRow) {
     date: row.date,
     note: row.note,
     countsInProfit: row.countsInProfit,
+    inCash: row.inCash,
     user: row.user,
   };
 }

@@ -8,7 +8,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateReturnDto } from './dto/create-return.dto';
 import { closeDebtItems } from './sale-close';
 import { saleDetailSelect, toSale } from './sale-shape';
-import { balanceOf, saleStatusAfterReturn, sumPaid, sumRefunded } from './sale-totals';
+import { balanceOf, cashRefundOf, saleStatusAfterReturn, sumPaid, sumRefunded } from './sale-totals';
 
 type Tx = Prisma.TransactionClient;
 
@@ -46,8 +46,12 @@ export class SaleReturnsService {
 
       const quantity = this.resolveQuantity(line, dto, sale.returns);
       const refundAmount = this.resolveRefund(line, dto, sale.returns, quantity);
+      // Cash handed back vs debt cancelled, computed server-side (F13): the refund cancels the
+      // sale's outstanding balance first; only the excess leaves the drawer. Never trust a client value.
+      const balanceBefore = balanceOf(sale.total, sumPaid(sale.payments), sumRefunded(sale.returns));
+      const cashRefund = cashRefundOf(refundAmount, balanceBefore);
       await tx.return.create({
-        data: { saleId, saleItemId: line.id, quantity, refundAmount, result: dto.result, reason: dto.reason, userId: actor.id },
+        data: { saleId, saleItemId: line.id, quantity, refundAmount, cashRefund, result: dto.result, reason: dto.reason, userId: actor.id },
       });
       await this.applyEffect(tx, line, dto.result, sale.locationId, quantity);
       const status = this.nextStatus(sale, line.id, quantity, refundAmount);

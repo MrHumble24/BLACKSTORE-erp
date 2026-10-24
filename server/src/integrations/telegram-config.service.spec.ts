@@ -16,12 +16,23 @@ function makeService(row: unknown, env: Record<string, string> = {}) {
     TELEGRAM_ALERT_CHAT_ID: 'ENV_ALERT',
     ...env,
   };
+  const setting = {
+    findUnique: jest.fn().mockResolvedValue(row == null ? null : { value: row }),
+    upsert: jest.fn().mockResolvedValue(undefined),
+  };
   const prisma = {
-    setting: { findUnique: jest.fn().mockResolvedValue(row == null ? null : { value: row }) },
+    setting,
+    // Run the callback with the same stub as the transaction client.
+    $transaction: jest.fn(async (cb: (tx: unknown) => unknown) => cb({ setting })),
   } as unknown as PrismaService;
   const config = { get: (k: string) => defaults[k] ?? '' } as unknown as ConfigService;
   const audit = { log: jest.fn() } as unknown as AuditService;
   return new TelegramConfigService(prisma, config, audit);
+}
+
+/** Pulls the mocked `setting.upsert` off a service built by makeService. */
+function upsertMock(service: TelegramConfigService): jest.Mock {
+  return (service as unknown as { prisma: { setting: { upsert: jest.Mock } } }).prisma.setting.upsert;
 }
 
 describe('TelegramConfigService.getCredentials', () => {
@@ -73,6 +84,36 @@ describe('TelegramConfigService.isFeatureEnabled', () => {
   it('defaults to on when nothing is stored', async () => {
     const service = makeService(null);
     expect(await service.isFeatureEnabled('lowStockDigest')).toBe(true);
+  });
+});
+
+describe('TelegramConfigService.updateSettings (no token)', () => {
+  it('keeps the stored token and updates only the flags/chat ids', async () => {
+    const stored = {
+      botTokenEnc: encrypt('DB_TOKEN', ENC_KEY),
+      botUsername: 'shop_bot',
+      botName: 'Shop',
+      backupChatId: 'DB_BACKUP',
+      alertChatId: 'DB_ALERT',
+      enabled: true,
+      features: { lowStockDigest: true },
+    };
+    const service = makeService(stored);
+
+    const status = await service.updateSettings({ enabled: false, features: { lowStockDigest: false } }, 9);
+
+    expect(status).toMatchObject({ configured: true, enabled: false, features: { lowStockDigest: false } });
+    // The persisted row still carries the original encrypted token — it was never re-entered.
+    const persisted = upsertMock(service).mock.calls[0][0].update.value;
+    expect(persisted.botTokenEnc).toEqual(stored.botTokenEnc);
+    expect(persisted.enabled).toBe(false);
+    expect(persisted.backupChatId).toBe('DB_BACKUP'); // untouched
+  });
+
+  it('throws 400 when no bot is configured yet', async () => {
+    const service = makeService(null);
+    await expect(service.updateSettings({ enabled: false }, 9)).rejects.toMatchObject({ status: 400 });
+    expect(upsertMock(service)).not.toHaveBeenCalled();
   });
 });
 

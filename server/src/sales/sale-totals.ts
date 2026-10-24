@@ -39,6 +39,19 @@ export function debtBalanceOf(sale: {
 }
 
 /**
+ * Cash actually handed back on a return (F13 drawer math). A refund first cancels the
+ * sale's outstanding debt; only the excess over that balance leaves the cash drawer.
+ * cashRefund = max(0, refundAmount − balanceBefore), so a pure debt-cancel refund = 0.
+ */
+export function cashRefundOf(
+  refundAmount: Prisma.Decimal,
+  balanceBefore: Prisma.Decimal,
+): Prisma.Decimal {
+  const cash = refundAmount.minus(balanceBefore);
+  return cash.isNegative() ? new Prisma.Decimal(0) : cash;
+}
+
+/**
  * Sale status once a payment lands: PAID when the balance reaches 0, otherwise it
  * stays a DEBT sale.
  */

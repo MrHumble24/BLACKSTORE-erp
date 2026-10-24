@@ -87,6 +87,20 @@ enum ReturnResult {
   DEFECTIVE
 }
 
+// Daily close / reconciliation (F13)
+enum DayStatus {
+  OPEN
+  CLOSED
+}
+
+enum FlagRefType {
+  SALE
+  PAYMENT
+  RETURN
+  EXPENSE
+  INCOME
+}
+
 // ─────────────────────────────────────────────
 // Users and permissions (#26, #27)
 // ─────────────────────────────────────────────
@@ -119,6 +133,7 @@ model User {
   consignments  Consignment[]
   stockCounts   StockCount[]
   ledgerEntries LedgerEntry[]
+  businessDays  BusinessDay[] // days this user closed
 }
 
 model AuditLog {
@@ -474,7 +489,8 @@ model SalePayment {
   method     PaymentMethod
   receivedBy Int // User id
   receiver   User          @relation(fields: [receivedBy], references: [id])
-  date       DateTime      @default(now())
+  date       DateTime      @default(now()) // editable business/display date
+  createdAt  DateTime      @default(now()) // server-set, immutable; reconciliation window keys off this (F13)
 }
 
 model Return {
@@ -485,11 +501,13 @@ model Return {
   saleItem     SaleItem     @relation(fields: [saleItemId], references: [id])
   quantity     Int          @default(1) // accessories can be returned partly
   refundAmount Decimal      @db.Decimal(12, 2)
+  cashRefund   Decimal      @default(0) @db.Decimal(12, 2) // server-computed cash handed back (vs debt cancelled); F13 drawer math
   result       ReturnResult
   reason       String?
   userId       Int
   user         User         @relation(fields: [userId], references: [id])
-  date         DateTime     @default(now())
+  date         DateTime     @default(now()) // editable business/display date
+  createdAt    DateTime     @default(now()) // server-set, immutable; reconciliation window keys off this (F13)
 }
 
 // ─────────────────────────────────────────────
@@ -572,7 +590,9 @@ model LedgerEntry {
   type           LedgerType
   category       String // "Rent", "Salary", "Delivery" ...
   amount         Decimal    @db.Decimal(12, 2)
-  date           DateTime   @default(now())
+  date           DateTime   @default(now()) // editable business/display date
+  createdAt      DateTime   @default(now()) // server-set, immutable; reconciliation window keys off this (F13)
+  inCash         Boolean    @default(true) // true = cash drawer; false = bank/card (F13 drawer math)
   note           String?
   countsInProfit Boolean    @default(false) // Admin confirms this INCOME adds to net profit (BR-5); always false for EXPENSE
   userId         Int
@@ -583,4 +603,47 @@ model LedgerEntry {
 model Setting {
   key   String @id
   value Json
+}
+
+// ─────────────────────────────────────────────
+// Daily close / reconciliation (F13, anti-fraud)
+// ─────────────────────────────────────────────
+
+// One trading day. Exactly one row is OPEN (enforced by a partial unique index in
+// the migration). The expected/counted/variance values are an immutable close-time
+// snapshot — frozen at close, never re-read as a live balance.
+model BusinessDay {
+  id           Int       @id @default(autoincrement())
+  openedAt     DateTime  @default(now())
+  closedAt     DateTime? // set at close; window is half-open [openedAt, closedAt)
+  status       DayStatus @default(OPEN)
+  expectedCash Decimal?  @db.Decimal(12, 2)
+  countedCash  Decimal?  @db.Decimal(12, 2)
+  cashVariance Decimal?  @db.Decimal(12, 2)
+  expectedCard Decimal?  @db.Decimal(12, 2)
+  countedCard  Decimal?  @db.Decimal(12, 2)
+  cardVariance Decimal?  @db.Decimal(12, 2)
+  note         String?
+  closedById   Int?
+  closedBy     User?     @relation(fields: [closedById], references: [id])
+
+  flags DayCloseFlag[]
+
+  @@index([status])
+}
+
+// A suspicious record the owner flagged while closing a day (FR-30 audited).
+model DayCloseFlag {
+  id            Int         @id @default(autoincrement())
+  businessDayId Int
+  businessDay   BusinessDay @relation(fields: [businessDayId], references: [id])
+  refType       FlagRefType
+  refId         Int
+  reason        String
+  resolved      Boolean     @default(false)
+  resolvedById  Int?
+  resolvedAt    DateTime?
+  createdAt     DateTime    @default(now())
+
+  @@index([businessDayId])
 }
