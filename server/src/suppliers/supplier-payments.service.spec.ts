@@ -7,7 +7,7 @@ import { SupplierPaymentsService } from './supplier-payments.service';
 describe('SupplierPaymentsService (F25 investor money)', () => {
   const supplierPayment = { create: jest.fn(), findMany: jest.fn(), count: jest.fn() };
   const supplier = { count: jest.fn() };
-  const investor = { findUnique: jest.fn() };
+  const investor = { findUnique: jest.fn(), count: jest.fn() };
   const prisma = {
     supplierPayment,
     supplier,
@@ -30,6 +30,7 @@ describe('SupplierPaymentsService (F25 investor money)', () => {
     jest.clearAllMocks();
     supplier.count.mockResolvedValue(1);
     investor.findUnique.mockResolvedValue({ isOwn: null, isActive: true });
+    investor.count.mockResolvedValue(1);
     supplierPayment.create.mockResolvedValue(stored());
   });
 
@@ -75,6 +76,13 @@ describe('SupplierPaymentsService (F25 investor money)', () => {
     );
   });
 
+  it('400 for a fee correction larger than the corrected amount', async () => {
+    await expect(service.create(2, { amount: '-10', fee: '-11' }, 1)).rejects.toThrow(
+      new BadRequestException('A fee correction cannot exceed the corrected amount'),
+    );
+    expect(supplierPayment.create).not.toHaveBeenCalled();
+  });
+
   it('stores a negative fee on a correcting entry', async () => {
     await service.create(2, { amount: '-1000', fee: '-10', investorId: 4, feePaidBy: 'INVESTOR' }, 1);
     const data = createData() as { amount: Prisma.Decimal; fee: Prisma.Decimal };
@@ -102,5 +110,13 @@ describe('SupplierPaymentsService (F25 investor money)', () => {
       }],
       total: 1, page: 2, pageSize: 10,
     });
+  });
+
+  it('findAllForInvestor 404s for an unknown investor', async () => {
+    investor.count.mockResolvedValue(0);
+    await expect(service.findAllForInvestor(99, { page: 1, pageSize: 10 })).rejects.toThrow(
+      new NotFoundException('Investor not found'),
+    );
+    expect(supplierPayment.findMany).not.toHaveBeenCalled();
   });
 });

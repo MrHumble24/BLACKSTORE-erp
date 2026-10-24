@@ -157,13 +157,24 @@ export class InvestorsService {
    */
   private async withMoney(investor: FullInvestor, actor: PublicUser) {
     const showMoney = hasPermission(actor, 'view_cost') && investor.isOwn !== true;
-    const [deposits, payouts] = await this.depositsAndPayouts(investor.id);
+    // One round of parallel queries: balance sums and (if shown) the money figures.
+    const [[deposits, payouts], figures] = await Promise.all([
+      this.depositsAndPayouts(investor.id),
+      showMoney ? this.moneyFigures(investor.id) : undefined,
+    ]);
+    const balance = deposits.minus(payouts);
+    const money = figures && {
+      deposits: deposits.toFixed(2),
+      payouts: payouts.toFixed(2),
+      ...figures,
+      unsentDeposits: balance.minus(figures.sentToSuppliers).minus(figures.feesCharged).toFixed(2),
+    };
     return {
       ...investor,
       isOwn: investor.isOwn ?? false,
       shareValue: investor.shareValue.toFixed(2),
-      balance: deposits.minus(payouts).toFixed(2),
-      ...(showMoney ? { money: await this.money(investor.id, deposits, payouts) } : {}),
+      balance: balance.toFixed(2),
+      ...(money ? { money } : {}),
     };
   }
 
@@ -175,8 +186,8 @@ export class InvestorsService {
       _sum: { amount: true },
     });
     const sumOf = (type: InvestorTxType) => {
-      const { _sum: sum } = groups.find((g) => g.type === type) ?? {};
-      return sum?.amount ?? ZERO;
+      const { _sum } = groups.find((g) => g.type === type) ?? {};
+      return _sum?.amount ?? ZERO;
     };
     return [sumOf(InvestorTxType.DEPOSIT), sumOf(InvestorTxType.PAYOUT)] as const;
   }
@@ -187,7 +198,7 @@ export class InvestorsService {
    * at purchasePrice + extraCost like the profit report; DEFECTIVE is only counted, its cost was booked as
    * a loss on return (BR-6).
    */
-  private async money(investorId: number, deposits: Prisma.Decimal, payouts: Prisma.Decimal) {
+  private async moneyFigures(investorId: number) {
     const [{ _sum: sent }, { _sum: fees }, { _count: unsoldItems, _sum: unsold }, defectiveItems] = await Promise.all([
       this.prisma.supplierPayment.aggregate({ where: { investorId }, _sum: { amount: true } }),
       this.prisma.supplierPayment.aggregate({
@@ -201,15 +212,10 @@ export class InvestorsService {
       }),
       this.prisma.item.count({ where: { investorId, status: ItemStatus.DEFECTIVE } }),
     ]);
-    const sentToSuppliers = sent.amount ?? ZERO;
-    const feesCharged = fees.fee ?? ZERO;
     const unsoldAtCost = (unsold.purchasePrice ?? ZERO).plus(unsold.extraCost ?? ZERO);
     return {
-      deposits: deposits.toFixed(2),
-      payouts: payouts.toFixed(2),
-      sentToSuppliers: sentToSuppliers.toFixed(2),
-      feesCharged: feesCharged.toFixed(2),
-      unsentDeposits: deposits.minus(payouts).minus(sentToSuppliers).minus(feesCharged).toFixed(2),
+      sentToSuppliers: (sent.amount ?? ZERO).toFixed(2),
+      feesCharged: (fees.fee ?? ZERO).toFixed(2),
       unsoldItems,
       unsoldAtCost: unsoldAtCost.toFixed(2),
       defectiveItems,

@@ -493,7 +493,8 @@
       "amountInvalid": "Invalid amount format",
       "amountNotZero": "Amount must not be zero",
       "feeInvalid": "Invalid commission format",
-      "feeNegativeOnlyOnCorrection": "A negative commission is only allowed on a correcting entry (negative amount)"
+      "feeNegativeOnlyOnCorrection": "A negative commission is only allowed on a correcting entry (negative amount)",
+      "feeCorrectionTooLarge": "A commission correction cannot exceed the corrected amount"
     },
     "paymentInvestor": "Whose money",
     "paymentInvestorBusiness": "Business (own money)",

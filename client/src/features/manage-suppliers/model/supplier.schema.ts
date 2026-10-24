@@ -57,5 +57,13 @@ export function createSupplierPaymentSchema(t: TFn) {
     .refine((v) => Number(normalizeMoney(v.fee)) >= 0 || Number(normalizeMoney(v.amount)) < 0, {
       message: t('suppliers.validation.feeNegativeOnlyOnCorrection'),
       path: ['fee'],
-    });
+    })
+    // A correction may not refund more fee than the amount it corrects (server mirrors this).
+    .refine(
+      (v) => {
+        const fee = Number(normalizeMoney(v.fee));
+        return fee >= 0 || Math.abs(fee) <= Math.abs(Number(normalizeMoney(v.amount)));
+      },
+      { message: t('suppliers.validation.feeCorrectionTooLarge'), path: ['fee'] },
+    );
 }

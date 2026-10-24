@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -6,6 +7,7 @@ import { DialogFormFooter, FormError, Form } from '@/shared/ui';
 import { getTodayIso, normalizeMoney, useCreateOrUpdate } from '@/shared/lib';
 import { useCreateSupplierPayment } from '@/entities/supplier';
 import type { CreateSupplierPaymentPayload } from '@/entities/supplier';
+import { investorKeys } from '@/entities/investor';
 import {
   createSupplierPaymentSchema,
   type SupplierPaymentFormValues,
@@ -23,10 +25,20 @@ export function SupplierPaymentContent({ supplierId, onClose }: SupplierPaymentC
   const { t } = useTranslation();
   const [todayIso] = useState(() => getTodayIso());
   const { mutate: createPayment, isPending: creating } = useCreateSupplierPayment();
+  const queryClient = useQueryClient();
 
   const { submit, apiError, isPending } = useCreateOrUpdate({
     create: (payload: CreateSupplierPaymentPayload, opt) =>
-      createPayment({ id: supplierId, payload }, opt),
+      createPayment({ id: supplierId, payload }, {
+        ...opt,
+        onSuccess: () => {
+          // Investor money cards and "Sent to suppliers" are computed from these payments.
+          if (payload.investorId) {
+            void queryClient.invalidateQueries({ queryKey: investorKeys.all });
+          }
+          opt?.onSuccess?.();
+        },
+      }),
     // Create-only dialog: the update branch of useCreateOrUpdate never runs.
     update: () => undefined,
     isPending: creating,

@@ -493,7 +493,8 @@
       "amountInvalid": "Summa formati noto'g'ri",
       "amountNotZero": "Summa 0 ga teng bo'lishi mumkin emas",
       "feeInvalid": "Komissiya formati noto'g'ri",
-      "feeNegativeOnlyOnCorrection": "Manfiy komissiya faqat tuzatish yozuvida (manfiy summa bilan) kiritiladi"
+      "feeNegativeOnlyOnCorrection": "Manfiy komissiya faqat tuzatish yozuvida (manfiy summa bilan) kiritiladi",
+      "feeCorrectionTooLarge": "Komissiya tuzatishi tuzatilayotgan summadan oshmasligi kerak"
     },
     "paymentInvestor": "Kimning puli",
     "paymentInvestorBusiness": "Biznes (do'kon o'z mablag'i)",

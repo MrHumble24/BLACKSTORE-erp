@@ -38,8 +38,10 @@ export class SupplierPaymentsService {
     return { items: rows.map(toResponse), total, page, pageSize };
   }
 
-  /** One page of payments made with an investor's money (F25), newest first, with the supplier name. */
+  /** One page of payments made with an investor's money (F25), newest first; 404 if the investor is missing. */
   async findAllForInvestor(investorId: number, { page, pageSize }: PaginationQueryDto) {
+    const exists = await this.prisma.investor.count({ where: { id: investorId } });
+    if (!exists) throw new NotFoundException('Investor not found');
     const [rows, total] = await this.prisma.$transaction([
       this.prisma.supplierPayment.findMany({
         where: { investorId },
@@ -110,31 +112,31 @@ function parseAmounts(dto: CreatePaymentDto) {
   if (fee?.isNegative() && !amount.isNegative()) {
     throw new BadRequestException('A negative fee is only allowed on a correcting entry');
   }
+  // Bound the reversal so the investor's feesCharged can't be pushed below zero.
+  if (fee?.isNegative() && fee.abs().gt(amount.abs())) {
+    throw new BadRequestException('A fee correction cannot exceed the corrected amount');
+  }
   return { amount, fee };
 }
 
-/** Money as decimal strings, date as an ISO string. */
-function toResponse(p: PaymentWithInvestor) {
+/** Fields shared by both row shapes: money as decimal strings, date as an ISO string. */
+function baseRow(p: PaymentWithInvestor | PaymentWithSupplier) {
   return {
     id: p.id,
     amount: p.amount.toFixed(2),
     fee: p.fee.toFixed(2),
     feePaidBy: p.feePaidBy,
-    investor: p.investor,
     date: p.date.toISOString(),
     note: p.note,
   };
+}
+
+/** Row of a supplier's payment list, with whose money it was. */
+function toResponse(p: PaymentWithInvestor) {
+  return { ...baseRow(p), investor: p.investor };
 }
 
 /** Row of an investor's "sent to suppliers" list. */
 function toInvestorRow(p: PaymentWithSupplier) {
-  return {
-    id: p.id,
-    date: p.date.toISOString(),
-    amount: p.amount.toFixed(2),
-    fee: p.fee.toFixed(2),
-    feePaidBy: p.feePaidBy,
-    note: p.note,
-    supplier: p.supplier,
-  };
+  return { ...baseRow(p), supplier: p.supplier };
 }
