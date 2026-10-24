@@ -1,5 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { basename } from 'node:path';
+import { Logger } from '@nestjs/common';
 
 /** Telegram refuses documents over 50 MB; stay just under so the upload never bounces. */
 export const TELEGRAM_MAX_BYTES = 49 * 1024 * 1024;
@@ -38,6 +39,31 @@ export async function sendMessage(token: string, chatId: string, text: string): 
     body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'HTML' }),
   });
   return res.ok;
+}
+
+/** Human-readable message from an unknown thrown value, for a log line. */
+export function errorMessage(e: unknown): string {
+  return e instanceof Error ? e.message : String(e);
+}
+
+/**
+ * Sends one Telegram message, logging (never throwing) on a failure so a send loop continues. Shared
+ * by every per-recipient cron (customer reminders, investor reports); `label` names the caller in the
+ * log line (e.g. 'Customer reminder', 'Investor report'). Behaviour: a failed send or a thrown error
+ * is warned and swallowed — the loop keeps going and nothing propagates out.
+ */
+export async function safeSend(
+  logger: Logger,
+  token: string,
+  chatId: string,
+  text: string,
+  label: string,
+): Promise<void> {
+  try {
+    if (!(await sendMessage(token, chatId, text))) logger.warn(`${label} failed to send`);
+  } catch (e) {
+    logger.warn(`${label} errored: ${errorMessage(e)}`);
+  }
 }
 
 /** The bot behind a token (F12), as the UI shows it after "verify". */

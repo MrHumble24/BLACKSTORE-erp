@@ -34,6 +34,11 @@ export class TelegramFeaturesDto {
   @IsOptional()
   @IsBoolean()
   warrantyReminders?: boolean;
+
+  // Monthly per-investor report cron (F18, roadmap #6). Default off.
+  @IsOptional()
+  @IsBoolean()
+  investorReports?: boolean;
 }
 
 /** Everyday Telegram settings (no token): toggles + chat ids. Needs a bot already configured. */

@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { Prisma, SaleStatus } from '@prisma/client';
-import { sendMessage } from '../common/telegram';
+import { errorMessage, safeSend } from '../common/telegram';
 import { TelegramConfigService } from '../integrations/telegram-config.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { SettingsService } from '../settings/settings.service';
@@ -57,11 +57,9 @@ export class CustomerNotificationsService {
         paid: sumPaid(sale.payments).toFixed(2),
         balance: debtBalanceOf(sale).toFixed(2),
       });
-      if (!(await sendMessage(token, chatId, text))) {
-        this.logger.warn(`Receipt for sale #${sale.id} failed to send`);
-      }
+      await safeSend(this.logger, token, chatId, text, `Receipt for sale #${sale.id}`);
     } catch (e) {
-      this.logger.warn(`Receipt for sale #${sale.id} errored: ${msg(e)}`);
+      this.logger.warn(`Receipt for sale #${sale.id} errored: ${errorMessage(e)}`);
     }
   }
 
@@ -84,10 +82,10 @@ export class CustomerNotificationsService {
         const owed = c.sales.reduce((sum, s) => sum.plus(debtBalanceOf(s)), new Prisma.Decimal(0));
         if (!c.telegramChatId || !owed.isPositive()) continue;
         // eslint-disable-next-line no-await-in-loop -- sequential sends; one failure must not stop the rest
-        await this.safeSend(token, c.telegramChatId, buildDebtReminderText(shop, owed.toFixed(2)));
+        await safeSend(this.logger, token, c.telegramChatId, buildDebtReminderText(shop, owed.toFixed(2)), 'Customer reminder');
       }
     } catch (e) {
-      this.logger.error(`Debt reminder cron failed: ${msg(e)}`);
+      this.logger.error(`Debt reminder cron failed: ${errorMessage(e)}`);
     }
   }
 
@@ -129,10 +127,10 @@ export class CustomerNotificationsService {
       }
       for (const [chatId, list] of byChat) {
         // eslint-disable-next-line no-await-in-loop -- sequential sends; one failure must not stop the rest
-        await this.safeSend(token, chatId, buildWarrantyReminderText(shop, list));
+        await safeSend(this.logger, token, chatId, buildWarrantyReminderText(shop, list), 'Customer reminder');
       }
     } catch (e) {
-      this.logger.error(`Warranty reminder cron failed: ${msg(e)}`);
+      this.logger.error(`Warranty reminder cron failed: ${errorMessage(e)}`);
     }
   }
 
@@ -146,15 +144,6 @@ export class CustomerNotificationsService {
     const { token } = await this.telegram.getCredentials();
     if (!token) this.logger.warn('Telegram not configured; skipping customer reminder cron');
     return token;
-  }
-
-  /** Sends one message, logging (never throwing) on a failure so the loop continues. */
-  private async safeSend(token: string, chatId: string, text: string): Promise<void> {
-    try {
-      if (!(await sendMessage(token, chatId, text))) this.logger.warn('Customer reminder failed to send');
-    } catch (e) {
-      this.logger.warn(`Customer reminder errored: ${msg(e)}`);
-    }
   }
 }
 
@@ -179,9 +168,4 @@ function deviceName(item: {
   item: { identifiers: { value: string }[] } | null;
 }): string {
   return item.productModel?.name ?? item.item?.identifiers[0]?.value ?? 'Mahsulot';
-}
-
-/** Error message text for a log line. */
-function msg(e: unknown): string {
-  return e instanceof Error ? e.message : String(e);
 }

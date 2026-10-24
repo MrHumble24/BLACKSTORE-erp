@@ -1162,7 +1162,8 @@
       "ownerSnapshot": "Owner daily snapshot",
       "customerReceipts": "Customer receipts",
       "debtReminders": "Debt reminders",
-      "warrantyReminders": "Warranty reminders"
+      "warrantyReminders": "Warranty reminders",
+      "investorReports": "Investor reports"
     },
     "disconnect": "Disconnect",
     "disconnectTitle": "Disconnect Telegram?",
@@ -1202,6 +1203,8 @@
     "note": "Note (optional)",
     "notePlaceholder": "Anything worth remembering about today",
     "confirmClose": "Confirm close",
-    "closedSuccess": "Day closed"
+    "closedSuccess": "Day closed",
+    "methodCash": "Cash",
+    "methodCard": "Card"
   }
 }

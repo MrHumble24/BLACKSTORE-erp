@@ -5,8 +5,23 @@ import type { TelegramConfigService } from '../integrations/telegram-config.serv
 import type { SaleDetailRow } from '../sales/sale-shape';
 import { CustomerNotificationsService } from './customer-notifications.service';
 
-// Mock only the network sender; the builders stay real.
-jest.mock('../common/telegram', () => ({ sendMessage: jest.fn() }));
+// Mock the network sender; safeSend/errorMessage get thin stand-ins (the real safeSend's try/catch is
+// unit-tested in common/telegram.spec). The stand-in forwards to the mocked sendMessage and swallows
+// errors, matching the real helper's "never throw" contract.
+jest.mock('../common/telegram', () => {
+  const sendMessage = jest.fn();
+  return {
+    sendMessage,
+    errorMessage: (e: unknown): string => (e instanceof Error ? e.message : String(e)),
+    safeSend: async (_l: unknown, token: string, chatId: string, text: string): Promise<void> => {
+      try {
+        await sendMessage(token, chatId, text);
+      } catch {
+        /* swallowed, as the real helper does */
+      }
+    },
+  };
+});
 import { sendMessage } from '../common/telegram';
 
 const CREDS = { token: 't', backupChatId: '', alertChatId: '' };

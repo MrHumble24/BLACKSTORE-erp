@@ -1162,7 +1162,8 @@
       "ownerSnapshot": "Ежедневная сводка владельцу",
       "customerReceipts": "Чеки клиентам",
       "debtReminders": "Напоминания о долге",
-      "warrantyReminders": "Напоминания о гарантии"
+      "warrantyReminders": "Напоминания о гарантии",
+      "investorReports": "Отчёты инвесторам"
     },
     "disconnect": "Отключить",
     "disconnectTitle": "Отключить Telegram?",
@@ -1202,6 +1203,8 @@
     "note": "Заметка (необязательно)",
     "notePlaceholder": "Что важно запомнить о сегодняшнем дне",
     "confirmClose": "Подтвердить закрытие",
-    "closedSuccess": "День закрыт"
+    "closedSuccess": "День закрыт",
+    "methodCash": "Наличные",
+    "methodCard": "Карта"
   }
 }
