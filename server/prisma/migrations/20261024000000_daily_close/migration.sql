@@ -7,13 +7,21 @@ CREATE TYPE "FlagRefType" AS ENUM ('SALE', 'PAYMENT', 'RETURN', 'EXPENSE', 'INCO
 -- AlterTable
 ALTER TABLE "LedgerEntry" ADD COLUMN     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 ADD COLUMN     "inCash" BOOLEAN NOT NULL DEFAULT true;
+-- Backfill existing rows: the DEFAULT only applies to new rows; without this, every pre-existing
+-- row collapses onto the deploy timestamp and lands in whatever day is open at deploy, corrupting
+-- that day's first reconciliation (F13). Inherit the real business date instead.
+UPDATE "LedgerEntry" SET "createdAt" = "date";
 
 -- AlterTable
 ALTER TABLE "Return" ADD COLUMN     "cashRefund" DECIMAL(12,2) NOT NULL DEFAULT 0,
 ADD COLUMN     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP;
+-- Backfill existing rows to their real business date (see LedgerEntry note above).
+UPDATE "Return" SET "createdAt" = "date";
 
 -- AlterTable
 ALTER TABLE "SalePayment" ADD COLUMN     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP;
+-- Backfill existing rows to their real business date (see LedgerEntry note above).
+UPDATE "SalePayment" SET "createdAt" = "date";
 
 -- CreateTable
 CREATE TABLE "BusinessDay" (
