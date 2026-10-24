@@ -5,12 +5,12 @@
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 4144 nodes · 6962 edges · 378 communities (351 shown, 27 thin omitted)
+- 4144 nodes · 6962 edges · 378 communities (349 shown, 29 thin omitted)
 - Extraction: 94% EXTRACTED · 6% INFERRED · 0% AMBIGUOUS · INFERRED: 395 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `cf0d357d`
+- Built from commit: `cbb42636`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -319,539 +319,543 @@
 - `LoginFormFields()` --calls--> `Register`  [INFERRED]
   client/src/features/auth/ui/LoginFormFields.tsx → PRODUCT.md
 
-## Communities (378 total, 27 thin omitted)
+## Communities (378 total, 29 thin omitted)
 
 ### Community 0 - "Community 0"
-Cohesion: 0.05
-Nodes (48): runSequential(), CodeParamDto, CreateIdentifierDto, CreateItemDto, CreateWalkInPurchaseDto, WalkInSellerDto, QueryItemsDto, UpdateItemDto (+40 more)
+Cohesion: 0.06
+Nodes (47): CodeParamDto, CreateIdentifierDto, CreateItemDto, CreateWalkInPurchaseDto, WalkInSellerDto, QueryItemsDto, UpdateItemDto, UpdateItemPricesDto (+39 more)
 
 ### Community 1 - "Community 1"
-Cohesion: 0.05
-Nodes (38): categoryKeys, useCreateAttribute(), useCreateCategory(), useUpdateAttribute(), useUpdateCategory(), CYRILLIC_MAP, slugifyAttributeKey(), ATTRIBUTE_TYPES (+30 more)
+Cohesion: 0.06
+Nodes (28): AccessoryStockService, StockRow, lowStockIds(), BatchLinesService, RemoveLine, RepriceLine, Tx, assertBatchEditable() (+20 more)
 
 ### Community 2 - "Community 2"
 Cohesion: 0.05
-Nodes (34): receiptSettingsKeys, useReceiptSettings(), useSale(), useUpdateReceiptSettings(), fileToDataUrl(), SAMPLE_SALE, DEFAULT_RECEIPT_SETTINGS, ReceiptSettings (+26 more)
+Nodes (38): categoryKeys, useCreateAttribute(), useCreateCategory(), useUpdateAttribute(), useUpdateCategory(), CYRILLIC_MAP, slugifyAttributeKey(), ATTRIBUTE_TYPES (+30 more)
 
 ### Community 3 - "Community 3"
+Cohesion: 0.05
+Nodes (34): receiptSettingsKeys, useReceiptSettings(), useSale(), useUpdateReceiptSettings(), fileToDataUrl(), SAMPLE_SALE, DEFAULT_RECEIPT_SETTINGS, ReceiptSettings (+26 more)
+
+### Community 4 - "Community 4"
 Cohesion: 0.11
 Nodes (20): JwtAuthGuard, PermissionsGuard, AuthRequest, Language, LANGUAGES, PublicUser, CurrentUser, Permissions() (+12 more)
 
-### Community 4 - "Community 4"
-Cohesion: 0.06
-Nodes (41): AppModule, configureApp(), bootstrap(), activeIds, allIds, body, imei1, imei2 (+33 more)
-
 ### Community 5 - "Community 5"
+Cohesion: 0.06
+Nodes (42): AppModule, configureApp(), bootstrap(), activeIds, allIds, body, imei1, imei2 (+34 more)
+
+### Community 6 - "Community 6"
 Cohesion: 0.07
 Nodes (24): endOfDay(), formatDate(), parseIso(), parsePastDate(), parseTodayOrFutureDate(), startOfToday(), ConsignmentSellService, Tx (+16 more)
 
-### Community 6 - "Community 6"
+### Community 7 - "Community 7"
 Cohesion: 0.06
 Nodes (33): investorKeys, useCreateInvestor(), useCreateInvestorTransaction(), useInvestor(), useInvestorTransactions(), useUpdateInvestor(), createInvestorSchema(), createInvestorTransactionSchema() (+25 more)
-
-### Community 7 - "Community 7"
-Cohesion: 0.08
-Nodes (23): BatchLinesService, RemoveLine, RepriceLine, Tx, assertBatchEditable(), isPastBatch(), past, DetailRow (+15 more)
 
 ### Community 8 - "Community 8"
 Cohesion: 0.06
 Nodes (26): blendAvgCost(), CreateTransferDto, TransferAccessoryDto, QueryTransfersDto, DetailRow, locationBrief, sharedFields(), SummaryRow (+18 more)
 
 ### Community 9 - "Community 9"
+Cohesion: 0.05
+Nodes (28): accessories, accessoryStock, audit, batch, item, items, prisma, purchaseLine (+20 more)
+
+### Community 10 - "Community 10"
 Cohesion: 0.06
 Nodes (32): saleKeys, useAddSalePayment(), useCreateSale(), useCreateSaleReturn(), AddPaymentPayload, CreateReturnPayload, CreateSaleAccessoryLine, CreateSaleDeviceLine (+24 more)
 
-### Community 10 - "Community 10"
-Cohesion: 0.09
-Nodes (25): ChartTooltip(), ChartTooltipProps, DeltaBadgeProps, TooltipRow, TooltipShell(), CHART, ProfitRankChart(), ProfitRankChartProps (+17 more)
-
 ### Community 11 - "Community 11"
 Cohesion: 0.09
-Nodes (28): CategoryInfo, err(), FIXED_COLUMNS, FIXED_SET, identifierType(), ImportContext, ImportItemInput, parseCondition() (+20 more)
+Nodes (29): ActiveNavMatch, findActiveItem(), matchScore(), match, testPaths, useVisibleNav(), AuthState, useAuthStore (+21 more)
 
 ### Community 12 - "Community 12"
 Cohesion: 0.08
 Nodes (15): CategoriesController, CategoriesModule, CategoriesService, accessoryStock, audit, category, categoryAttribute, item (+7 more)
 
 ### Community 13 - "Community 13"
-Cohesion: 0.1
-Nodes (24): CommandState, isMacPlatform(), useCommandShortcut(), useCommandStore, CommandCategory, CommandItem, buildLookupItems(), buildNavigationPages() (+16 more)
+Cohesion: 0.09
+Nodes (26): ChartTooltip(), ChartTooltipProps, DeltaBadgeProps, TooltipRow, TooltipShell(), CHART, marginOf(), ProfitMarginGauge() (+18 more)
 
 ### Community 14 - "Community 14"
-Cohesion: 0.1
-Nodes (15): ItemBrief, CreateScanDto, CreateStockCountDto, classifyScan(), computeResult(), ScanStatus, ScanWithItem, elsewhere (+7 more)
+Cohesion: 0.07
+Nodes (27): Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, PopoverContent, OptionListProps (+19 more)
 
 ### Community 15 - "Community 15"
-Cohesion: 0.12
-Nodes (22): BulkAddCodes, BulkAddConfig, BulkAddState, DEFAULT_CONFIG, useBulkAddStore, useBulkAddUserGuard(), BulkScanState, useResetMissingId() (+14 more)
+Cohesion: 0.08
+Nodes (24): cn(), Badge(), BadgeProps, badgeVariants, StateCard(), GroupTab, ProfitGroupTables(), ProfitGroupTablesProps (+16 more)
 
 ### Community 16 - "Community 16"
-Cohesion: 0.09
-Nodes (20): AFFECTED_KEYS, useHardDelete(), useHardDeletePreview(), HardDeletePreviewRequest, HardDeleteReport, HardDeleteRequest, HardDeleteResult, HardDeleteTargetType (+12 more)
+Cohesion: 0.08
+Nodes (21): useProfitReport(), InvestorReportFiltersProps, InvestorReportTable(), InvestorReportTableProps, InvestorRow(), InvestorTotalsRow(), InvestorSummaryStrip(), InvestorSummaryStripProps (+13 more)
 
 ### Community 17 - "Community 17"
-Cohesion: 0.09
-Nodes (19): AuditController, AuditModule, AuditEntry, AuditService, REDACTED_KEYS, create, prisma, service (+11 more)
+Cohesion: 0.12
+Nodes (20): escapeHtml(), errorMessage(), safeSend(), buildDebtReminderText(), buildReceiptText(), buildWarrantyReminderText(), ReceiptData, ReceiptLine (+12 more)
 
 ### Community 18 - "Community 18"
 Cohesion: 0.1
-Nodes (13): CustomersController, CustomersModule, CustomersService, audit, customer, prisma, result, sale (+5 more)
+Nodes (15): ItemBrief, CreateScanDto, CreateStockCountDto, classifyScan(), computeResult(), ScanStatus, ScanWithItem, elsewhere (+7 more)
 
 ### Community 19 - "Community 19"
 Cohesion: 0.12
-Nodes (20): BotUpdate, sendMessage(), telegramSkipReason(), buildOwnerSnapshot(), OwnerSnapshotData, OwnerSnapshotService, actual, getCredentials (+12 more)
+Nodes (22): BulkAddCodes, BulkAddConfig, BulkAddState, DEFAULT_CONFIG, useBulkAddStore, useBulkAddUserGuard(), BulkScanState, useResetMissingId() (+14 more)
 
 ### Community 20 - "Community 20"
-Cohesion: 0.1
-Nodes (21): decrypt(), DecryptError, encrypt(), EncryptedBlob, parseEncKey(), blob, key, EnvironmentVariables (+13 more)
+Cohesion: 0.09
+Nodes (20): AFFECTED_KEYS, useHardDelete(), useHardDeletePreview(), HardDeletePreviewRequest, HardDeleteReport, HardDeleteRequest, HardDeleteResult, HardDeleteTargetType (+12 more)
 
 ### Community 21 - "Community 21"
-Cohesion: 0.09
-Nodes (25): cn(), Badge(), BadgeProps, badgeVariants, StateCard(), FormControl(), FormDescription(), FormFieldContext (+17 more)
+Cohesion: 0.1
+Nodes (13): CustomersController, CustomersModule, CustomersService, audit, customer, prisma, result, sale (+5 more)
 
 ### Community 22 - "Community 22"
+Cohesion: 0.08
+Nodes (17): actor, { service }, { service, audit }, tx, HealthController, mockHealthCheckService, mockPrismaHealthIndicator, mockPrismaService (+9 more)
+
+### Community 23 - "Community 23"
 Cohesion: 0.11
 Nodes (21): telegramKeys, useClearTelegramConfig(), useSaveTelegramConfig(), useTelegramChats(), useTelegramConfig(), useUpdateTelegramSettings(), useVerifyTelegramBot(), SaveTelegramPayload (+13 more)
 
-### Community 23 - "Community 23"
-Cohesion: 0.09
-Nodes (21): FilterSelect(), FilterSelectProps, InvestorReportFiltersProps, InvestorReportTable(), InvestorReportTableProps, InvestorRow(), InvestorTotalsRow(), InvestorSummaryStrip() (+13 more)
-
 ### Community 24 - "Community 24"
-Cohesion: 0.09
-Nodes (20): PopoverContent, OptionListProps, OptionRowProps, SearchableOption, SearchableSelect(), SearchableSelectProps, SearchableTrigger(), SearchInputProps (+12 more)
+Cohesion: 0.11
+Nodes (18): BotUpdate, getBotUpdates(), logger, buildOwnerSnapshot(), CommandContext, handleStart(), handleStatus(), parseCommand() (+10 more)
 
 ### Community 25 - "Community 25"
-Cohesion: 0.11
-Nodes (16): errorMessage(), safeSend(), ReceiptLine, WarrantyItem, CustomerNotificationsService, deviceName(), CREDS, item (+8 more)
-
-### Community 26 - "Community 26"
 Cohesion: 0.09
 Nodes (13): computeExpected(), Expected, ReconcileInput, result, sumIf(), BusinessDayService, ClosedDay, DbClient (+5 more)
 
-### Community 27 - "Community 27"
-Cohesion: 0.13
-Nodes (19): ActiveNavMatch, findActiveItem(), matchScore(), match, testPaths, useVisibleNav(), HOME_NAV_ITEM, NAV_GROUPS (+11 more)
-
-### Community 28 - "Community 28"
-Cohesion: 0.11
-Nodes (15): BatchesService, hasPermission(), AuthState, useAuthStore, ReportsController, ProtectedRoute(), AdminItems(), BuyingItems() (+7 more)
-
-### Community 29 - "Community 29"
+### Community 26 - "Community 26"
 Cohesion: 0.11
 Nodes (13): CreateLedgerEntryDto, QueryLedgerDto, LedgerController, EntryRow, LedgerService, actor, audit, ledgerEntry (+5 more)
 
-### Community 30 - "Community 30"
+### Community 27 - "Community 27"
 Cohesion: 0.1
 Nodes (19): useCreateItem(), FailHandler, useScanErrorToast(), createBulkAddSchema(), Prices, TFn, BulkScanOptions, CodeStep (+11 more)
 
-### Community 31 - "Community 31"
-Cohesion: 0.1
-Nodes (15): AccessoryStockService, StockRow, lowStockIds(), accessories, accessoryStock, audit, batch, item (+7 more)
+### Community 28 - "Community 28"
+Cohesion: 0.13
+Nodes (11): sendMessage(), DashboardService, monthRange(), OwnerSnapshotData, OwnerSnapshotService, actual, getCredentials, msg (+3 more)
 
-### Community 32 - "Community 32"
+### Community 29 - "Community 29"
 Cohesion: 0.15
 Nodes (9): CreateInvestorDto, CreateTransactionDto, UpdateInvestorDto, InvestorTransactionsService, toResponse(), InvestorsModule, FullInvestor, InvestorsService (+1 more)
 
-### Community 33 - "Community 33"
+### Community 30 - "Community 30"
 Cohesion: 0.13
 Nodes (17): productModelKeys, useCreateProductModel(), useUpdateProductModel(), createProductModelSchema(), ProductModelFormValues, CreateProductModelPayload, ProductModel, UpdateProductModelPayload (+9 more)
 
-### Community 34 - "Community 34"
+### Community 31 - "Community 31"
 Cohesion: 0.09
 Nodes (14): audit, dto, investor, item, itemIdentifier, items, location, prisma (+6 more)
 
+### Community 32 - "Community 32"
+Cohesion: 0.14
+Nodes (11): BatchesService, hasPermission(), buildLookupItems(), buildNavigationPages(), buildQuickActions(), getAdminPages(), getCorePages(), getManagementPages() (+3 more)
+
+### Community 33 - "Community 33"
+Cohesion: 0.13
+Nodes (16): CommandState, isMacPlatform(), useCommandShortcut(), useCommandStore, CommandCategory, CommandItem, CommandDialog(), ListProps (+8 more)
+
+### Community 34 - "Community 34"
+Cohesion: 0.12
+Nodes (13): AuditController, AuditModule, AuditEntry, AuditService, REDACTED_KEYS, create, prisma, service (+5 more)
+
 ### Community 35 - "Community 35"
-Cohesion: 0.11
-Nodes (11): actor, { service }, { service, audit }, tx, HealthController, mockHealthCheckService, mockPrismaHealthIndicator, mockPrismaService (+3 more)
+Cohesion: 0.17
+Nodes (20): Backup, backupFileName(), prune(), Sidecar, toBackup(), writeSidecar(), decryptFile(), encryptFile() (+12 more)
 
 ### Community 36 - "Community 36"
-Cohesion: 0.09
-Nodes (17): getBotUpdates(), GetBotUpdatesResponse, getMe(), GetMeResponse, getUpdates(), GetUpdatesResponse, RawChat, sendDocument() (+9 more)
-
-### Community 37 - "Community 37"
 Cohesion: 0.15
 Nodes (20): HARD_DELETE_TYPES, HardDeleteDto, HardDeletePreviewDto, HardDeleteType, Db, deleteTargets(), itemOrModel(), snapshotRows() (+12 more)
 
-### Community 38 - "Community 38"
-Cohesion: 0.12
-Nodes (16): useSellCart(), SaleCompletedDialog(), SaleCompletedDialogProps, SellCartPanel(), SellCartPanelProps, SellConfirmDialog(), SellConfirmDialogProps, SellLocationSelect() (+8 more)
+### Community 37 - "Community 37"
+Cohesion: 0.11
+Nodes (23): ReportSaleRow, buckets, CATEGORY, d(), daily, item(), ItemOpts, [line] (+15 more)
 
-### Community 39 - "Community 39"
+### Community 38 - "Community 38"
 Cohesion: 0.13
 Nodes (13): useCreateTransfer(), AccessoryDraft, newAccessoryDraft(), Options, useScanToAdd(), TransferInput, useTransferSubmit(), Props (+5 more)
 
-### Community 40 - "Community 40"
-Cohesion: 0.12
-Nodes (20): useAddAccessoryStock(), useCategories(), useInvestors(), useLocations(), useProductModels(), useStartStockCount(), AccessoryStockContent(), useAccessoryStockForm() (+12 more)
-
-### Community 41 - "Community 41"
+### Community 39 - "Community 39"
 Cohesion: 0.1
 Nodes (14): useBatch(), AddAccessoriesButton(), BatchDetailPage(), PriceAllButton(), BatchCostFields(), BatchHeaderCard(), BatchHeaderCardProps, UnpricedBadgeProps (+6 more)
 
-### Community 42 - "Community 42"
+### Community 40 - "Community 40"
 Cohesion: 0.1
 Nodes (12): useCreateBatch(), useUpdateBatch(), BatchFormValues, createBatchFormSchema(), BatchFormContent(), BatchFormContentProps, buildUpdatePayload(), useBatchSubmit() (+4 more)
 
-### Community 43 - "Community 43"
-Cohesion: 0.12
-Nodes (17): useAddBatchItem(), createBatchScanSchema(), codeIdentifierType(), FailHandler, ScanTarget, useAddSecondCode(), useCreateLine(), useScanTarget() (+9 more)
-
-### Community 44 - "Community 44"
-Cohesion: 0.11
-Nodes (16): useProfitReport(), DeltaBadge(), margin(), NetProfitHighlight(), ProfitKpiBand(), ProfitKpiBandProps, StatGrid(), StatProps (+8 more)
-
-### Community 45 - "Community 45"
+### Community 41 - "Community 41"
 Cohesion: 0.12
 Nodes (14): ActiveToggleButtonProps, Button, ButtonProps, buttonVariants, CameraScanButtonProps, ScannerViewportProps, DialogContent, DialogDescription (+6 more)
 
-### Community 46 - "Community 46"
+### Community 42 - "Community 42"
 Cohesion: 0.14
 Nodes (16): locationKeys, useCreateLocation(), useUpdateLocation(), createLocationSchema(), LocationFormValues, CreateLocationPayload, Location, LocationType (+8 more)
 
-### Community 47 - "Community 47"
-Cohesion: 0.11
-Nodes (22): buckets, CATEGORY, d(), daily, item(), ItemOpts, [line], lines (+14 more)
-
-### Community 48 - "Community 48"
+### Community 43 - "Community 43"
 Cohesion: 0.11
 Nodes (12): DialogsProps, ItemDeviceInfoCard(), Props, ItemIdentifiersCard(), Props, ItemOwnershipCard(), Props, ItemPricingCard() (+4 more)
 
-### Community 49 - "Community 49"
+### Community 44 - "Community 44"
 Cohesion: 0.19
-Nodes (18): Backup, backupFileName(), prune(), Sidecar, toBackup(), writeSidecar(), decryptFile(), encryptFile() (+10 more)
+Nodes (13): CreatePartnerDto, UpdatePartnerDto, ReportNumbers, money(), SaleItemRow, SaleSummaryRow, balanceOf(), cashRefundOf() (+5 more)
 
-### Community 50 - "Community 50"
+### Community 45 - "Community 45"
 Cohesion: 0.13
 Nodes (17): Register, createUserFormSchema(), UserFormValues, AmountDateNote(), TypeAndCategory(), UserFormContent(), UserFormContentProps, UserFormDialogProps (+9 more)
+
+### Community 46 - "Community 46"
+Cohesion: 0.16
+Nodes (12): LowStockAlertsService, buildLowStockDigest(), isLowStock(), LOW_CANDIDATE_WHERE, LowStockLine, getCredentials, msg, { service, findMany } (+4 more)
+
+### Community 47 - "Community 47"
+Cohesion: 0.18
+Nodes (10): dateRange(), summarize(), groupLines(), groupLinesByDate(), signedQuantity(), sumLines(), previousPeriod(), ProfitReportService (+2 more)
+
+### Community 48 - "Community 48"
+Cohesion: 0.14
+Nodes (13): greetingKey(), HomeGreeting(), HomeKpiTiles(), Tile(), TileProps, HomeSkeleton(), AttentionRow, NeedsAttentionList() (+5 more)
+
+### Community 49 - "Community 49"
+Cohesion: 0.15
+Nodes (16): batchKeys, AddBatchAccessoryPayload, AddBatchItemPayload, Batch, BatchFilters, BatchItemIdentifier, BatchLine, BatchSummary (+8 more)
+
+### Community 50 - "Community 50"
+Cohesion: 0.1
+Nodes (13): useConsignment(), ConsignmentDetailPage(), ConsignmentItemDialogsProps, ConsignmentDueDateDialog(), ConsignmentDueDateDialogProps, FormContentProps, ConsignmentItemRowProps, ConsignmentItemsTable() (+5 more)
 
 ### Community 51 - "Community 51"
 Cohesion: 0.14
 Nodes (13): money(), buildInvestorReportText(), InvestorReportData, monthLabel(), previousMonth(), data, text, InvestorNotificationsService (+5 more)
 
 ### Community 52 - "Community 52"
-Cohesion: 0.15
-Nodes (16): batchKeys, AddBatchAccessoryPayload, AddBatchItemPayload, Batch, BatchFilters, BatchItemIdentifier, BatchLine, BatchSummary (+8 more)
+Cohesion: 0.14
+Nodes (13): decrypt(), DecryptError, encrypt(), EncryptedBlob, parseEncKey(), blob, key, EnvironmentVariables (+5 more)
 
 ### Community 53 - "Community 53"
-Cohesion: 0.21
-Nodes (14): useCurrentBusinessDay(), CloseDayForm, useCloseDayForm(), variance(), CloseConfirmDialog(), CloseConfirmDialogProps, SummaryRow(), CloseDayPage() (+6 more)
+Cohesion: 0.13
+Nodes (17): GetBotUpdatesResponse, getMe(), GetMeResponse, getUpdates(), GetUpdatesResponse, RawChat, sendDocument(), TelegramBot (+9 more)
 
 ### Community 54 - "Community 54"
-Cohesion: 0.1
-Nodes (13): useConsignment(), ConsignmentDetailPage(), ConsignmentItemDialogsProps, ConsignmentDueDateDialog(), ConsignmentDueDateDialogProps, FormContentProps, ConsignmentItemRowProps, ConsignmentItemsTable() (+5 more)
-
-### Community 55 - "Community 55"
-Cohesion: 0.23
-Nodes (13): ReturnLine, ReturnSale, Tx, money(), SaleItemRow, SaleSummaryRow, balanceOf(), cashRefundOf() (+5 more)
-
-### Community 56 - "Community 56"
 Cohesion: 0.17
 Nodes (6): CreateProductModelDto, QueryProductModelDto, UpdateProductModelDto, ProductModelsController, ProductModelsModule, ProductModelsService
 
-### Community 57 - "Community 57"
+### Community 55 - "Community 55"
 Cohesion: 0.16
 Nodes (6): ListQueryDto, CreateLocationDto, UpdateLocationDto, LocationsController, LocationsModule, LocationsService
 
-### Community 58 - "Community 58"
-Cohesion: 0.21
-Nodes (6): gunzipFile(), gzipFile(), BackupsService, exclusive(), exists(), Stat()
-
-### Community 59 - "Community 59"
-Cohesion: 0.19
-Nodes (15): HeatmapAcc, heatmapBuckets(), lowMargin(), LowMarginAcc, ZERO, ProfitLine, loadReportLines(), Period (+7 more)
-
-### Community 60 - "Community 60"
-Cohesion: 0.18
-Nodes (9): dateRange(), summarize(), groupLines(), groupLinesByDate(), signedQuantity(), sumLines(), previousPeriod(), ProfitReportService (+1 more)
-
-### Community 61 - "Community 61"
+### Community 56 - "Community 56"
 Cohesion: 0.11
 Nodes (15): useConsignments(), useCustomer(), usePartner(), useSales(), CustomerContactCard(), CustomerContactCardProps, CustomerDebtCard(), CustomerDebtCardProps (+7 more)
 
-### Community 62 - "Community 62"
-Cohesion: 0.15
-Nodes (12): greetingKey(), HomeGreeting(), Tile(), TileProps, HomeSkeleton(), AttentionRow, NeedsAttentionList(), Row() (+4 more)
+### Community 57 - "Community 57"
+Cohesion: 0.12
+Nodes (13): useCustomers(), CustomersPage(), CustomersTable(), CustomersTableProps, SalesDateFiltersProps, SalesFilters(), SalesFiltersProps, useSalesFilterOptions() (+5 more)
 
-### Community 63 - "Community 63"
+### Community 58 - "Community 58"
+Cohesion: 0.15
+Nodes (12): useGenerateSystemCode(), useItem(), getSystemCode(), ItemWithIdentifiers, BatchLabelCard(), BatchLabelsPage(), GenerationState, useEnsureBatchCodes() (+4 more)
+
+### Community 59 - "Community 59"
+Cohesion: 0.14
+Nodes (13): BatchScanValues, createBatchScanSchema(), codeIdentifierType(), BatchScanPanel(), ScanForm, targetModelOf(), toScanIdentifier(), useBatchScanForm() (+5 more)
+
+### Community 60 - "Community 60"
+Cohesion: 0.23
+Nodes (13): CloseDayForm, useCloseDayForm(), variance(), CloseConfirmDialog(), CloseConfirmDialogProps, SummaryRow(), CloseDayPage(), isMatch() (+5 more)
+
+### Community 61 - "Community 61"
 Cohesion: 0.12
 Nodes (13): MetricCardProps, PartnerCards(), PartnerCardsProps, ConsignmentRowProps, PartnerConsignmentsTable(), PartnerConsignmentsTableProps, PartnerContactCard(), PartnerContactCardProps (+5 more)
 
+### Community 62 - "Community 62"
+Cohesion: 0.22
+Nodes (10): AccessoryStockModule, AuthModule, BackupsModule, BatchesModule, ConsignmentsModule, ItemsModule, LedgerModule, PrismaModule (+2 more)
+
+### Community 63 - "Community 63"
+Cohesion: 0.2
+Nodes (14): HeatmapAcc, heatmapBuckets(), lowMargin(), LowMarginAcc, ZERO, ProfitLine, Period, ACCESSORIES (+6 more)
+
 ### Community 64 - "Community 64"
-Cohesion: 0.17
-Nodes (13): CreateSaleDto, CreateSaleLineDto, SalePaymentInputDto, assertAccessoryModel(), buildAccessoryLine(), buildDeviceLine(), buildLine(), BuiltLine (+5 more)
-
-### Community 65 - "Community 65"
-Cohesion: 0.18
-Nodes (11): LowStockAlertsService, buildLowStockDigest(), isLowStock(), LOW_CANDIDATE_WHERE, LowStockLine, getCredentials, msg, { service, findMany } (+3 more)
-
-### Community 66 - "Community 66"
 Cohesion: 0.17
 Nodes (13): CreateWalkInPurchasePayload, useCreateWalkInPurchase(), createWalkInPurchaseSchema(), TFn, WalkInPurchaseFormValues, WalkInModelFields(), WalkInModelFieldsProps, WalkInSellerFields() (+5 more)
 
-### Community 67 - "Community 67"
+### Community 65 - "Community 65"
 Cohesion: 0.13
 Nodes (12): useCreateConsignment(), useItemByCode(), HandoverHeaderFields(), HandoverHeaderFieldsProps, HandoverItemsTable(), HandoverItemsTableProps, HandoverLine, HandoverTableRowProps (+4 more)
 
-### Community 68 - "Community 68"
+### Community 66 - "Community 66"
 Cohesion: 0.13
 Nodes (4): RolesController, UsersController, UsersModule, UsersService
 
-### Community 69 - "Community 69"
+### Community 67 - "Community 67"
 Cohesion: 0.22
 Nodes (7): CreatePaymentDto, CreateSupplierDto, UpdateSupplierDto, SupplierPaymentsService, toResponse(), SuppliersModule, FullSupplier
 
-### Community 70 - "Community 70"
+### Community 68 - "Community 68"
+Cohesion: 0.24
+Nodes (4): BackupsService, exclusive(), exists(), Stat()
+
+### Community 69 - "Community 69"
 Cohesion: 0.21
-Nodes (11): buildSaleLines(), isBelowMinPrice(), UseSellSubmitParams, AccessoryCartLine, DeviceCartLine, SellCartLine, SellLineCard(), SellLineRow() (+3 more)
+Nodes (11): buildSaleLines(), isBelowMinPrice(), UseSellSubmitParams, AccessoryCartLine, DeviceCartLine, SellCartLine, InlineCustomer, SellLineCard() (+3 more)
+
+### Community 70 - "Community 70"
+Cohesion: 0.12
+Nodes (9): useItems(), ALL_STATUSES, FilterSelectProps, ItemsFilters(), ItemsFiltersProps, ItemsPage(), ItemRow(), ItemsTable() (+1 more)
 
 ### Community 71 - "Community 71"
-Cohesion: 0.13
-Nodes (12): CustomerSearchSelectProps, InlineCustomer, InlineCustomerFieldsProps, SellCustomerPicker(), SellCustomerPickerProps, PaymentAmountField(), PaymentAmountFieldProps, PaymentMethodToggleProps (+4 more)
+Cohesion: 0.17
+Nodes (14): itemKeys, AddIdentifierPayload, CreateItemPayload, IdentifierType, Item, ItemBrief, ItemFilters, ItemIdentifier (+6 more)
 
 ### Community 72 - "Community 72"
 Cohesion: 0.12
-Nodes (10): ItemFormValues, NewIdentifier, TFn, COMMON_COLOR_OPTIONS, FieldProps, ItemDynamicAttributesProps, ItemPriceInputs(), ItemPriceInputsProps (+2 more)
+Nodes (11): ItemFormValues, NewIdentifier, TFn, IdentifierField(), IdentifierFieldSpec, IdentifierName, ItemIdentifierInputsProps, ItemPriceInputs() (+3 more)
 
 ### Community 73 - "Community 73"
-Cohesion: 0.18
-Nodes (10): useGenerateSystemCode(), getSystemCode(), ItemWithIdentifiers, BatchLabelCard(), BatchLabelsPage(), GenerationState, useEnsureBatchCodes(), Code128Barcode() (+2 more)
+Cohesion: 0.14
+Nodes (10): useBootstrapAuth(), AuthProvider(), AppProviders(), AppRoutes(), PROTECTED_ROUTES, PublicOnlyRoute(), RouteConfig, ProtectedRoute() (+2 more)
 
 ### Community 74 - "Community 74"
-Cohesion: 0.12
-Nodes (11): GroupTab, ProfitGroupTables(), ProfitGroupTablesProps, KindBadge(), MoneyCell(), ProfitLineRowProps, ProfitLinesTable(), ProfitLinesTableProps (+3 more)
+Cohesion: 0.16
+Nodes (12): useCreateSupplier(), createSupplierSchema(), SupplierFormValues, SupplierPaymentFormValues, TFn, SupplierFormContent(), SupplierFormContentProps, SupplierFormDialogProps (+4 more)
 
 ### Community 75 - "Community 75"
 Cohesion: 0.13
 Nodes (15): reportKeys, useInvestorReport(), InvestorReport, InvestorReportRow, ProfitDailyTrend, ProfitGroup, ProfitHeatmapBucket, ProfitLine (+7 more)
 
-### Community 77 - "Community 77"
-Cohesion: 0.15
-Nodes (12): customerKeys, useCreateCustomer(), useUpdateCustomer(), useSellSubmit(), CreateCustomerPayload, Customer, CustomerDetail, UpdateCustomerPayload (+4 more)
+### Community 76 - "Community 76"
+Cohesion: 0.17
+Nodes (12): CreateSaleDto, CreateSaleLineDto, SalePaymentInputDto, assertAccessoryModel(), buildAccessoryLine(), buildDeviceLine(), buildLine(), BuiltLine (+4 more)
 
 ### Community 78 - "Community 78"
-Cohesion: 0.12
-Nodes (8): useItems(), ALL_STATUSES, FilterSelectProps, ItemsFiltersProps, ItemsPage(), ItemRow(), ItemsTable(), ItemsTableProps
+Cohesion: 0.15
+Nodes (14): ADMIN_PERMISSIONS, ALL_PERMISSIONS, STAFF_PERMISSIONS, SUPER_ONLY_PERMISSIONS, assertActive(), assertActiveLocation(), EditItemRow, ItemContext (+6 more)
 
 ### Community 79 - "Community 79"
 Cohesion: 0.14
-Nodes (9): useBootstrapAuth(), AuthProvider(), AppProviders(), AppRoutes(), PROTECTED_ROUTES, PublicOnlyRoute(), RouteConfig, ProtectedRouteProps (+1 more)
+Nodes (9): useLogout(), AppHeader(), HeaderSearchSectionProps, HeaderUserBadgeProps, MobileNavDrawerProps, AppSidebar(), HelpDialog(), TIPS (+1 more)
 
 ### Community 80 - "Community 80"
-Cohesion: 0.14
-Nodes (9): useChangeLanguage(), AppHeader(), HeaderSearchSectionProps, HeaderUserBadgeProps, MobileNavDrawerProps, AppSidebar(), HelpDialog(), TIPS (+1 more)
-
-### Community 81 - "Community 81"
 Cohesion: 0.18
 Nodes (11): consignmentKeys, Consignment, ConsignmentFilters, ConsignmentItem, ConsignmentItemStatus, ConsignmentSummary, CreateConsignmentItemPayload, CreateConsignmentPayload (+3 more)
 
-### Community 82 - "Community 82"
+### Community 81 - "Community 81"
 Cohesion: 0.12
 Nodes (16): Apple Store Inventory System — PRD, Business rules, Finance, users and system, Functional requirements, Inventory, Investors, Key workflows, Non-functional requirements (+8 more)
 
-### Community 83 - "Community 83"
-Cohesion: 0.13
-Nodes (15): addBatchDevice(), adminAgent(), batchIds, batchImei, body, extraItemIds, fiveDaysAgo, itemIds (+7 more)
-
-### Community 84 - "Community 84"
-Cohesion: 0.25
-Nodes (8): AccessoryStockModule, BatchesModule, ConsignmentsModule, ItemsModule, LedgerModule, PrismaModule, StockCountsModule, WalkInPurchasesModule
-
-### Community 85 - "Community 85"
-Cohesion: 0.2
-Nodes (7): CreatePartnerDto, UpdatePartnerDto, PartnersService, ReportNumbers, toPartner(), toPartnerReport(), zero()
-
-### Community 86 - "Community 86"
+### Community 82 - "Community 82"
 Cohesion: 0.12
 Nodes (13): EMPTY, admin, auth, backups, buildCategoryTx(), dto, { service }, { service, audit } (+5 more)
 
-### Community 87 - "Community 87"
-Cohesion: 0.19
-Nodes (11): useCreateSupplierPayment(), createSupplierPaymentSchema(), SupplierFormValues, SupplierPaymentFormValues, TFn, SupplierFormFieldsProps, SupplierPaymentFields(), SupplierPaymentFieldsProps (+3 more)
-
-### Community 88 - "Community 88"
+### Community 83 - "Community 83"
 Cohesion: 0.17
-Nodes (11): useUpdateBatchLine(), BatchScanValues, createLinePriceSchema(), LinePriceValues, TFn, BatchScanSettingsFieldsProps, ConditionPriceRow(), isSoldLine() (+3 more)
+Nodes (11): customerKeys, useCreateCustomer(), useUpdateCustomer(), CreateCustomerPayload, Customer, CustomerDetail, UpdateCustomerPayload, CustomerFormContent() (+3 more)
 
-### Community 89 - "Community 89"
+### Community 84 - "Community 84"
+Cohesion: 0.14
+Nodes (10): CustomerSearchSelectProps, InlineCustomerFieldsProps, SellCustomerPicker(), SellCustomerPickerProps, PaymentAmountFieldProps, PaymentMethodToggleProps, SellPaymentSection(), SellPaymentSectionProps (+2 more)
+
+### Community 85 - "Community 85"
 Cohesion: 0.18
 Nodes (7): DateRangeInputsProps, Input, InputProps, Label, labelVariants, ScanCodeInputProps, TextFieldProps
 
-### Community 90 - "Community 90"
+### Community 86 - "Community 86"
 Cohesion: 0.12
 Nodes (15): 10. Types and hooks, 1. Dual-SIM scanning (`features/receive-batch`, `BatchScanPanel`), 2. Dropped scan message, 3. Show all codes in the line table, 4. Unpriced lines badge **(needs BE)**, 5. Price all lines of one model **(needs BE)**, 6. Extra cost with split NONE, 7. Remove a line **(needs BE)** (+7 more)
 
-### Community 92 - "Community 92"
+### Community 87 - "Community 87"
+Cohesion: 0.14
+Nodes (14): addBatchDevice(), batchIds, batchImei, body, extraItemIds, fiveDaysAgo, itemIds, line (+6 more)
+
+### Community 88 - "Community 88"
+Cohesion: 0.26
+Nodes (7): CreateSalePaymentDto, QuerySalesDto, SalePaymentsService, toSale(), toSaleSummary(), SalesModule, Tx
+
+### Community 89 - "Community 89"
 Cohesion: 0.14
 Nodes (11): CreateReturnDto, accessoryLine, actor, debtSale, detailRow, deviceLine, dto, line (+3 more)
 
-### Community 93 - "Community 93"
-Cohesion: 0.24
-Nodes (11): escapeHtml(), buildDebtReminderText(), buildReceiptText(), buildWarrantyReminderText(), ReceiptData, renderLine(), renderTotals(), escaped (+3 more)
-
-### Community 94 - "Community 94"
-Cohesion: 0.22
-Nodes (14): buildLinesForSale(), context(), counts(), DailyTrendAcc, fixedShare(), identifierCode(), investorShareFor(), lastPaymentDate() (+6 more)
-
-### Community 95 - "Community 95"
+### Community 90 - "Community 90"
 Cohesion: 0.19
 Nodes (12): useCreateUser(), userKeys, useRoles(), useUpdateUser(), CreateUserPayload, Language, Role, UpdateUserPayload (+4 more)
 
-### Community 96 - "Community 96"
+### Community 91 - "Community 91"
 Cohesion: 0.17
 Nodes (11): accessoryStockKeys, useAccessoryStock(), AccessoryStock, AccessoryStockFilters, AddAccessoryStockPayload, StockLevel, AccessoriesPage(), AccessoryInputsProps (+3 more)
 
-### Community 97 - "Community 97"
-Cohesion: 0.21
-Nodes (13): itemKeys, useItem(), AddIdentifierPayload, CreateItemPayload, IdentifierType, Item, ItemBrief, ItemFilters (+5 more)
+### Community 92 - "Community 92"
+Cohesion: 0.19
+Nodes (10): formatMoney(), money(), InvestorCards(), shareTypeLabel(), shareValueDisplay(), InvestorTransactionsTable(), InvestorTransactionsTableProps, TransactionRow() (+2 more)
 
-### Community 98 - "Community 98"
+### Community 93 - "Community 93"
+Cohesion: 0.16
+Nodes (10): useAddAccessoryStock(), useCategories(), AccessoryQtyFields(), Props, AccessorySelectFields(), Props, AccessoryStockContent(), AccessoryStockFormDialogProps (+2 more)
+
+### Community 94 - "Community 94"
 Cohesion: 0.2
-Nodes (9): AuthResponse, LoginCredentials, useLogin(), useLogout(), createLoginSchema(), LoginFormValues, LoginForm(), LoginFormFields() (+1 more)
+Nodes (9): AuthResponse, LoginCredentials, useChangeLanguage(), useLogin(), createLoginSchema(), LoginFormValues, LoginForm(), LoginFormFields() (+1 more)
 
-### Community 99 - "Community 99"
+### Community 95 - "Community 95"
 Cohesion: 0.17
 Nodes (12): attachStream(), BARCODE_FORMATS, BarcodeDetectorInstance, createBarcodeDetector(), DetectedBarcode, getCameraStream(), startScanner(), Stop (+4 more)
 
-### Community 100 - "Community 100"
+### Community 96 - "Community 96"
 Cohesion: 0.15
-Nodes (11): useCreatePartner(), useUpdatePartner(), MutationOptions, useCreateOrUpdate(), UseCreateOrUpdateOptions, PartnerFormContent(), PartnerFormContentProps, PartnerFormDialogProps (+3 more)
+Nodes (12): useBatches(), useSupplier(), useSupplierPayments(), BatchesPage(), SupplierDetailHeader(), SupplierBalanceCard(), SupplierBatchesSection(), SupplierDetailPage() (+4 more)
 
-### Community 101 - "Community 101"
+### Community 97 - "Community 97"
 Cohesion: 0.19
 Nodes (10): stockCountKeys, useFinishStockCount(), CreateStockCountPayload, ScanStatus, StockCount, StockCountFilters, StockCountScan, StockCountSummary (+2 more)
 
-### Community 102 - "Community 102"
+### Community 98 - "Community 98"
 Cohesion: 0.13
 Nodes (14): 1. `server/src/categories/dto/update-attribute.dto.ts`, 2. `server/src/categories/categories.service.ts` — `updateAttribute()`, 3. `docs/handoffs/F02-API-contract.md`, API contract, Changes, code:ts (@IsOptional()), code:ts (const keyChanged = dto.key !== undefined && dto.key !== befo), code:ts (const effectiveType = dto.type ?? before.type;) (+6 more)
 
-### Community 103 - "Community 103"
+### Community 99 - "Community 99"
 Cohesion: 0.13
 Nodes (14): 1. `summary` — counts for KPI tiles, 2. `previousTrends` — prior-period daily series (for the comparison overlay), 3. `heatmap` — sales by weekday × hour, 4. `lowMargin` — thin-margin watchlist, 5. Excel export — `GET /reports/profit.xlsx`, Client contract (for the frontend; you only implement server), code:block1 (summary: {), code:block2 (previousTrends: ProfitDailyTrend[]   // same shape as dailyT) (+6 more)
 
-### Community 104 - "Community 104"
+### Community 100 - "Community 100"
 Cohesion: 0.18
 Nodes (8): UpdateReceiptDto, EMPTY_RECEIPT, ReceiptSettings, SettingsService, audit, prisma, service, setting
 
-### Community 105 - "Community 105"
-Cohesion: 0.15
-Nodes (5): AuthModule, BackupsController, BackupsModule, SuperAdminController, SuperAdminModule
+### Community 101 - "Community 101"
+Cohesion: 0.16
+Nodes (7): closeDebtItems(), Tx, ReturnLine, ReturnSale, SaleReturnsService, sumQuantity(), Tx
 
-### Community 106 - "Community 106"
-Cohesion: 0.2
-Nodes (3): toSale(), toSaleSummary(), SalesService
+### Community 102 - "Community 102"
+Cohesion: 0.24
+Nodes (13): buildLinesForSale(), context(), counts(), DailyTrendAcc, fixedShare(), identifierCode(), investorShareFor(), lastPaymentDate() (+5 more)
 
-### Community 107 - "Community 107"
+### Community 103 - "Community 103"
 Cohesion: 0.18
 Nodes (7): AccessoriesFilters(), AccessoriesFiltersProps, Option, StockLevelFilter, AccessoriesTable(), AccessoriesTableProps, AccessoryRow()
 
-### Community 108 - "Community 108"
-Cohesion: 0.24
-Nodes (12): formatMoney(), isNonZeroMoney(), isPositiveMoney(), isStrictlyPositiveMoney(), money(), normalizeMoney(), buildIdentifiers(), formatAttributes() (+4 more)
-
-### Community 109 - "Community 109"
+### Community 104 - "Community 104"
 Cohesion: 0.16
 Nodes (5): AttributesTable(), AttributesTableProps, CategoryDetailPage(), CategoryModelsTable(), CategoryModelsTableProps
 
-### Community 110 - "Community 110"
+### Community 105 - "Community 105"
 Cohesion: 0.18
 Nodes (11): getSystemTheme(), initialResolved, mediaQuery, resolved, ResolvedTheme, resolveTheme(), Theme, ThemeState (+3 more)
 
-### Community 111 - "Community 111"
+### Community 106 - "Community 106"
 Cohesion: 0.18
 Nodes (9): backupKeys, useRestoreBackup(), useRunBackup(), Backup, RestorePayload, RestoreResult, RestoreContent(), RestoreDialogProps (+1 more)
 
-### Community 112 - "Community 112"
+### Community 107 - "Community 107"
 Cohesion: 0.14
 Nodes (9): useReturnConsignmentItem(), useUpdateConsignmentItemPrice(), useSubmitWithError(), MinPriceDialogProps, MinPriceFormContent(), MinPriceFormContentProps, ReturnConfirmDialogProps, ReturnItemButton() (+1 more)
 
-### Community 113 - "Community 113"
+### Community 108 - "Community 108"
 Cohesion: 0.14
 Nodes (13): code:bash ($ pnpm install), code:bash (# development), code:bash (# unit tests), code:bash ($ pnpm install -g @nestjs/mau), Compile and run the project, Deployment, Description, License (+5 more)
 
-### Community 114 - "Community 114"
+### Community 109 - "Community 109"
 Cohesion: 0.14
 Nodes (13): 1. `server/src/categories/dto/update-attribute.dto.ts`, 2. `server/src/categories/categories.service.ts` — `updateAttribute()`, 3. `docs/handoffs/F02-API-contract.md` (or F03 if attributes live there), API contract, Changes, code:ts (@IsOptional()), code:ts (if (dto.key && dto.key !== before.key) {), Data-safety rule (decided — DO NOT skip) (+5 more)
 
-### Community 115 - "Community 115"
+### Community 110 - "Community 110"
 Cohesion: 0.14
 Nodes (13): Client decisions, code:ts (type Partner = { id: number; name: string; phone: string; ma), code:ts (type ImportError = { row: number; message: string };), Endpoints, Endpoints, F07: Partners and finance — consignment, reports, stock import, backups — API contract, Part 1 (F07-BE-01): partners, consignment, reports, Part 2 (F07-BE-02): stock import, backups (+5 more)
 
-### Community 116 - "Community 116"
+### Community 111 - "Community 111"
 Cohesion: 0.15
 Nodes (11): accessoryStock, audit, avgCost, location, prisma, productModel, purchaseLine, service (+3 more)
 
-### Community 117 - "Community 117"
+### Community 112 - "Community 112"
 Cohesion: 0.26
 Nodes (6): DashboardController, DashboardModule, IntegrationsModule, InvestorNotificationsModule, ReportsModule, TelegramBotModule
 
-### Community 118 - "Community 118"
-Cohesion: 0.26
-Nodes (6): CreateSalePaymentDto, QuerySalesDto, closeDebtItems(), Tx, SalePaymentsService, SalesModule
+### Community 113 - "Community 113"
+Cohesion: 0.22
+Nodes (10): applyResplit(), d(), line(), shares, sum, splitExtraCost(), SplitInput, SplitLine (+2 more)
 
-### Community 119 - "Community 119"
+### Community 114 - "Community 114"
 Cohesion: 0.24
 Nodes (8): useCreateLedgerEntry(), useLedgerCategories(), createLedgerSchema(), LedgerFormValues, TFn, LedgerEntryContent(), FieldsProps, LedgerEntryFields()
 
-### Community 120 - "Community 120"
+### Community 115 - "Community 115"
 Cohesion: 0.19
 Nodes (9): useLedger(), ExpensesFilters(), Props, ExpensesPage(), EntryRow(), ExpensesTable(), ExpensesTotals(), TotalCard() (+1 more)
 
+### Community 116 - "Community 116"
+Cohesion: 0.21
+Nodes (9): SellCartPanel(), SellCartPanelProps, SellLinesTable(), SellLocationSelect(), SellLocationSelectProps, useRememberedLocation(), SellScanInput(), SellScanInputProps (+1 more)
+
+### Community 117 - "Community 117"
+Cohesion: 0.22
+Nodes (9): useSellCart(), useSellSubmit(), SaleCompletedDialog(), SaleCompletedDialogProps, SellConfirmDialog(), SellConfirmDialogProps, SellScreen(), SellScreenStateProps (+1 more)
+
+### Community 118 - "Community 118"
+Cohesion: 0.18
+Nodes (6): useSuppliers(), BatchesFilters(), BatchesFiltersProps, SuppliersPage(), SuppliersTable(), SuppliersTableProps
+
+### Community 119 - "Community 119"
+Cohesion: 0.21
+Nodes (9): usePriceBatchModel(), createPriceAllSchema(), PriceAllValues, TFn, distinctModels(), PriceAllContent(), PriceAllContentProps, PriceAllDialogProps (+1 more)
+
+### Community 120 - "Community 120"
+Cohesion: 0.21
+Nodes (11): FormControl(), FormDescription(), FormFieldContext, FormFieldContextValue, FormItem(), FormItemContext, FormItemContextValue, FormItemProps (+3 more)
+
 ### Community 121 - "Community 121"
 Cohesion: 0.19
-Nodes (6): useImportItems(), ImportError, ImportResult, ImportPanel(), ImportResultCard(), TemplateLink()
+Nodes (11): businessDayKeys, useCloseDay(), useCurrentBusinessDay(), CloseDayPayload, ClosedDaySnapshot, CurrentBusinessDay, DayCloseFlagInput, FlagRefType (+3 more)
 
 ### Community 122 - "Community 122"
 Cohesion: 0.15
 Nodes (10): useUpdateConsignmentDueDate(), getTodayIso(), isConsignmentOverdue(), DueDateFormContent(), ConsignmentHeaderCard(), ConsignmentHeaderCardProps, ConsignmentInfoRowProps, getDefaultMonth() (+2 more)
 
 ### Community 123 - "Community 123"
-Cohesion: 0.15
-Nodes (12): Acceptance, API contract delta (for the frontend glue), F14-BE-01 — Owner daily Telegram snapshot (backend), Feature flag (thread through existing config), Frontend (NOT in this task — the allocator will do the small glue), Message content (HTML, `parse_mode` already set by sendMessage), New service (cron + message), Scope (this task) (+4 more)
+Cohesion: 0.19
+Nodes (6): useImportItems(), ImportError, ImportResult, ImportPanel(), ImportResultCard(), TemplateLink()
 
 ### Community 124 - "Community 124"
 Cohesion: 0.15
-Nodes (12): API (already live, no change), code:ts (interface BulkAddCodes { imei: boolean; imei2: boolean; seri), F19-FE-01 — Bulk add devices by scanning (items page) — frontend, Feature, Reuse (do not re-implement), Rules reminder, Scan flow (`model/useBulkScan.ts`), Translations (+4 more)
+Nodes (12): Acceptance, API contract delta (for the frontend glue), F14-BE-01 — Owner daily Telegram snapshot (backend), Feature flag (thread through existing config), Frontend (NOT in this task — the allocator will do the small glue), Message content (HTML, `parse_mode` already set by sendMessage), New service (cron + message), Scope (this task) (+4 more)
 
 ### Community 125 - "Community 125"
 Cohesion: 0.15
-Nodes (12): Client decisions, code:ts (type SupplierSummary = { id: number; name: string; country: ), code:ts (interface BatchSummary { ...; isLocked: boolean; unpricedLin), Endpoints, Endpoints, F04-BE-03 changes (batch logic fixes), F04: Buying — suppliers, batches, walk-in purchases, labels — API contract, Permissions (no new ones) (+4 more)
+Nodes (12): API (already live, no change), code:ts (interface BulkAddCodes { imei: boolean; imei2: boolean; seri), F19-FE-01 — Bulk add devices by scanning (items page) — frontend, Feature, Reuse (do not re-implement), Rules reminder, Scan flow (`model/useBulkScan.ts`), Translations (+4 more)
 
 ### Community 126 - "Community 126"
+Cohesion: 0.15
+Nodes (12): Client decisions, code:ts (type SupplierSummary = { id: number; name: string; country: ), code:ts (interface BatchSummary { ...; isLocked: boolean; unpricedLin), Endpoints, Endpoints, F04-BE-03 changes (batch logic fixes), F04: Buying — suppliers, batches, walk-in purchases, labels — API contract, Permissions (no new ones) (+4 more)
+
+### Community 127 - "Community 127"
 Cohesion: 0.2
 Nodes (10): adminAgent(), body, itemIds, login(), modelIds, movedRow, srcRow, staffAgent() (+2 more)
 
-### Community 127 - "Community 127"
+### Community 128 - "Community 128"
 Cohesion: 0.23
 Nodes (10): main(), prisma, requireEnv(), seedSuperAdmin(), AttrSeed, CATEGORIES, CategorySeed, LOCATIONS (+2 more)
 
-### Community 128 - "Community 128"
+### Community 129 - "Community 129"
 Cohesion: 0.24
 Nodes (7): QueryInvestorReportDto, InvestorReportService, money(), monthRange(), LineTotals, ProfitGroupAcc, investorReportToXlsx()
 
-### Community 129 - "Community 129"
-Cohesion: 0.21
-Nodes (8): SalesDateFiltersProps, SalesFilters(), SalesFiltersProps, useSalesFilterOptions(), SalesTable(), SalesTableProps, SalesTableRow(), SalesTableRowProps
-
 ### Community 130 - "Community 130"
-Cohesion: 0.32
-Nodes (9): supplierKeys, useUpdateSupplier(), CreateSupplierPayload, CreateSupplierPaymentPayload, Supplier, SupplierPayment, SupplierSummary, UpdateSupplierPayload (+1 more)
+Cohesion: 0.21
+Nodes (9): useProductModels(), ScanSettingSelects(), DEFAULT_FORM_VALUES, ItemFormContent(), useCreateItemSubmit(), useItemForm(), ItemFormDialogProps, AccessoryRow() (+1 more)
 
 ### Community 131 - "Community 131"
 Cohesion: 0.2
-Nodes (9): useSupplier(), useSupplierPayments(), SupplierDetailHeader(), SupplierBalanceCard(), SupplierDetailPage(), SupplierPaymentsSection(), PaymentRow(), SupplierPaymentsTable() (+1 more)
+Nodes (8): useCreateSupplierPayment(), MutationOptions, useCreateOrUpdate(), UseCreateOrUpdateOptions, createSupplierPaymentSchema(), SupplierPaymentContent(), SupplierPaymentContentProps, SupplierPaymentDialogProps
 
 ### Community 132 - "Community 132"
-Cohesion: 0.2
-Nodes (7): useAddBatchAccessory(), BatchAccessoryValues, createBatchAccessorySchema(), AccessoryLineDialogProps, AccessoryLineFields(), AccessoryLineFieldsProps, QuantityCostFields()
+Cohesion: 0.32
+Nodes (9): supplierKeys, useUpdateSupplier(), CreateSupplierPayload, CreateSupplierPaymentPayload, Supplier, SupplierPayment, SupplierSummary, UpdateSupplierPayload (+1 more)
 
 ### Community 133 - "Community 133"
 Cohesion: 0.2
-Nodes (8): Table, TableBody, TableCaption, TableCell, TableFooter, TableHead, TableHeader, TableRow
+Nodes (7): useAddBatchAccessory(), BatchAccessoryValues, createBatchAccessorySchema(), AccessoryLineDialogProps, AccessoryLineFields(), AccessoryLineFieldsProps, QuantityCostFields()
 
 ### Community 134 - "Community 134"
-Cohesion: 0.21
-Nodes (10): businessDayKeys, useCloseDay(), CloseDayPayload, ClosedDaySnapshot, CurrentBusinessDay, DayCloseFlagInput, FlagRefType, OpenDayLedgerRow (+2 more)
+Cohesion: 0.2
+Nodes (8): Table, TableBody, TableCaption, TableCell, TableFooter, TableHead, TableHeader, TableRow
 
 ### Community 135 - "Community 135"
 Cohesion: 0.17
@@ -865,17 +869,13 @@ Nodes (11): 1. Wire the existing stock-level filter, 2. Low/Out badge from real 
 Cohesion: 0.2
 Nodes (9): d(), detailRow, device, lineArg, makeTx(), saleArg, { service }, { service, changeStatus } (+1 more)
 
-### Community 139 - "Community 139"
-Cohesion: 0.24
-Nodes (9): applyResplit(), d(), line(), shares, sum, splitExtraCost(), SplitInput, SplitLine (+1 more)
-
 ### Community 140 - "Community 140"
-Cohesion: 0.25
-Nodes (7): InvestorCards(), shareTypeLabel(), shareValueDisplay(), InvestorTransactionsTable(), InvestorTransactionsTableProps, TransactionRow(), txTypeLabel()
+Cohesion: 0.18
+Nodes (7): CREDS, item, second, sendMessage, { service }, { service, isFeatureEnabled }, text
 
 ### Community 141 - "Community 141"
-Cohesion: 0.22
-Nodes (6): AccessoryQtyFields(), Props, AccessorySelectFields(), Props, AccessoryStockFormDialogProps, StockFormValues
+Cohesion: 0.31
+Nodes (10): isNonZeroMoney(), isPositiveMoney(), isStrictlyPositiveMoney(), normalizeMoney(), buildIdentifiers(), formatAttributes(), buildItemPayload(), price() (+2 more)
 
 ### Community 142 - "Community 142"
 Cohesion: 0.18
@@ -883,31 +883,31 @@ Nodes (4): ItemCondition, conditionStyles, ItemConditionBadgeProps, Props
 
 ### Community 143 - "Community 143"
 Cohesion: 0.22
-Nodes (8): usePriceBatchModel(), createPriceAllSchema(), PriceAllValues, distinctModels(), PriceAllContent(), PriceAllContentProps, PriceAllDialogProps, PriceAllFieldsProps
+Nodes (8): useCreatePartner(), useUpdatePartner(), PartnerFormContent(), PartnerFormContentProps, PartnerFormDialogProps, usePartnerForm(), PartnerFormFields(), PartnerFormFieldsProps
 
 ### Community 144 - "Community 144"
 Cohesion: 0.25
 Nodes (9): transferKeys, useTransfer(), CreateTransferPayload, NamedRef, Transfer, TransferAccessory, TransferFilters, TransferSummary (+1 more)
 
 ### Community 145 - "Community 145"
-Cohesion: 0.22
-Nodes (6): dateLocale(), formatDate(), formatDateTime(), AuditRow(), TransferHeader(), TransferRow()
-
-### Community 146 - "Community 146"
 Cohesion: 0.2
 Nodes (5): UsersPageHeaderProps, UsersTable(), UsersTableBodyProps, UsersTableProps, UserTableRowProps
 
-### Community 147 - "Community 147"
+### Community 146 - "Community 146"
 Cohesion: 0.18
 Nodes (10): 1. Expose `lowStockThreshold` on ProductModel (Admin-only write), 2. `GET /accessory-stock`: return threshold + support a stock-level filter, 3. Dashboard summary: low-stock count, 4. Shared Telegram text sender (DRY), 5. Daily low-stock Telegram digest (cron), Acceptance, API contract (for the frontend task F11-FE-01), F11-BE-01 — Low-stock alerts (backend) (+2 more)
 
-### Community 148 - "Community 148"
+### Community 147 - "Community 147"
 Cohesion: 0.18
 Nodes (10): 1. Receipt on sale completion (roadmap #3, FR-24 "sent"), 2. Debt reminder cron (roadmap #4), 3. Warranty reminder cron (roadmap #4), Acceptance, API/FE note (allocator will wire the small client glue), Bilingual message helper, F17-BE-01 — Customer Telegram receipts + debt/warranty reminders (backend), Feature flags (default OFF — these message external people; owner opts in) (+2 more)
 
-### Community 149 - "Community 149"
+### Community 148 - "Community 148"
 Cohesion: 0.18
 Nodes (10): 1. New `super-admin` module, guarded hard, 2. Preview endpoint (no writes), 3. Execute endpoint (destructive), 4. What is NOT deleted (confirm, comment why), 5. Side effects to note (not bugs), Acceptance, API contract (for F12-FE-01), F12-BE-03 — Hard delete (full cascade) — backend (+2 more)
+
+### Community 150 - "Community 150"
+Cohesion: 0.29
+Nodes (4): PartnersService, toPartner(), toPartnerReport(), zero()
 
 ### Community 151 - "Community 151"
 Cohesion: 0.2
@@ -915,357 +915,349 @@ Nodes (7): detailRow, device, dto, { service }, { service, changeStatus }, { ser
 
 ### Community 152 - "Community 152"
 Cohesion: 0.22
-Nodes (6): useBatches(), useSuppliers(), BatchesFilters(), BatchesFiltersProps, BatchesPage(), SupplierBatchesSection()
+Nodes (6): useLocations(), useStartStockCount(), LocationsPage(), LocationsTable(), LocationsTableProps, StartCountDialog()
 
 ### Community 153 - "Community 153"
-Cohesion: 0.24
-Nodes (6): useCreateSupplier(), createSupplierSchema(), SupplierFormContent(), SupplierFormContentProps, SupplierFormDialogProps, SupplierFormFields()
-
-### Community 154 - "Community 154"
 Cohesion: 0.22
 Nodes (7): usePartners(), PartnersHeaderProps, PartnersPage(), PartnerRow(), PartnerRowProps, PartnersTable(), PartnersTableProps
 
+### Community 154 - "Community 154"
+Cohesion: 0.24
+Nodes (8): useAddBatchItem(), useAddIdentifier(), FailHandler, ScanTarget, useAddSecondCode(), useCreateLine(), useScanTarget(), UseScanTargetOptions
+
 ### Community 155 - "Community 155"
-Cohesion: 0.2
-Nodes (9): After each finished feature, Before each feature, Client side (client/), Code quality rules (all agents), code:block1 (git worktree add .worktrees/F03-FE-02 -b task/F03-FE-02 main), graphify, Parallel tasks never share a working tree, Server side (server/) (+1 more)
+Cohesion: 0.27
+Nodes (8): FilterSelect(), FilterSelectProps, getActivePreset(), getPresetRange(), Preset, ProfitReportFilterControls(), ProfitReportFilterControlsProps, SelectDropdownsProps
 
 ### Community 156 - "Community 156"
-Cohesion: 0.2
-Nodes (9): Acceptance, Command router + `/status`, F15-BE-01 — Telegram inbound poller + `/status` command (backend), Low-level update fetch (new, in `common/telegram.ts`), New module (avoid the dependency cycle), NOT in this task (future, build on this foundation), Poller service, Tests (+1 more)
+Cohesion: 0.24
+Nodes (7): DeltaBadge(), margin(), NetProfitHighlight(), ProfitKpiBand(), ProfitKpiBandProps, StatGrid(), StatProps
 
 ### Community 157 - "Community 157"
-Cohesion: 0.2
-Nodes (9): Acceptance, Concept, Expose the invite link (for F17/F18 to use; no UI here), F16-BE-01 — Telegram chat-linking foundation (`/start` deep link) — backend, NOT in this task, One-time, expiring link token (random, stored — no signing secret needed), Schema (Prisma) + ONE migration, `/start` command (extend the F15 router) (+1 more)
+Cohesion: 0.24
+Nodes (6): useUsers(), AuditLogFilters(), Props, AuditLogTable(), AuditRow(), UsersPage()
 
 ### Community 158 - "Community 158"
-Cohesion: 0.2
-Nodes (9): Before you finish, Build, code:ts (type Language = 'uz' | 'ru';), Endpoints, Feature 1: Users, roles and login — API contract, Feature 1: Users, roles and login (PRD FR-29, FR-30, NFR Security, NFR Language), Permissions (constants, one file on each side), Session rules (+1 more)
+Cohesion: 0.24
+Nodes (5): dateLocale(), formatDate(), formatDateTime(), TransferHeader(), TransferRow()
 
 ### Community 159 - "Community 159"
 Cohesion: 0.2
-Nodes (9): code:ts (export interface ReceiptSettings {), Contract — `docs/handoffs/F05-API-contract.md`, Done when, DTO — `dto/update-receipt.dto.ts`, F05-BE-03 — Richer, customizable receipt settings, Feature (extends FR-24), Logo storage (decided), Shared shape — `ReceiptSettings` (+1 more)
+Nodes (9): After each finished feature, Before each feature, Client side (client/), Code quality rules (all agents), code:block1 (git worktree add .worktrees/F03-FE-02 -b task/F03-FE-02 main), graphify, Parallel tasks never share a working tree, Server side (server/) (+1 more)
 
 ### Community 160 - "Community 160"
 Cohesion: 0.2
-Nodes (9): Change — `server/src/categories/categories.service.ts`, `updateAttribute()`, code:ts (const keyChanged = dto.key !== undefined && dto.key !== befo), code:ts (const effectiveType = dto.type ?? before.type;), Contract — `docs/handoffs/F02-API-contract.md`, Done when, DTO — `server/src/categories/dto/update-attribute.dto.ts`, F02-BE-05 — Allow attribute `type` change even when the category has items, Tests — `categories.service.spec.ts` (+1 more)
+Nodes (9): Acceptance, Command router + `/status`, F15-BE-01 — Telegram inbound poller + `/status` command (backend), Low-level update fetch (new, in `common/telegram.ts`), New module (avoid the dependency cycle), NOT in this task (future, build on this foundation), Poller service, Tests (+1 more)
 
 ### Community 161 - "Community 161"
 Cohesion: 0.2
-Nodes (9): 1. Encryption helper (new, in `common/`), 2. Telegram config storage + service (new `integrations` module), 3. Endpoints (controller, all `@Permissions('manage_integrations')`), 4. Rewire consumers to the DB config, Acceptance, Also apply these F11 review fixes (same files, do them in this pass), F12-BE-02 — In-app Telegram config (backend), Feature (+1 more)
+Nodes (9): Acceptance, Concept, Expose the invite link (for F17/F18 to use; no UI here), F16-BE-01 — Telegram chat-linking foundation (`/start` deep link) — backend, NOT in this task, One-time, expiring link token (random, stored — no signing secret needed), Schema (Prisma) + ONE migration, `/start` command (extend the F15 router) (+1 more)
 
 ### Community 162 - "Community 162"
 Cohesion: 0.2
-Nodes (9): Acceptance, API contract (for F13-FE-01), Concept, Endpoints, F13-BE-01 — Daily Close / Reconciliation (backend), Permission, Reconciliation window + math, Schema (Prisma) + migration (+1 more)
+Nodes (9): Before you finish, Build, code:ts (type Language = 'uz' | 'ru';), Endpoints, Feature 1: Users, roles and login — API contract, Feature 1: Users, roles and login (PRD FR-29, FR-30, NFR Security, NFR Language), Permissions (constants, one file on each side), Session rules (+1 more)
 
 ### Community 163 - "Community 163"
-Cohesion: 0.22
-Nodes (7): config, findUnique, hash, jwt, prisma, service, token
+Cohesion: 0.2
+Nodes (9): code:ts (export interface ReceiptSettings {), Contract — `docs/handoffs/F05-API-contract.md`, Done when, DTO — `dto/update-receipt.dto.ts`, F05-BE-03 — Richer, customizable receipt settings, Feature (extends FR-24), Logo storage (decided), Shared shape — `ReceiptSettings` (+1 more)
 
 ### Community 164 - "Community 164"
-Cohesion: 0.25
-Nodes (7): admin, d(), dto, makeService(), { service }, { service, tx }, staff
+Cohesion: 0.2
+Nodes (9): Change — `server/src/categories/categories.service.ts`, `updateAttribute()`, code:ts (const keyChanged = dto.key !== undefined && dto.key !== befo), code:ts (const effectiveType = dto.type ?? before.type;), Contract — `docs/handoffs/F02-API-contract.md`, Done when, DTO — `server/src/categories/dto/update-attribute.dto.ts`, F02-BE-05 — Allow attribute `type` change even when the category has items, Tests — `categories.service.spec.ts` (+1 more)
 
 ### Community 165 - "Community 165"
-Cohesion: 0.22
-Nodes (7): audit, prisma, purchaseLine, result, service, supplier, supplierPayment
+Cohesion: 0.2
+Nodes (9): 1. Encryption helper (new, in `common/`), 2. Telegram config storage + service (new `integrations` module), 3. Endpoints (controller, all `@Permissions('manage_integrations')`), 4. Rewire consumers to the DB config, Acceptance, Also apply these F11 review fixes (same files, do them in this pass), F12-BE-02 — In-app Telegram config (backend), Feature (+1 more)
 
 ### Community 166 - "Community 166"
-Cohesion: 0.22
-Nodes (8): admin, audit, batch, before, prisma, purchaseLine, service, tx
+Cohesion: 0.2
+Nodes (9): Acceptance, API contract (for F13-FE-01), Concept, Endpoints, F13-BE-01 — Daily Close / Reconciliation (backend), Permission, Reconciliation window + math, Schema (Prisma) + migration (+1 more)
 
 ### Community 167 - "Community 167"
 Cohesion: 0.22
-Nodes (3): BusinessDayController, BusinessDayModule, DayCloseFlagsController
+Nodes (7): config, findUnique, hash, jwt, prisma, service, token
+
+### Community 168 - "Community 168"
+Cohesion: 0.25
+Nodes (7): admin, d(), dto, makeService(), { service }, { service, tx }, staff
 
 ### Community 169 - "Community 169"
+Cohesion: 0.22
+Nodes (7): audit, prisma, purchaseLine, result, service, supplier, supplierPayment
+
+### Community 170 - "Community 170"
+Cohesion: 0.22
+Nodes (8): admin, audit, batch, before, prisma, purchaseLine, service, tx
+
+### Community 171 - "Community 171"
+Cohesion: 0.22
+Nodes (3): BusinessDayController, BusinessDayModule, DayCloseFlagsController
+
+### Community 174 - "Community 174"
 Cohesion: 0.28
 Nodes (8): addProfitLinesSheet(), addProfitTotalsSheet(), ProfitLineXlsx, profitReportToXlsx(), ProfitTotalsXlsx, ProfitXlsxReport, XlsxReport, XlsxRow
 
-### Community 170 - "Community 170"
+### Community 175 - "Community 175"
 Cohesion: 0.28
 Nodes (7): apiClient, getApiErrorMessage(), getApiErrorStatus(), isReauth, REAUTH_ENDPOINTS, mapLoginError(), handleApiError()
 
-### Community 171 - "Community 171"
-Cohesion: 0.31
-Nodes (6): useAddIdentifier(), AddIdentifierValues, createAddIdentifierSchema(), AddIdentifierContent(), AddIdentifierDialogProps, useAddIdentifierForm()
-
-### Community 172 - "Community 172"
-Cohesion: 0.22
-Nodes (8): DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuRadioItem, DropdownMenuSeparator, DropdownMenuSubContent, DropdownMenuSubTrigger
-
-### Community 173 - "Community 173"
-Cohesion: 0.28
-Nodes (5): useUsers(), AuditLogFilters(), Props, AuditLogTable(), UsersPage()
-
-### Community 174 - "Community 174"
-Cohesion: 0.25
-Nodes (5): useBackups(), formatFileSize(), BackupsPage(), BackupRow(), BackupsTable()
-
-### Community 175 - "Community 175"
-Cohesion: 0.22
-Nodes (8): API contract — UNCHANGED, do not touch the backend, Done when, F09-FE-01 — Profit report: full visual rebuild (client/ only), Feature & PRD, Hard constraints (these are what separates this from AI slop — do not break any), New i18n keys (add to en/ru/uz, identical keys), Palette for chart SVG props (match existing trends chart), What to build (rebuild the report body; keep the controls)
-
 ### Community 176 - "Community 176"
-Cohesion: 0.22
-Nodes (8): Behaviour, code:ts (interface NavItem { to: string; end?: boolean; icon: LucideI), Done when, F20-FE-01 — Grouped sidebar navigation — frontend, Goal, Groups and order (final; do not add or rename pages), Problem, Where
+Cohesion: 0.25
+Nodes (6): useInvestors(), InvestorReportFilters(), InvestorsPage(), InvestorsTable(), InvestorsTableProps, SelectDropdowns()
 
 ### Community 177 - "Community 177"
-Cohesion: 0.22
-Nodes (8): 1. New permissions (super-admin-only), 2. Seed the SuperAdmin role + a SEPARATE super-admin user, 3. Make the permission split enforceable, Acceptance, F12-BE-01 — Super Admin: role, account, permissions (backend), Feature, Notes for later tasks (do not build here), Tasks
+Cohesion: 0.28
+Nodes (7): useUpdateBatchLine(), createLinePriceSchema(), LinePriceValues, isSoldLine(), LinePriceContent(), LinePriceContentProps, LinePriceDialogProps
 
 ### Community 178 - "Community 178"
 Cohesion: 0.22
-Nodes (8): Acceptance, API (already deployed), base `/super-admin`, code:ts (interface SaleSummary { saleId: number; customerName: string), F12-FE-02 — Hard-delete UI (super-admin "danger zone") — frontend, Feature, Permission gate (do this first), Rules reminder, Tasks
+Nodes (8): DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuRadioItem, DropdownMenuSeparator, DropdownMenuSubContent, DropdownMenuSubTrigger
 
 ### Community 179 - "Community 179"
 Cohesion: 0.25
-Nodes (6): audit, [[{ data }]], investor, investorTransaction, prisma, service
+Nodes (5): useBackups(), formatFileSize(), BackupsPage(), BackupRow(), BackupsTable()
 
 ### Community 180 - "Community 180"
+Cohesion: 0.22
+Nodes (8): API contract — UNCHANGED, do not touch the backend, Done when, F09-FE-01 — Profit report: full visual rebuild (client/ only), Feature & PRD, Hard constraints (these are what separates this from AI slop — do not break any), New i18n keys (add to en/ru/uz, identical keys), Palette for chart SVG props (match existing trends chart), What to build (rebuild the report body; keep the controls)
+
+### Community 181 - "Community 181"
+Cohesion: 0.22
+Nodes (8): Behaviour, code:ts (interface NavItem { to: string; end?: boolean; icon: LucideI), Done when, F20-FE-01 — Grouped sidebar navigation — frontend, Goal, Groups and order (final; do not add or rename pages), Problem, Where
+
+### Community 182 - "Community 182"
+Cohesion: 0.22
+Nodes (8): 1. New permissions (super-admin-only), 2. Seed the SuperAdmin role + a SEPARATE super-admin user, 3. Make the permission split enforceable, Acceptance, F12-BE-01 — Super Admin: role, account, permissions (backend), Feature, Notes for later tasks (do not build here), Tasks
+
+### Community 183 - "Community 183"
+Cohesion: 0.22
+Nodes (8): Acceptance, API (already deployed), base `/super-admin`, code:ts (interface SaleSummary { saleId: number; customerName: string), F12-FE-02 — Hard-delete UI (super-admin "danger zone") — frontend, Feature, Permission gate (do this first), Rules reminder, Tasks
+
+### Community 184 - "Community 184"
+Cohesion: 0.25
+Nodes (6): audit, [[{ data }]], investor, investorTransaction, prisma, service
+
+### Community 187 - "Community 187"
 Cohesion: 0.29
 Nodes (3): CustomerNotificationsModule, SettingsController, SettingsModule
 
-### Community 184 - "Community 184"
+### Community 189 - "Community 189"
 Cohesion: 0.29
 Nodes (6): d(), debtSales, makeService(), recentRows, { service }, { service, profit }
 
-### Community 186 - "Community 186"
+### Community 191 - "Community 191"
 Cohesion: 0.25
 Nodes (7): Accessibility & Inclusion, Anti-references, Brand Personality, Design Principles, Product, Product Purpose, Users
 
-### Community 187 - "Community 187"
+### Community 192 - "Community 192"
 Cohesion: 0.39
 Nodes (6): ledgerKeys, CreateLedgerEntryPayload, LedgerEntry, LedgerFilters, LedgerPage, LedgerType
 
-### Community 188 - "Community 188"
-Cohesion: 0.29
-Nodes (5): useCustomers(), CustomersPage(), CustomersTable(), CustomersTableProps, CustomerSearchSelect()
-
-### Community 189 - "Community 189"
+### Community 193 - "Community 193"
 Cohesion: 0.29
 Nodes (5): useUpdateItemPrices(), InputsProps, ItemPricesContent(), ItemPricesDialogProps, useItemPricesForm()
 
-### Community 190 - "Community 190"
+### Community 194 - "Community 194"
 Cohesion: 0.29
 Nodes (6): dashboardKeys, useDashboardSummary(), DashboardRecentSale, DashboardSaleStatus, DashboardSummary, HomePage()
 
-### Community 191 - "Community 191"
+### Community 195 - "Community 195"
+Cohesion: 0.36
+Nodes (5): AddIdentifierValues, createAddIdentifierSchema(), AddIdentifierContent(), AddIdentifierDialogProps, useAddIdentifierForm()
+
+### Community 196 - "Community 196"
 Cohesion: 0.29
 Nodes (6): CellProps, HeatmapCell(), LegendProps, ProfitHeatmap(), ProfitHeatmapProps, weekdayLabels()
 
-### Community 192 - "Community 192"
+### Community 197 - "Community 197"
 Cohesion: 0.25
 Nodes (4): FlaggableRow(), ReviewSection(), ReviewTile(), RowBody()
 
-### Community 193 - "Community 193"
+### Community 198 - "Community 198"
 Cohesion: 0.32
 Nodes (5): useTransfers(), Props, TransfersFilters(), TransfersPage(), TransfersTable()
 
-### Community 194 - "Community 194"
+### Community 199 - "Community 199"
 Cohesion: 0.29
 Nodes (4): useStockCount(), CountResult(), CountHeader(), StockCountDetailPage()
 
-### Community 195 - "Community 195"
+### Community 200 - "Community 200"
 Cohesion: 0.29
 Nodes (6): useSellConsignmentItem(), SellItemDialogProps, SellItemFormContent(), SellItemFormContentProps, SellItemPriceHint(), useSellItemForm()
 
-### Community 196 - "Community 196"
+### Community 201 - "Community 201"
 Cohesion: 0.25
 Nodes (7): Client decisions, code:ts (type ItemBrief = { id: number; identifiers: ItemIdentifier[]), Endpoints, F06: Operations — transfers, stock count, expenses, audit log — API contract, Permissions (no new ones), Rules, Types
 
-### Community 197 - "Community 197"
+### Community 202 - "Community 202"
 Cohesion: 0.25
 Nodes (7): Acceptance, F18-BE-01 — Investor monthly Telegram reports (backend), FE note (allocator wires the small glue), Feature flag (default OFF), Tests, What it does, Wiring
 
-### Community 198 - "Community 198"
+### Community 203 - "Community 203"
 Cohesion: 0.25
 Nodes (7): code:ts (type ItemStatus = 'IN_STOCK' | 'AT_PARTNER' | 'DEBT' | 'SOLD), Endpoints, F03: Items — API contract, Permissions (no new ones), Rules, Scan field (frontend), Types
 
-### Community 199 - "Community 199"
+### Community 204 - "Community 204"
 Cohesion: 0.25
 Nodes (7): Client decisions, code:ts (type Customer = { id: number; name: string; phone: string; n), Endpoints, F05: Selling — sales, payments, debts, customers, returns, receipts — API contract, Permissions, Rules, Types
 
-### Community 203 - "Community 203"
+### Community 206 - "Community 206"
 Cohesion: 0.43
 Nodes (6): diff(), leafKeys(), loadLocale(), LOCALES_DIR, main(), report()
 
-### Community 204 - "Community 204"
+### Community 207 - "Community 207"
 Cohesion: 0.29
 Nodes (4): useRemoveBatchLine(), RemoveLineContent(), RemoveLineContentProps, RemoveLineDialogProps
 
-### Community 206 - "Community 206"
+### Community 209 - "Community 209"
 Cohesion: 0.48
 Nodes (5): partnerKeys, CreatePartnerPayload, Partner, PartnerReport, UpdatePartnerPayload
 
-### Community 207 - "Community 207"
-Cohesion: 0.29
-Nodes (6): Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle
-
-### Community 208 - "Community 208"
+### Community 210 - "Community 210"
 Cohesion: 0.38
 Nodes (5): auditLogKeys, useAuditLog(), AuditEntry, AuditFilters, AuditLogPage()
 
-### Community 209 - "Community 209"
-Cohesion: 0.29
-Nodes (6): After each finished feature, Client side (client/), Code quality rules (all agents), graphify, Server side (server/), Your job
-
-### Community 210 - "Community 210"
-Cohesion: 0.29
-Nodes (6): After each finished feature, Client side (client/), Code quality rules (all agents), graphify, Server side (server/), Your job
-
 ### Community 211 - "Community 211"
 Cohesion: 0.29
-Nodes (6): Backend rules (server/), code:block1 (src/), NestJS best practices, Principles, Structure: one module per business feature, Tests
+Nodes (6): After each finished feature, Client side (client/), Code quality rules (all agents), graphify, Server side (server/), Your job
 
 ### Community 212 - "Community 212"
 Cohesion: 0.29
-Nodes (6): BLACKSTORE backup restore, code:sh (export BACKUP_PASSPHRASE='...'            # the value used a), Manual restore (app is down), Monthly test-restore checklist, Off-site second copy, What you need
+Nodes (6): After each finished feature, Client side (client/), Code quality rules (all agents), graphify, Server side (server/), Your job
 
 ### Community 213 - "Community 213"
 Cohesion: 0.29
-Nodes (6): code:ts (type Language = 'uz' | 'ru';), Endpoints, Feature 1: Users, roles and login — API contract, Permissions (constants, one file on each side), Session rules, Types
+Nodes (6): Backend rules (server/), code:block1 (src/), NestJS best practices, Principles, Structure: one module per business feature, Tests
 
 ### Community 214 - "Community 214"
 Cohesion: 0.29
-Nodes (6): code:block1 (git worktree add .worktrees/<handoff-code> -b task/<handoff-), Features, Handoffs, How to run, Naming, Parallel tasks
+Nodes (6): BLACKSTORE backup restore, code:sh (export BACKUP_PASSPHRASE='...'            # the value used a), Manual restore (app is down), Monthly test-restore checklist, Off-site second copy, What you need
 
 ### Community 215 - "Community 215"
 Cohesion: 0.29
-Nodes (6): Acceptance, API (already deployed), base `/integrations/telegram`, F12-FE-01 — Super-admin area + Telegram settings UI (frontend), Feature, Rules reminder, Tasks
+Nodes (6): code:ts (type Language = 'uz' | 'ru';), Endpoints, Feature 1: Users, roles and login — API contract, Permissions (constants, one file on each side), Session rules, Types
 
 ### Community 216 - "Community 216"
 Cohesion: 0.29
-Nodes (6): Before you finish, Code, Contract alignment, F07 part 2: review fixes, Security and correctness (fix first), Tests
+Nodes (6): code:block1 (git worktree add .worktrees/<handoff-code> -b task/<handoff-), Features, Handoffs, How to run, Naming, Parallel tasks
 
 ### Community 217 - "Community 217"
 Cohesion: 0.29
-Nodes (6): code:ts (type LocationType = 'WAREHOUSE' | 'SHOP';), Endpoints, F02: Master data — API contract, Permissions, Rules, Types
+Nodes (6): Acceptance, API (already deployed), base `/integrations/telegram`, F12-FE-01 — Super-admin area + Telegram settings UI (frontend), Feature, Rules reminder, Tasks
 
 ### Community 218 - "Community 218"
-Cohesion: 0.6
-Nodes (4): ADMIN_PERMISSIONS, ALL_PERMISSIONS, STAFF_PERMISSIONS, SUPER_ONLY_PERMISSIONS
+Cohesion: 0.29
+Nodes (6): Before you finish, Code, Contract alignment, F07 part 2: review fixes, Security and correctness (fix first), Tests
 
-### Community 220 - "Community 220"
-Cohesion: 0.4
-Nodes (3): LocationsPage(), LocationsTable(), LocationsTableProps
+### Community 219 - "Community 219"
+Cohesion: 0.29
+Nodes (6): code:ts (type LocationType = 'WAREHOUSE' | 'SHOP';), Endpoints, F02: Master data — API contract, Permissions, Rules, Types
 
 ### Community 221 - "Community 221"
 Cohesion: 0.4
 Nodes (3): CategoriesPage(), CategoriesTable(), CategoriesTableProps
 
 ### Community 222 - "Community 222"
-Cohesion: 0.4
-Nodes (3): InvestorsPage(), InvestorsTable(), InvestorsTableProps
+Cohesion: 0.33
+Nodes (3): COMMON_COLOR_OPTIONS, FieldProps, ItemDynamicAttributesProps
 
 ### Community 223 - "Community 223"
-Cohesion: 0.33
-Nodes (4): IdentifierField(), IdentifierFieldSpec, IdentifierName, ItemIdentifierInputsProps
-
-### Community 224 - "Community 224"
 Cohesion: 0.4
 Nodes (4): useUpdateItem(), ItemEditContent(), ItemEditDialogProps, useItemEditForm()
 
-### Community 225 - "Community 225"
+### Community 224 - "Community 224"
 Cohesion: 0.33
 Nodes (5): ADMIN_ONLY_PERMISSIONS, ALL_PERMISSIONS, Permission, STAFF_PERMISSIONS, SUPER_ONLY_PERMISSIONS
 
-### Community 226 - "Community 226"
-Cohesion: 0.4
-Nodes (3): SuppliersPage(), SuppliersTable(), SuppliersTableProps
-
-### Community 227 - "Community 227"
+### Community 225 - "Community 225"
 Cohesion: 0.4
 Nodes (5): Figure(), ProfitStatementCard(), ProfitStatementCardProps, Tone, toneFor()
 
-### Community 228 - "Community 228"
+### Community 226 - "Community 226"
 Cohesion: 0.4
 Nodes (4): useStockCounts(), StockCountsPage(), CountRow(), StockCountsTable()
 
-### Community 229 - "Community 229"
+### Community 227 - "Community 227"
 Cohesion: 0.33
 Nodes (5): Client-side rules (client/), code:block1 (app/       providers (QueryClient, router), global styles, r), Feature-Sliced Design, Rules, Stack (use these, nothing else for the same job)
 
-### Community 230 - "Community 230"
+### Community 228 - "Community 228"
 Cohesion: 0.33
 Nodes (5): Acceptance, Backend, F12-BE-04 — Telegram config polish (backend + small frontend), Frontend (small), Why
 
-### Community 231 - "Community 231"
+### Community 229 - "Community 229"
 Cohesion: 0.33
 Nodes (5): Before you finish, Bugs (must), F03 (Items): review fixes, Rule breaks (must), Shrink (same pass; this is what gets the functions under 50 lines)
 
-### Community 232 - "Community 232"
+### Community 230 - "Community 230"
 Cohesion: 0.33
 Nodes (5): Before you finish, DRY and cleanup, F05 frontend: review fixes, Rules: functions over 50 lines, Wrong or missing (fix first)
 
-### Community 233 - "Community 233"
+### Community 231 - "Community 231"
 Cohesion: 0.33
 Nodes (5): Before you finish, Code, F05 backend: review fixes, Merge alignment with F06 (same names in both trees), Security and correctness (fix first)
 
-### Community 234 - "Community 234"
+### Community 232 - "Community 232"
 Cohesion: 0.33
 Nodes (5): code:ts ({), F10 — Home dashboard (replace the empty welcome page), PART A — Backend (backend-developer, Opus), PART B — Frontend (frontend-developer, Opus), Reviews
 
-### Community 235 - "Community 235"
+### Community 233 - "Community 233"
 Cohesion: 0.33
 Nodes (5): Before you finish, Bugs (must), Duplicates: delete the copies, use the shared pieces (must; this is what gets the functions under 50 lines), F02 (Master data pages) + F03 leftovers: review fixes, Rule breaks (must)
 
-### Community 236 - "Community 236"
+### Community 234 - "Community 234"
 Cohesion: 0.33
 Nodes (5): Before you finish, DRY, F06 frontend: review fixes, Rules: functions over 50 lines, Wrong or missing (fix first)
 
-### Community 239 - "Community 239"
+### Community 238 - "Community 238"
 Cohesion: 0.4
 Nodes (4): Db, emptyAggPay, emptyAggRet, saleItemFindMany
 
-### Community 240 - "Community 240"
-Cohesion: 0.4
-Nodes (3): ItemStatus, ItemStatusBadgeProps, statusStyles
-
-### Community 241 - "Community 241"
+### Community 239 - "Community 239"
 Cohesion: 0.4
 Nodes (3): useScanStockCount(), CountScanPanel(), KeyedScan
 
-### Community 242 - "Community 242"
+### Community 240 - "Community 240"
 Cohesion: 0.4
 Nodes (4): Before you finish, F03 (Items): review fixes, Must, Shrink (same pass)
 
-### Community 243 - "Community 243"
+### Community 241 - "Community 241"
 Cohesion: 0.4
 Nodes (4): Before you finish, Cleanups (do in the same pass), F01 (Users, roles and login): review fixes, Rule breaks (must)
 
-### Community 244 - "Community 244"
+### Community 242 - "Community 242"
 Cohesion: 0.4
 Nodes (4): Before you finish, Code, F07 part 1: review fixes, Security and correctness (fix first)
 
-### Community 245 - "Community 245"
+### Community 243 - "Community 243"
 Cohesion: 0.4
 Nodes (4): Before you finish, DRY and cleanup, F07 frontend, part 2: review fixes, Wrong (fix first)
 
-### Community 246 - "Community 246"
+### Community 244 - "Community 244"
 Cohesion: 0.4
 Nodes (4): Done when, F19-FE-02 — Bulk add devices: review fixes — frontend, Must fix, Small fixes
 
-### Community 247 - "Community 247"
+### Community 245 - "Community 245"
 Cohesion: 0.4
 Nodes (4): Before you finish, DRY and cleanup, F07 frontend, part 1: review fixes, Wrong (fix first)
 
-### Community 248 - "Community 248"
+### Community 246 - "Community 246"
 Cohesion: 0.4
 Nodes (4): Before you finish, F02 (Master data): review fixes, Must, Shrink (same pass)
 
-### Community 249 - "Community 249"
+### Community 247 - "Community 247"
 Cohesion: 0.4
 Nodes (4): Before you finish, DRY and cleanup, F04 frontend: review fixes, Missing or wrong (fix first)
 
-### Community 250 - "Community 250"
+### Community 248 - "Community 248"
 Cohesion: 0.4
 Nodes (4): Before you finish, Code, F06 backend: review fixes, Security (fix first)
 
-### Community 251 - "Community 251"
+### Community 249 - "Community 249"
 Cohesion: 0.4
 Nodes (4): Before you finish, F04 (Buying): review fixes, Must, Small
 
-### Community 252 - "Community 252"
+### Community 250 - "Community 250"
 Cohesion: 0.4
 Nodes (4): code:json ({), Expanding the Oxlint configuration, React Compiler, React + TypeScript + Vite
 
@@ -1332,16 +1324,16 @@ Nodes (3): Before you finish, Build, F04: Buying — suppliers, batches, walk-in
 ## Knowledge Gaps
 - **1254 isolated node(s):** `imei1`, `imei2`, `itemIds`, `body`, `imei1` (+1249 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **27 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **29 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `hasPermission()` connect `Community 28` to `Community 0`, `Community 64`, `Community 3`, `Community 69`, `Community 5`, `Community 7`, `Community 38`, `Community 106`, `Community 202`, `Community 138`, `Community 205`, `Community 13`, `Community 19`, `Community 118`, `Community 55`, `Community 218`, `Community 31`?**
+- **Why does `hasPermission()` connect `Community 32` to `Community 0`, `Community 1`, `Community 67`, `Community 4`, `Community 101`, `Community 6`, `Community 9`, `Community 73`, `Community 139`, `Community 11`, `Community 78`, `Community 208`, `Community 48`, `Community 117`, `Community 88`, `Community 28`?**
   _High betweenness centrality (0.323) - this node is a cross-community bridge._
-- **Why does `useAuthStore` connect `Community 28` to `Community 131`, `Community 132`, `Community 13`, `Community 15`, `Community 27`, `Community 30`, `Community 33`, `Community 38`, `Community 40`, `Community 41`, `Community 42`, `Community 43`, `Community 44`, `Community 52`, `Community 54`, `Community 189`, `Community 62`, `Community 190`, `Community 63`, `Community 193`, `Community 72`, `Community 75`, `Community 78`, `Community 79`, `Community 80`, `Community 88`, `Community 96`, `Community 98`, `Community 107`?**
+- **Why does `useAuthStore` connect `Community 11` to `Community 133`, `Community 16`, `Community 19`, `Community 27`, `Community 30`, `Community 32`, `Community 39`, `Community 40`, `Community 48`, `Community 49`, `Community 50`, `Community 59`, `Community 61`, `Community 193`, `Community 194`, `Community 198`, `Community 70`, `Community 72`, `Community 73`, `Community 75`, `Community 79`, `Community 91`, `Community 93`, `Community 94`, `Community 96`, `Community 103`, `Community 117`?**
   _High betweenness centrality (0.284) - this node is a cross-community bridge._
-- **Why does `SellScreen()` connect `Community 38` to `Community 28`?**
+- **Why does `SellScreen()` connect `Community 117` to `Community 32`, `Community 11`?**
   _High betweenness centrality (0.092) - this node is a cross-community bridge._
 - **Are the 36 inferred relationships involving `cn()` (e.g. with `CommandDialog()` and `CommandTrigger()`) actually correct?**
   _`cn()` has 36 INFERRED edges - model-reasoned connections that need verification._
@@ -1350,4 +1342,4 @@ _Questions this graph is uniquely positioned to answer:_
 - **What connects `imei1`, `imei2`, `itemIds` to the rest of the system?**
   _1254 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Community 0` be split into smaller, more focused modules?**
-  _Cohesion score 0.05 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.06 - nodes in this community are weakly interconnected._
