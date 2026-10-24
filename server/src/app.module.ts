@@ -21,6 +21,7 @@ import { InvestorsModule } from './investors/investors.module';
 import { LedgerModule } from './ledger/ledger.module';
 import { LocationsModule } from './locations/locations.module';
 import { PartnersModule } from './partners/partners.module';
+import { TelegramBotModule } from './telegram-bot/telegram-bot.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { ProductModelsModule } from './product-models/product-models.module';
 import { ReportsModule } from './reports/reports.module';
@@ -62,6 +63,7 @@ import { WalkInPurchasesModule } from './walk-in-purchases/walk-in-purchases.mod
     DashboardModule,
     SettingsModule,
     IntegrationsModule,
+    TelegramBotModule,
     BusinessDayModule,
     SuperAdminModule,
     HealthModule,

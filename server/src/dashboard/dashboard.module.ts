@@ -14,5 +14,6 @@ import { OwnerSnapshotService } from './owner-snapshot.service';
   imports: [ReportsModule, IntegrationsModule],
   controllers: [DashboardController],
   providers: [DashboardService, OwnerSnapshotService],
+  exports: [DashboardService], // the inbound Telegram poller (F15) reads the snapshot from here
 })
 export class DashboardModule {}
