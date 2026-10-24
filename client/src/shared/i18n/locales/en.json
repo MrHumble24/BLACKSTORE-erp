@@ -1159,7 +1159,10 @@
     "enabledHint": "Master switch for all Telegram messages.",
     "features": {
       "lowStockDigest": "Low-stock daily digest",
-      "ownerSnapshot": "Owner daily snapshot"
+      "ownerSnapshot": "Owner daily snapshot",
+      "customerReceipts": "Customer receipts",
+      "debtReminders": "Debt reminders",
+      "warrantyReminders": "Warranty reminders"
     },
     "disconnect": "Disconnect",
     "disconnectTitle": "Disconnect Telegram?",

@@ -1,4 +1,5 @@
 import { Prisma } from '@prisma/client';
+import { escapeHtml } from '../common/html';
 import type { PrismaService } from '../prisma/prisma.service';
 
 /** Stock-level filter values for the accessory-stock list (client has the same four). */
@@ -35,11 +36,6 @@ export interface LowStockLine {
   location: string;
   quantity: number;
   threshold: number;
-}
-
-/** Escapes the three characters Telegram's HTML parse mode treats as markup (& must go first). */
-export function escapeHtml(s: string): string {
-  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
 /**

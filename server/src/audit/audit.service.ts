@@ -13,6 +13,9 @@ export interface AuditEntry {
   after?: object | null;
 }
 
+/** Keys scrubbed from every audited before/after snapshot: a secret and a private contact id. */
+const REDACTED_KEYS = new Set(['passwordHash', 'telegramChatId']);
+
 /** Fields of an audit row that leave the server (Admin only); before/after returned as stored. */
 const auditSelect = {
   id: true,
@@ -31,7 +34,8 @@ export class AuditService {
   constructor(private readonly prisma: PrismaService) {}
 
   /**
-   * Saves one audit row; passwordHash is removed at any depth before saving.
+   * Saves one audit row; passwordHash and telegramChatId are removed at any depth before saving
+   * (secret / private contact data must never land in the audit trail or GET /audit-log).
    * Pass the transaction client (tx) to write it inside the same transaction as the change.
    */
   async log(entry: AuditEntry, tx?: Prisma.TransactionClient): Promise<void> {
@@ -75,8 +79,6 @@ function toSafeJson(
 ): Prisma.InputJsonValue | undefined {
   if (!value) return undefined;
   return JSON.parse(
-    JSON.stringify(value, (key, v: unknown) =>
-      key === 'passwordHash' ? undefined : v,
-    ),
+    JSON.stringify(value, (key, v: unknown) => (REDACTED_KEYS.has(key) ? undefined : v)),
   ) as Prisma.InputJsonValue;
 }

@@ -13,6 +13,10 @@ const TELEGRAM_KEY = 'telegram';
 export interface TelegramFeatures {
   lowStockDigest: boolean;
   ownerSnapshot: boolean;
+  // Customer-facing features (F17). Default OFF — they message external people, so the owner opts in.
+  customerReceipts: boolean;
+  debtReminders: boolean;
+  warrantyReminders: boolean;
 }
 
 /** The 'telegram' Setting row value. The token is stored encrypted and never leaves the server. */
@@ -135,6 +139,9 @@ export class TelegramConfigService {
       features: {
         lowStockDigest: dto.features?.lowStockDigest ?? before.features.lowStockDigest,
         ownerSnapshot: dto.features?.ownerSnapshot ?? before.features.ownerSnapshot,
+        customerReceipts: dto.features?.customerReceipts ?? before.features.customerReceipts,
+        debtReminders: dto.features?.debtReminders ?? before.features.debtReminders,
+        warrantyReminders: dto.features?.warrantyReminders ?? before.features.warrantyReminders,
       },
     };
     await this.persist(next, before, actorId);
@@ -158,6 +165,9 @@ export class TelegramConfigService {
       features: {
         lowStockDigest: dto.features?.lowStockDigest ?? before.features.lowStockDigest,
         ownerSnapshot: dto.features?.ownerSnapshot ?? before.features.ownerSnapshot,
+        customerReceipts: dto.features?.customerReceipts ?? before.features.customerReceipts,
+        debtReminders: dto.features?.debtReminders ?? before.features.debtReminders,
+        warrantyReminders: dto.features?.warrantyReminders ?? before.features.warrantyReminders,
       },
     };
     await this.persist(next, before, actorId);
@@ -212,6 +222,11 @@ export class TelegramConfigService {
       features: {
         lowStockDigest: s.features?.lowStockDigest ?? true,
         ownerSnapshot: s.features?.ownerSnapshot ?? true, // missing flag = on, same as lowStockDigest
+        // Customer-facing features default OFF: isFeatureEnabled does `?? true` for a missing key, so
+        // this `?? false` in read() is the ONLY thing that keeps them off until the owner opts in.
+        customerReceipts: s.features?.customerReceipts ?? false,
+        debtReminders: s.features?.debtReminders ?? false,
+        warrantyReminders: s.features?.warrantyReminders ?? false,
       },
     };
   }
