@@ -48,7 +48,8 @@
     "partners": "Партнёры",
     "reports": "Отчёты",
     "importStock": "Импорт товаров",
-    "backups": "Резервные копии"
+    "backups": "Резервные копии",
+    "telegram": "Telegram"
   },
   "auth": {
     "title": "Вход в систему",
@@ -1071,5 +1072,56 @@
     "restoreWarning": "Вся база данных будет заменена содержимым копии. Сначала автоматически создаётся защитная копия.",
     "confirmLabel": "Введите имя файла ещё раз",
     "restoreSuccess": "База восстановлена. Защитная копия: {{name}}"
+  },
+  "command": {
+    "searchPlaceholder": "Поиск страниц, действий или IMEI / штрихкода...",
+    "triggerPlaceholder": "Поиск...",
+    "pages": "Страницы",
+    "actions": "Быстрые действия",
+    "search": "Поиск",
+    "noResults": "Ничего не найдено",
+    "navigateHint": "Навигация",
+    "openHint": "Выбрать",
+    "closeHint": "Закрыть",
+    "lookupItem": "Поиск по коду",
+    "searchItems": "Поиск в устройствах",
+    "searchAccessories": "Поиск в аксессуарах",
+    "toggleTheme": "Переключить тему",
+    "newSale": "Новая продажа",
+    "receiveBatch": "Принять партию",
+    "walkInPurchase": "Скупка с рук",
+    "newExpense": "Добавить расход",
+    "startStockCount": "Начать инвентаризацию"
+  },
+  "superAdmin": {
+    "title": "Супер-админ",
+    "subtitle": "Интеграции и чувствительные настройки."
+  },
+  "telegram": {
+    "title": "Telegram-бот",
+    "subtitle": "Подключите бота для отправки резервных копий и уведомлений в ваши чаты Telegram.",
+    "tokenLabel": "Токен бота",
+    "tokenPlaceholder": "123456:ABC-DEF...",
+    "tokenHint": "Вставьте токен от @BotFather и проверьте его.",
+    "verify": "Проверить",
+    "addBot": "Добавить этого бота",
+    "addSuccess": "Бот подключён",
+    "changeBot": "Сменить бота",
+    "changeBotTitle": "Подключить другого бота",
+    "changeBotHint": "Вставьте новый токен, чтобы заменить текущего бота. Нужен только для смены бота — обычные изменения сохраняются без него.",
+    "saveSuccess": "Настройки сохранены",
+    "backupChatId": "Чат для копий",
+    "alertChatId": "Чат для уведомлений",
+    "chatIdPlaceholder": "Выберите чат",
+    "chatIdHint": "Чаты не найдены. Напишите боту и введите ID чата.",
+    "enabled": "Включено",
+    "enabledHint": "Главный переключатель для всех сообщений Telegram.",
+    "features": {
+      "lowStockDigest": "Ежедневная сводка по остаткам"
+    },
+    "disconnect": "Отключить",
+    "disconnectTitle": "Отключить Telegram?",
+    "disconnectWarning": "Сохранённый бот и чаты будут удалены. Резервные копии и уведомления прекратятся до повторного подключения.",
+    "disconnectSuccess": "Telegram отключён"
   }
 }

@@ -27,6 +27,7 @@ import { PartnersPage, PartnerDetailPage } from '@/pages/partners';
 import { NewConsignmentPage, ConsignmentDetailPage } from '@/pages/consignments';
 import { ProfitReportPage, InvestorReportPage } from '@/pages/reports';
 import { ReceiptSettingsPage } from '@/pages/settings';
+import { TelegramPage } from '@/pages/super-admin';
 import type { Permission } from '@/shared/config/permissions';
 import { ProtectedRoute } from './ProtectedRoute';
 
@@ -72,6 +73,7 @@ const PROTECTED_ROUTES: RouteConfig[] = [
   { path: 'reports/investors', permission: 'view_profit', Component: InvestorReportPage },
   { path: 'items/import', permission: 'manage_prices', Component: ImportPage },
   { path: 'backups', permission: 'manage_backups', Component: BackupsPage },
+  { path: 'super-admin/telegram', permission: 'manage_integrations', Component: TelegramPage },
 ];
 
 /** Redirects already authenticated users away from public pages. */

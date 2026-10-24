@@ -48,7 +48,8 @@
     "partners": "Partners",
     "reports": "Reports",
     "importStock": "Stock import",
-    "backups": "Backups"
+    "backups": "Backups",
+    "telegram": "Telegram"
   },
   "auth": {
     "title": "Sign in",
@@ -1071,5 +1072,56 @@
     "restoreWarning": "The whole database will be replaced with the backup contents. A safety copy is created first automatically.",
     "confirmLabel": "Type the file name again to confirm",
     "restoreSuccess": "Database restored. Safety copy: {{name}}"
+  },
+  "command": {
+    "searchPlaceholder": "Search pages, actions, or IMEI / barcode...",
+    "triggerPlaceholder": "Search...",
+    "pages": "Pages",
+    "actions": "Quick Actions",
+    "search": "Search",
+    "noResults": "No results found",
+    "navigateHint": "Navigate",
+    "openHint": "Select",
+    "closeHint": "Close",
+    "lookupItem": "Look up by code",
+    "searchItems": "Search in devices",
+    "searchAccessories": "Search in accessories",
+    "toggleTheme": "Toggle theme",
+    "newSale": "New sale",
+    "receiveBatch": "Receive batch",
+    "walkInPurchase": "Walk-in purchase",
+    "newExpense": "Add expense",
+    "startStockCount": "Start stock count"
+  },
+  "superAdmin": {
+    "title": "Super admin",
+    "subtitle": "Integrations and sensitive settings."
+  },
+  "telegram": {
+    "title": "Telegram bot",
+    "subtitle": "Connect a bot to send backups and alerts to your Telegram chats.",
+    "tokenLabel": "Bot token",
+    "tokenPlaceholder": "123456:ABC-DEF...",
+    "tokenHint": "Paste the token from @BotFather, then verify it.",
+    "verify": "Verify",
+    "addBot": "Add this bot",
+    "addSuccess": "Bot connected",
+    "changeBot": "Change bot",
+    "changeBotTitle": "Connect a different bot",
+    "changeBotHint": "Paste a new token to replace the current bot. Only needed to switch bots — everyday changes save without it.",
+    "saveSuccess": "Settings saved",
+    "backupChatId": "Backup chat",
+    "alertChatId": "Alerts chat",
+    "chatIdPlaceholder": "Select a chat",
+    "chatIdHint": "No chats found. Message the bot, then enter the chat id.",
+    "enabled": "Enabled",
+    "enabledHint": "Master switch for all Telegram messages.",
+    "features": {
+      "lowStockDigest": "Low-stock daily digest"
+    },
+    "disconnect": "Disconnect",
+    "disconnectTitle": "Disconnect Telegram?",
+    "disconnectWarning": "The saved bot and chats will be cleared. Backups and alerts will stop until you connect again.",
+    "disconnectSuccess": "Telegram disconnected"
   }
 }

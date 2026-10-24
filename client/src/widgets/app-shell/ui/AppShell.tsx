@@ -1,6 +1,7 @@
 import { Outlet } from 'react-router-dom';
 import { AppHeader } from './AppHeader';
 import { AppSidebar } from './AppSidebar';
+import { CommandDialog } from '@/features/command-search';
 
 /**
  * Main application shell widget with Apple studio mist backdrop and centered stage.
@@ -17,6 +18,8 @@ export function AppShell() {
           </div>
         </main>
       </div>
+      <CommandDialog />
     </div>
   );
 }
+

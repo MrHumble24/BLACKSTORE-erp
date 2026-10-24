@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import {
   Home, Users, Smartphone, Headphones, MapPin, Shapes, Coins,
   Building2, Package, ShoppingCart, Receipt, Contact, Settings,
-  ArrowLeftRight, ClipboardCheck, ScrollText, Handshake, BarChart3, Upload, DatabaseBackup,
+  ArrowLeftRight, ClipboardCheck, ScrollText, Handshake, BarChart3, Upload, DatabaseBackup, Send,
 } from 'lucide-react';
 import { useAuthStore } from '@/entities/session';
 import { cn } from '@/shared/lib';
@@ -135,6 +135,16 @@ function AdminItems({ onNavigate }: { onNavigate?: () => void }) {
   );
 }
 
+/** Super-admin links (Telegram integration), gated on the super-admin-only permission. */
+function SuperAdminItems({ onNavigate }: { onNavigate?: () => void }) {
+  const { t } = useTranslation();
+  const hasPermission = useAuthStore((state) => state.hasPermission);
+  if (!hasPermission('manage_integrations')) return null;
+  return (
+    <SidebarItem to="/super-admin/telegram" onClick={onNavigate} icon={<Send className="h-4 w-4" />} label={t('nav.telegram')} />
+  );
+}
+
 /** Full nav list: home, selling, stock, buying, admin. */
 export function SidebarNavList({ onNavigate }: { onNavigate?: () => void }) {
   const { t } = useTranslation();
@@ -152,6 +162,7 @@ export function SidebarNavList({ onNavigate }: { onNavigate?: () => void }) {
       <BuyingItems onNavigate={onNavigate} />
       <OperationsItems onNavigate={onNavigate} />
       <AdminItems onNavigate={onNavigate} />
+      <SuperAdminItems onNavigate={onNavigate} />
     </nav>
   );
 }

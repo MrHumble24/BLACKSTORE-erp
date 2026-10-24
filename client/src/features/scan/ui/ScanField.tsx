@@ -1,7 +1,7 @@
 import { useState, type KeyboardEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Search, Loader2 } from 'lucide-react';
+import { Barcode, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useItemByCode, SCAN_CODE_REGEX } from '@/entities/item';
 import { getApiErrorStatus } from '@/shared/api';
@@ -26,12 +26,12 @@ function ScanInput({
 }) {
   const { t } = useTranslation();
   return (
-    <div className={`relative flex items-center ${className ?? 'w-52 md:w-64'}`}>
+    <div className={`relative flex items-center ${className ?? 'w-44 md:w-56'}`}>
       <div className="absolute left-2.5 flex items-center pointer-events-none text-steel">
         {isPending ? (
           <Loader2 className="h-3.5 w-3.5 animate-spin text-pricing-blue" />
         ) : (
-          <Search className="h-3.5 w-3.5" />
+          <Barcode className="h-3.5 w-3.5" />
         )}
       </div>
       <input
@@ -42,7 +42,7 @@ function ScanInput({
         onKeyDown={onKeyDown}
         placeholder={t('scan.placeholder')}
         disabled={disabled}
-        className="h-8 w-full rounded-[980px] border border-hairline-silver bg-gallery-white pl-8 pr-8 text-xs text-ink placeholder:text-steel focus:border-pricing-blue focus:outline-none focus:ring-1 focus:ring-pricing-blue/20 transition-all tracking-[-0.01em]"
+        className="h-8 w-full rounded-[980px] border border-hairline-silver bg-gallery-white dark:bg-[#1a1b20] dark:border-[#2d3039] pl-8 pr-8 text-xs text-ink placeholder:text-steel focus:border-pricing-blue focus:outline-none focus:ring-1 focus:ring-pricing-blue/20 transition-all tracking-[-0.01em]"
       />
       <div className="absolute right-1 flex items-center">
         <CameraScanButton onScan={onCameraScan} />
@@ -50,6 +50,7 @@ function ScanInput({
     </div>
   );
 }
+
 
 /** Scan input in header for barcode / IMEI scanning and quick lookup. */
 export function ScanField({ className }: { className?: string } = {}) {

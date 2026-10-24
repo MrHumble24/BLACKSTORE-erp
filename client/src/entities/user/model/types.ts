@@ -2,7 +2,7 @@ export type Language = 'uz' | 'ru' | 'en';
 
 export interface Role {
   id: number;
-  name: 'Admin' | 'Staff';
+  name: 'Admin' | 'Staff' | 'SuperAdmin';
   permissions: string[];
 }
 

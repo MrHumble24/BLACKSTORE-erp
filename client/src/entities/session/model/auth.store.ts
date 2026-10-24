@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import type { User } from '@/entities/user';
-import type { Permission } from '@/shared/config/permissions';
+import { SUPER_ONLY_PERMISSIONS, type Permission } from '@/shared/config/permissions';
 
 interface AuthState {
   user: User | null;
@@ -21,7 +21,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   hasPermission: (permission: Permission) => {
     const user = get().user;
     if (!user) return false;
-    if (user.role.name === 'Admin') return true;
-    return user.role.permissions.includes(permission);
+    if (user.role.permissions.includes(permission)) return true;
+    // Admin implicitly holds every permission except the super-admin-only ones (F12).
+    if (user.role.name === 'Admin') {
+      return !(SUPER_ONLY_PERMISSIONS as readonly Permission[]).includes(permission);
+    }
+    return false;
   },
 }));

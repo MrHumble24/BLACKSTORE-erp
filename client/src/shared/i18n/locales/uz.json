@@ -48,7 +48,8 @@
     "partners": "Hamkorlar",
     "reports": "Hisobotlar",
     "importStock": "Mahsulot importi",
-    "backups": "Zaxira nusxalari"
+    "backups": "Zaxira nusxalari",
+    "telegram": "Telegram"
   },
   "auth": {
     "title": "Tizimga kirish",
@@ -1071,5 +1072,56 @@
     "restoreWarning": "Butun ma'lumotlar bazasi zaxira nusxasidagi holatga qaytariladi. Amaliyotdan oldin avtomatik ravishda xavfsizlik nusxasi olinadi.",
     "confirmLabel": "Tasdiqlash uchun fayl nomini aynan kiriting",
     "restoreSuccess": "Ma'lumotlar bazasi tiklandi. Xavfsizlik nusxasi: {{name}}"
+  },
+  "command": {
+    "searchPlaceholder": "Sahifalar, amallar yoki IMEI / shtrix-kod...",
+    "triggerPlaceholder": "Qidirish...",
+    "pages": "Sahifalar",
+    "actions": "Tezkor amallar",
+    "search": "Qidiruv",
+    "noResults": "Hech narsa topilmadi",
+    "navigateHint": "Harakatlanish",
+    "openHint": "Tanlash",
+    "closeHint": "Yopish",
+    "lookupItem": "Kod bo'yicha qidirish",
+    "searchItems": "Qurilmalardan qidirish",
+    "searchAccessories": "Aksessuarlardan qidirish",
+    "toggleTheme": "Mavzuni almashtirish",
+    "newSale": "Yangi sotuv",
+    "receiveBatch": "Partiya qabul qilish",
+    "walkInPurchase": "Qo'ldan xarid qilish",
+    "newExpense": "Xarajat kiritish",
+    "startStockCount": "Inventarizatsiya boshlash"
+  },
+  "superAdmin": {
+    "title": "Super admin",
+    "subtitle": "Integratsiyalar va maxfiy sozlamalar."
+  },
+  "telegram": {
+    "title": "Telegram bot",
+    "subtitle": "Zaxira nusxalar va ogohlantirishlarni Telegram chatlaringizga yuborish uchun botni ulang.",
+    "tokenLabel": "Bot tokeni",
+    "tokenPlaceholder": "123456:ABC-DEF...",
+    "tokenHint": "@BotFather'dan olingan tokenni joylang va tekshiring.",
+    "verify": "Tekshirish",
+    "addBot": "Shu botni qo'shish",
+    "addSuccess": "Bot ulandi",
+    "changeBot": "Botni almashtirish",
+    "changeBotTitle": "Boshqa botni ulash",
+    "changeBotHint": "Joriy botni almashtirish uchun yangi token kiriting. Faqat botni almashtirishda kerak — oddiy o'zgarishlar tokensiz saqlanadi.",
+    "saveSuccess": "Sozlamalar saqlandi",
+    "backupChatId": "Zaxira chati",
+    "alertChatId": "Ogohlantirishlar chati",
+    "chatIdPlaceholder": "Chatni tanlang",
+    "chatIdHint": "Chatlar topilmadi. Botga yozing va chat ID'sini kiriting.",
+    "enabled": "Yoqilgan",
+    "enabledHint": "Barcha Telegram xabarlari uchun asosiy tugma.",
+    "features": {
+      "lowStockDigest": "Kam qolgan tovarlar kunlik hisoboti"
+    },
+    "disconnect": "Uzish",
+    "disconnectTitle": "Telegram uzilsinmi?",
+    "disconnectWarning": "Saqlangan bot va chatlar o'chiriladi. Qayta ulamaguningizcha zaxira nusxalar va ogohlantirishlar to'xtaydi.",
+    "disconnectSuccess": "Telegram uzildi"
   }
 }
