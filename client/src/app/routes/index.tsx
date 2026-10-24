@@ -28,6 +28,7 @@ import { NewConsignmentPage, ConsignmentDetailPage } from '@/pages/consignments'
 import { ProfitReportPage, InvestorReportPage } from '@/pages/reports';
 import { ReceiptSettingsPage } from '@/pages/settings';
 import { TelegramPage } from '@/pages/super-admin';
+import { CloseDayPage } from '@/pages/close-day';
 import type { Permission } from '@/shared/config/permissions';
 import { ProtectedRoute } from './ProtectedRoute';
 
@@ -64,6 +65,7 @@ const PROTECTED_ROUTES: RouteConfig[] = [
   { path: 'stock-counts', permission: 'stock_count', Component: StockCountsPage },
   { path: 'stock-counts/:id', permission: 'stock_count', Component: StockCountDetailPage },
   { path: 'expenses', permission: 'manage_expenses', Component: ExpensesPage },
+  { path: 'close-day', permission: 'close_day', Component: CloseDayPage },
   { path: 'audit-log', permission: 'view_audit_log', Component: AuditLogPage },
   { path: 'partners', permission: 'consign', Component: PartnersPage },
   { path: 'partners/:id', permission: 'consign', Component: PartnerDetailPage },

@@ -11,6 +11,8 @@ export interface LedgerEntry {
   note: string | null;
   /** Admin's confirmation that this INCOME adds to net profit (BR-5); always false for EXPENSE. */
   countsInProfit: boolean;
+  /** True = cash drawer, false = bank/card; drives the daily-close cash reconciliation (F13). */
+  inCash: boolean;
   user: { id: number; name: string };
 }
 
@@ -32,4 +34,5 @@ export interface CreateLedgerEntryPayload {
   date?: string;
   note?: string;
   countsInProfit?: boolean;
+  inCash?: boolean;
 }

@@ -49,7 +49,8 @@
     "reports": "Reports",
     "importStock": "Stock import",
     "backups": "Backups",
-    "telegram": "Telegram"
+    "telegram": "Telegram",
+    "closeDay": "Close day"
   },
   "auth": {
     "title": "Sign in",
@@ -633,7 +634,10 @@
       "amountRequired": "Amount is required",
       "amountInvalid": "Invalid amount format",
       "amountPositive": "Amount must be greater than zero"
-    }
+    },
+    "inCash": "Cash drawer",
+    "fromCash": "From the cash drawer",
+    "fromBank": "From bank / card"
   },
   "auditLog": {
     "title": "Audit log",
@@ -1117,11 +1121,47 @@
     "enabled": "Enabled",
     "enabledHint": "Master switch for all Telegram messages.",
     "features": {
-      "lowStockDigest": "Low-stock daily digest"
+      "lowStockDigest": "Low-stock daily digest",
+      "ownerSnapshot": "Owner daily snapshot"
     },
     "disconnect": "Disconnect",
     "disconnectTitle": "Disconnect Telegram?",
     "disconnectWarning": "The saved bot and chats will be cleared. Backups and alerts will stop until you connect again.",
     "disconnectSuccess": "Telegram disconnected"
+  },
+  "closeDay": {
+    "title": "Daily close",
+    "subtitle": "Count the drawer and confirm the day",
+    "openedAt": "Open since {{time}}",
+    "loadError": "Could not load today's figures",
+    "expected": "Expected",
+    "counted": "Counted",
+    "cashDrawer": "Cash drawer",
+    "cashHint": "Count the cash in the drawer",
+    "card": "Card",
+    "cardHint": "Total taken by card today",
+    "enterCount": "Enter count",
+    "matches": "Matches",
+    "short": "Short",
+    "over": "Over",
+    "sales": "Sales",
+    "returns": "Returns",
+    "expenses": "Expenses",
+    "income": "Income",
+    "noneToday": "None today",
+    "unknownSeller": "Unknown",
+    "cashBack": "Cash back",
+    "fromCash": "From cash",
+    "fromBank": "From bank",
+    "flag": "Flag as suspicious",
+    "flagReason": "What looks wrong?",
+    "closeDay": "Close day",
+    "confirmTitle": "Close the day?",
+    "confirmSubtitle": "This locks today's figures and starts a new day. It cannot be undone.",
+    "flaggedCount": "{{n}} record(s) flagged for review",
+    "note": "Note (optional)",
+    "notePlaceholder": "Anything worth remembering about today",
+    "confirmClose": "Confirm close",
+    "closedSuccess": "Day closed"
   }
 }

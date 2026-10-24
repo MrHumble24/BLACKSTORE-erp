@@ -5,6 +5,7 @@ import {
   Home, Users, Smartphone, Headphones, MapPin, Shapes, Coins,
   Building2, Package, ShoppingCart, Receipt, Contact, Settings,
   ArrowLeftRight, ClipboardCheck, ScrollText, Handshake, BarChart3, Upload, DatabaseBackup, Send,
+  CalendarCheck,
 } from 'lucide-react';
 import { useAuthStore } from '@/entities/session';
 import { cn } from '@/shared/lib';
@@ -95,6 +96,9 @@ function OperationsItems({ onNavigate }: { onNavigate?: () => void }) {
       )}
       {hasPermission('manage_expenses') && (
         <SidebarItem to="/expenses" onClick={onNavigate} icon={<Receipt className="h-4 w-4" />} label={t('nav.expenses')} />
+      )}
+      {hasPermission('close_day') && (
+        <SidebarItem to="/close-day" onClick={onNavigate} icon={<CalendarCheck className="h-4 w-4" />} label={t('nav.closeDay')} />
       )}
       {hasPermission('view_audit_log') && (
         <SidebarItem to="/audit-log" onClick={onNavigate} icon={<ScrollText className="h-4 w-4" />} label={t('nav.auditLog')} />

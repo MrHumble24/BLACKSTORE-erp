@@ -11,6 +11,7 @@ export interface LedgerFormValues {
   date: string;
   note: string;
   countsInProfit: boolean;
+  inCash: boolean;
 }
 
 /** Localized schema: category 1–50 chars, amount a positive money string. */
@@ -30,5 +31,6 @@ export function createLedgerSchema(t: TFn) {
     date: z.string(),
     note: z.string(),
     countsInProfit: z.boolean(),
+    inCash: z.boolean(),
   });
 }
