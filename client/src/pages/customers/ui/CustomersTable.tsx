@@ -10,7 +10,7 @@ import {
   TableLoadingRow,
   TableEmptyRow,
 } from '@/shared/ui';
-import { formatDate } from '@/shared/lib';
+import { formatDate, formatMoney } from '@/shared/lib';
 import type { Customer } from '@/entities/customer';
 
 interface CustomersTableProps {
@@ -31,14 +31,15 @@ export function CustomersTable({ customers, isLoading }: CustomersTableProps) {
             <TableHead>{t('customers.name')}</TableHead>
             <TableHead>{t('customers.phone')}</TableHead>
             <TableHead>{t('customers.note')}</TableHead>
+            <TableHead className="text-right">{t('customers.debt')}</TableHead>
             <TableHead>{t('customers.createdAt')}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {isLoading ? (
-            <TableLoadingRow colSpan={4} />
+            <TableLoadingRow colSpan={5} />
           ) : customers.length === 0 ? (
-            <TableEmptyRow colSpan={4} message={t('customers.noCustomers')} />
+            <TableEmptyRow colSpan={5} message={t('customers.noCustomers')} />
           ) : (
             customers.map((c) => (
               <TableRow
@@ -49,6 +50,13 @@ export function CustomersTable({ customers, isLoading }: CustomersTableProps) {
                 <TableCell className="font-medium text-ink text-xs">{c.name}</TableCell>
                 <TableCell className="font-mono text-xs text-slate">{c.phone}</TableCell>
                 <TableCell className="text-xs text-slate">{c.note || '—'}</TableCell>
+                <TableCell className="text-right text-xs tabular-nums">
+                  {Number(c.debtBalance) > 0 ? (
+                    <span className="font-semibold text-launch-orange">{formatMoney(c.debtBalance)}</span>
+                  ) : (
+                    <span className="text-slate">—</span>
+                  )}
+                </TableCell>
                 <TableCell className="text-xs text-slate">{formatDate(c.createdAt)}</TableCell>
               </TableRow>
             ))

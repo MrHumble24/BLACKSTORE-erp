@@ -4,6 +4,8 @@ export interface Customer {
   phone: string;
   note: string | null;
   createdAt: string;
+  /** Outstanding debt across the customer's sales (BR-8), as a decimal string. */
+  debtBalance: string;
 }
 
 export interface CustomerDetail extends Customer {

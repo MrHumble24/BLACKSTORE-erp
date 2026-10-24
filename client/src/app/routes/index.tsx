@@ -3,7 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore } from '@/features/auth';
 import { AppShell } from '@/widgets/app-shell';
 import { LoginPage } from '@/pages/login';
-import { LabelPage } from '@/features/print-label';
+import { LabelPage, BatchLabelsPage } from '@/features/print-label';
 import { HomePage } from '@/pages/home';
 import { UsersPage } from '@/pages/users';
 import { ItemsPage, ItemDetailsPage } from '@/pages/items';
@@ -127,6 +127,15 @@ export function AppRoutes() {
         element={
           <ProtectedRoute permission="receive_batch">
             <LabelPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="batches/:id/labels"
+        element={
+          <ProtectedRoute permission="receive_batch">
+            <BatchLabelsPage />
           </ProtectedRoute>
         }
       />

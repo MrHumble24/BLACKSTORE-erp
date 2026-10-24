@@ -46,13 +46,22 @@ function FilterSelect({
   );
 }
 
+export type StockLevelFilter = 'ALL' | 'IN_STOCK' | 'LOW_STOCK' | 'OUT_OF_STOCK';
+
 interface AccessoriesFiltersProps {
   filters: AccessoryStockFilters;
   onChange: (filters: AccessoryStockFilters) => void;
+  stockLevel?: StockLevelFilter;
+  onStockLevelChange?: (level: StockLevelFilter) => void;
 }
 
 /** Filter bar for non-serialized accessory stock. */
-export function AccessoriesFilters({ filters, onChange }: AccessoriesFiltersProps) {
+export function AccessoriesFilters({
+  filters,
+  onChange,
+  stockLevel = 'ALL',
+  onStockLevelChange,
+}: AccessoriesFiltersProps) {
   const { t } = useTranslation();
   const { data: categories = [] } = useCategories();
   const nonSerializedCategories = categories.filter((c) => !c.isSerialized);
@@ -76,6 +85,18 @@ export function AccessoriesFilters({ filters, onChange }: AccessoriesFiltersProp
         options={locations.map((l) => ({ value: String(l.id), label: l.name }))}
         allLabel={t('accessories.allLocations')}
       />
+      {onStockLevelChange && (
+        <FilterSelect
+          value={stockLevel}
+          onChange={(val) => onStockLevelChange(val as StockLevelFilter)}
+          options={[
+            { value: 'IN_STOCK', label: t('accessories.stockFilterInStock') },
+            { value: 'LOW_STOCK', label: t('accessories.stockFilterLowStock') },
+            { value: 'OUT_OF_STOCK', label: t('accessories.stockFilterOutOfStock') },
+          ]}
+          allLabel={t('accessories.stockFilterAll')}
+        />
+      )}
     </div>
   );
 }

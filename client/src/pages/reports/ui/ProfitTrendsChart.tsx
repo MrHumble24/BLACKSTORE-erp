@@ -245,7 +245,7 @@ export function ProfitTrendsChart({
             {t('reports.trendsSubtitle', 'Daily sales and gross margin progression')}
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           <ChartLegend items={legendItems} />
           {canViewCost && (
             <button

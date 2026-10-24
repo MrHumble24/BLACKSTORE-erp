@@ -11,22 +11,23 @@ import type {
 export const customerKeys = {
   all: ['customers'] as const,
   lists: () => [...customerKeys.all, 'list'] as const,
-  list: (search?: string, page = 1, pageSize = 20) =>
-    [...customerKeys.lists(), { search, page, pageSize }] as const,
+  list: (search?: string, page = 1, pageSize = 20, hasDebt = false) =>
+    [...customerKeys.lists(), { search, page, pageSize, hasDebt }] as const,
   details: () => [...customerKeys.all, 'detail'] as const,
   detail: (id: number) => [...customerKeys.details(), id] as const,
 };
 
 /** Fetch paginated customers optionally filtered by search (name or phone). */
-export function useCustomers(search?: string, page = 1, pageSize = 20) {
+export function useCustomers(search?: string, page = 1, pageSize = 20, hasDebt = false) {
   return useQuery({
-    queryKey: customerKeys.list(search, page, pageSize),
+    queryKey: customerKeys.list(search, page, pageSize, hasDebt),
     queryFn: async () => {
       const params: Record<string, string> = {
         page: String(page),
         pageSize: String(pageSize),
       };
       if (search?.trim()) params.search = search.trim();
+      if (hasDebt) params.hasDebt = 'true';
 
       const { data } = await api.get<Page<Customer>>('/customers', { params });
       return data;

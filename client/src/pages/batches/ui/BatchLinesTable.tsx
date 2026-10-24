@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
-import { Pencil, Trash2 } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Pencil, Printer, Trash2 } from 'lucide-react';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
   Button, TableLoadingRow, TableEmptyRow,
@@ -81,6 +82,7 @@ function LineRow({
   onSetPrice: (line: BatchLine) => void;
   onDelete: (line: BatchLine) => void;
 }) {
+  const { t } = useTranslation();
   const status = statusOf(line);
 
   return (
@@ -100,6 +102,18 @@ function LineRow({
       )}
       <TableCell className="text-right">
         <div className="flex items-center justify-end gap-1.5">
+          {line.item && (
+            <Link
+              to={`/items/${line.item.id}/label`}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={t('labels.print')}
+              title={t('labels.print')}
+              className="inline-flex h-7 w-7 items-center justify-center rounded-full text-slate hover:text-apple-blue hover:bg-apple-blue/10 transition-colors"
+            >
+              <Printer className="h-3.5 w-3.5" />
+            </Link>
+          )}
           {canManagePrices && <SetPriceButton line={line} onClick={onSetPrice} />}
           {canDelete && <DeleteLineButton line={line} onClick={onDelete} />}
         </div>

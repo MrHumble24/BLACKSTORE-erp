@@ -21,7 +21,10 @@
     "view": "View",
     "reset": "Reset",
     "copied": "Copied",
-    "phonePlaceholder": "+998 90 123 45 67"
+    "phonePlaceholder": "+998 90 123 45 67",
+    "lightTheme": "Light theme",
+    "darkTheme": "Dark theme",
+    "toggleTheme": "Toggle theme"
   },
   "nav": {
     "home": "Home",
@@ -87,7 +90,38 @@
   },
   "home": {
     "welcome": "Welcome, {{name}}!",
-    "description": "BLACKSTORE shop and warehouse management system"
+    "description": "BLACKSTORE shop and warehouse management system",
+    "greeting": {
+      "morning": "Good morning",
+      "afternoon": "Good afternoon",
+      "evening": "Good evening"
+    },
+    "hello": "{{greeting}}, {{name}}",
+    "actions": {
+      "newSale": "New sale",
+      "receiveBatch": "Receive batch",
+      "walkIn": "Walk-in buy",
+      "findItem": "Find item"
+    },
+    "kpi": {
+      "todaySales": "Today's sales",
+      "salesCount": "{{count}} sales",
+      "inStock": "In stock",
+      "atPartner": "{{count}} at partners",
+      "outstandingDebt": "Outstanding debt",
+      "debtors": "{{count}} debtors",
+      "overduePartner": "Overdue at partner",
+      "overdueNote": "Items past deadline",
+      "todayProfit": "Today's profit",
+      "monthProfit": "Net profit this month"
+    },
+    "recentSales": "Recent sales",
+    "noRecentSales": "No sales yet",
+    "walkInCustomer": "Walk-in",
+    "needsAttention": "Needs attention",
+    "allClear": "All clear — nothing needs your attention",
+    "debtorsToChase": "{{count}} customers owe you",
+    "overdueItems": "{{count}} items overdue at partners"
   },
   "scan": {
     "placeholder": "IMEI or serial number...",
@@ -196,6 +230,12 @@
     "unitCost": "Unit cost",
     "avgCost": "Average cost",
     "stockAddedSuccess": "Accessory stock added successfully",
+    "outOfStock": "Out of stock",
+    "lowStock": "Low stock",
+    "stockFilterAll": "All stock",
+    "stockFilterInStock": "In stock",
+    "stockFilterLowStock": "Low stock (≤3)",
+    "stockFilterOutOfStock": "Out of stock (0)",
     "validation": {
       "modelRequired": "Select a model",
       "locationRequired": "Select a location",
@@ -479,7 +519,14 @@
   "labels": {
     "print": "Print label",
     "hint": "Label 50×30 mm — a print window will open",
-    "generating": "Preparing the system code…"
+    "generating": "Preparing the system code…",
+    "batchLabelsTitle": "Batch Labels",
+    "batchLabelsCount": "{{count}} devices",
+    "printBatchLabels": "Print Labels ({{count}})",
+    "printAll": "Print All",
+    "batchPrintHint": "Load 50×30 mm roll into thermal printer and click Print",
+    "generatingBatchCodes": "Generating system codes: {{current}} / {{total}}…",
+    "noDevicesInBatch": "No device items in this batch (accessories only)"
   },
   "transfers": {
     "title": "Transfers",
@@ -666,7 +713,7 @@
     "tablePrice": "Sale price",
     "tableQty": "Qty",
     "tableWarranty": "Warranty until",
-    "belowMinPrice": "Below min. price",
+    "belowMinPrice": "Below the minimum price",
     "paymentTitle": "Payment and customer",
     "summaryTotal": "Total due",
     "paymentMethod": "Payment method",
@@ -690,9 +737,47 @@
     "remainingDebt": "Debt balance",
     "itemsCount": "Items",
     "clearCustomer": "Change customer",
-    "noCustomersFound": "No customers found"
+    "noCustomersFound": "No customers found",
+    "saleSuccessTitle": "Sale completed successfully",
+    "saleSuccessSubtitle": "You can print the receipt or start a new sale",
+    "printReceipt": "Print receipt",
+    "newSale": "New sale",
+    "viewDetails": "Sale details",
+    "confirmTitle": "Confirm sale",
+    "confirmSubtitle": "Check the amounts before completing this sale.",
+    "confirmComplete": "Complete sale"
+  },
+  "help": {
+    "title": "Help",
+    "subtitle": "Quick tips for everyday work",
+    "sell": {
+      "t": "Sell fast",
+      "d": "Scan a device, set the price, choose cash or card, then finish. If it isn't fully paid, pick a customer."
+    },
+    "scan": {
+      "t": "Scan from anywhere",
+      "d": "Use the scan box at the top to open any device from any screen."
+    },
+    "minPrice": {
+      "t": "Minimum price",
+      "d": "You can't sell below an item's minimum price. Ask the owner if a customer needs a lower price."
+    },
+    "debt": {
+      "t": "Debts",
+      "d": "An unpaid sale needs a customer. Open the customer and add a payment; the balance updates itself."
+    },
+    "returns": {
+      "t": "Returns",
+      "d": "A return puts the item back in stock (or marks it defective) and corrects the money automatically."
+    },
+    "noDelete": {
+      "t": "Can't delete something?",
+      "d": "Staff can't delete or edit past records. If something is wrong, tell the owner."
+    }
   },
   "customers": {
+    "debt": "Current debt",
+    "onlyDebtors": "Owes money",
     "title": "Customers",
     "subtitle": "Customer list and debt tracking",
     "addCustomer": "Add customer",
@@ -702,7 +787,6 @@
     "phone": "Phone",
     "note": "Note",
     "createdAt": "Registered on",
-    "debt": "Current debt",
     "noCustomers": "No customers found",
     "createdSuccess": "Customer added successfully",
     "updatedSuccess": "Customer details updated",
@@ -746,7 +830,10 @@
     "paid": "Paid",
     "balance": "Debt",
     "print": "Print",
-    "back": "Back"
+    "back": "Back",
+    "paperWidth": "Paper width",
+    "thermal80mm": "80 mm (Standard thermal)",
+    "thermal58mm": "58 mm (Compact thermal)"
   },
   "receiptSettings": {
     "title": "Receipt settings",

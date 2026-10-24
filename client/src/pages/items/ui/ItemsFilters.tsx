@@ -41,10 +41,10 @@ function FilterSelect({ value, placeholder, onChange, options }: FilterSelectPro
   const isFiltered = value !== 'ALL';
 
   return (
-    <div className="w-full sm:w-36">
+    <div className="w-full sm:w-auto">
       <Select value={value} onValueChange={onChange}>
         <SelectTrigger
-          className={`h-8 text-xs rounded-full border-hairline-silver/70 transition-colors w-full ${
+          className={`h-8 text-xs rounded-full border-hairline-silver/70 transition-colors w-full sm:w-auto sm:min-w-[10rem] [&>span]:truncate ${
             isFiltered ? 'bg-studio-mist font-medium text-ink border-steel/60' : 'bg-gallery-white text-slate'
           }`}
         >

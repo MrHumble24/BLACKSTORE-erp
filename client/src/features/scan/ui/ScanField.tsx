@@ -14,6 +14,7 @@ function ScanInput({
   disabled,
   isPending,
   onCameraScan,
+  className,
 }: {
   value: string;
   setValue: (v: string) => void;
@@ -21,10 +22,11 @@ function ScanInput({
   disabled: boolean;
   isPending: boolean;
   onCameraScan: (code: string) => void;
+  className?: string;
 }) {
   const { t } = useTranslation();
   return (
-    <div className="relative flex items-center w-52 md:w-64">
+    <div className={`relative flex items-center ${className ?? 'w-52 md:w-64'}`}>
       <div className="absolute left-2.5 flex items-center pointer-events-none text-steel">
         {isPending ? (
           <Loader2 className="h-3.5 w-3.5 animate-spin text-pricing-blue" />
@@ -50,7 +52,7 @@ function ScanInput({
 }
 
 /** Scan input in header for barcode / IMEI scanning and quick lookup. */
-export function ScanField() {
+export function ScanField({ className }: { className?: string } = {}) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [value, setValue] = useState('');
@@ -92,6 +94,7 @@ export function ScanField() {
       disabled={isPending}
       isPending={isPending}
       onCameraScan={handleCameraScan}
+      className={className}
     />
   );
 }

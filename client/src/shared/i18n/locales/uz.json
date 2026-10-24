@@ -21,7 +21,10 @@
     "view": "Ko'rish",
     "reset": "Tozalash",
     "copied": "Nusxalandi",
-    "phonePlaceholder": "+998 90 123 45 67"
+    "phonePlaceholder": "+998 90 123 45 67",
+    "lightTheme": "Yorug' mavzu",
+    "darkTheme": "Qorong'i mavzu",
+    "toggleTheme": "Mavzuni almashtirish"
   },
   "nav": {
     "home": "Bosh sahifa",
@@ -87,7 +90,38 @@
   },
   "home": {
     "welcome": "Xush kelibsiz, {{name}}!",
-    "description": "BLACKSTORE do'kon va ombor boshqaruv tizimi"
+    "description": "BLACKSTORE do'kon va ombor boshqaruv tizimi",
+    "greeting": {
+      "morning": "Xayrli tong",
+      "afternoon": "Xayrli kun",
+      "evening": "Xayrli kech"
+    },
+    "hello": "{{greeting}}, {{name}}",
+    "actions": {
+      "newSale": "Yangi sotuv",
+      "receiveBatch": "Partiya qabul qilish",
+      "walkIn": "Sotib olish",
+      "findItem": "Mahsulot topish"
+    },
+    "kpi": {
+      "todaySales": "Bugungi sotuvlar",
+      "salesCount": "{{count}} ta sotuv",
+      "inStock": "Omborda",
+      "atPartner": "{{count}} ta hamkorda",
+      "outstandingDebt": "Qarzdorlik",
+      "debtors": "{{count}} ta qarzdor",
+      "overduePartner": "Hamkorda muddati o'tgan",
+      "overdueNote": "Muddati o'tgan mahsulotlar",
+      "todayProfit": "Bugungi foyda",
+      "monthProfit": "Shu oydagi sof foyda"
+    },
+    "recentSales": "So'nggi sotuvlar",
+    "noRecentSales": "Hozircha sotuvlar yo'q",
+    "walkInCustomer": "Mijozsiz",
+    "needsAttention": "E'tibor talab qiladi",
+    "allClear": "Hammasi joyida — e'tibor talab qiladigan narsa yo'q",
+    "debtorsToChase": "{{count}} ta mijoz sizdan qarzdor",
+    "overdueItems": "{{count}} ta mahsulot hamkorlarda muddati o'tgan"
   },
   "scan": {
     "placeholder": "IMEI yoki seriya raqami...",
@@ -196,6 +230,12 @@
     "unitCost": "Dona tannarxi",
     "avgCost": "O'rtacha tannarx",
     "stockAddedSuccess": "Aksessuar muvaffaqiyatli qabul qilindi",
+    "outOfStock": "Tugagan",
+    "lowStock": "Kam qolgan",
+    "stockFilterAll": "Barcha qoldiqlar",
+    "stockFilterInStock": "Mavjud",
+    "stockFilterLowStock": "Kam qolgan (≤3)",
+    "stockFilterOutOfStock": "Tugagan (0)",
     "validation": {
       "modelRequired": "Modelni tanlang",
       "locationRequired": "Filial yoki omborni tanlang",
@@ -479,7 +519,14 @@
   "labels": {
     "print": "Yorliq chop etish",
     "hint": "Yorliq o'lchami 50×30 mm — chop etish oynasi ochiladi",
-    "generating": "Tizim kodi tayyorlanmoqda…"
+    "generating": "Tizim kodi tayyorlanmoqda…",
+    "batchLabelsTitle": "Partiya yorliqlari",
+    "batchLabelsCount": "{{count}} ta qurilma",
+    "printBatchLabels": "Yorliqlarni chop etish ({{count}})",
+    "printAll": "Barchasini chop etish",
+    "batchPrintHint": "Termoprinterga 50×30 mm lentani joylashtiring va chop etish tugmasini bosing",
+    "generatingBatchCodes": "Tizim kodlari yaratilmoqda: {{current}} / {{total}}…",
+    "noDevicesInBatch": "Ushbu partiyada qurilmalar yo'q (faqat aksessuarlar)"
   },
   "transfers": {
     "title": "Ko'chirishlar",
@@ -690,9 +737,47 @@
     "remainingDebt": "Qarz qoldig'i",
     "itemsCount": "Mahsulotlar",
     "clearCustomer": "Boshqa mijoz",
-    "noCustomersFound": "Mijozlar topilmadi"
+    "noCustomersFound": "Mijozlar topilmadi",
+    "saleSuccessTitle": "Savdo muvaffaqiyatli amalga oshirildi",
+    "saleSuccessSubtitle": "Chekni chop etishingiz yoki yangi savdo boshlashingiz mumkin",
+    "printReceipt": "Chekni chop etish",
+    "newSale": "Yangi savdo",
+    "viewDetails": "Savdo tafsiloti",
+    "confirmTitle": "Sotuvni tasdiqlang",
+    "confirmSubtitle": "Sotuvni yakunlashdan oldin summalarni tekshiring.",
+    "confirmComplete": "Sotuvni yakunlash"
+  },
+  "help": {
+    "title": "Yordam",
+    "subtitle": "Kundalik ish uchun qisqa maslahatlar",
+    "sell": {
+      "t": "Tez sotish",
+      "d": "Qurilmani skanerlang, narxni kiriting, naqd yoki karta tanlang va yakunlang. To'liq to'lanmasa — mijoz tanlang."
+    },
+    "scan": {
+      "t": "Istalgan joydan skanerlang",
+      "d": "Yuqoridagi skaner maydoni orqali istalgan ekrandan qurilmani oching."
+    },
+    "minPrice": {
+      "t": "Eng kam narx",
+      "d": "Mahsulotning eng kam narxidan past sota olmaysiz. Arzonroq kerak bo'lsa — egasiga ayting."
+    },
+    "debt": {
+      "t": "Qarzlar",
+      "d": "To'lanmagan sotuv uchun mijoz kerak. Mijozni oching va to'lov qo'shing — balans o'zi yangilanadi."
+    },
+    "returns": {
+      "t": "Qaytarishlar",
+      "d": "Qaytarish mahsulotni omborga qaytaradi (yoki nuqsonli deb belgilaydi) va pulni o'zi to'g'rilaydi."
+    },
+    "noDelete": {
+      "t": "O'chira olmayapsizmi?",
+      "d": "Xodimlar o'tgan yozuvlarni o'chira yoki tahrirlay olmaydi. Xato bo'lsa — egasiga ayting."
+    }
   },
   "customers": {
+    "debt": "Qarzdorlik (nasiya)",
+    "onlyDebtors": "Qarzdorlar",
     "title": "Mijozlar",
     "subtitle": "Mijozlar bazasi va qarzdorlik hisobi",
     "addCustomer": "Mijoz qo'shish",
@@ -702,7 +787,6 @@
     "phone": "Telefon raqami",
     "note": "Izoh",
     "createdAt": "Ro'yxatdan o'tgan sana",
-    "debt": "Qarzdorlik (nasiya)",
     "noCustomers": "Mijozlar topilmadi",
     "createdSuccess": "Mijoz muvaffaqiyatli qo'shildi",
     "updatedSuccess": "Mijoz ma'lumotlari yangilandi",
@@ -746,7 +830,10 @@
     "paid": "To'langan",
     "balance": "Qarz",
     "print": "Chop etish",
-    "back": "Orqaga"
+    "back": "Orqaga",
+    "paperWidth": "Qog'oz eni",
+    "thermal80mm": "80 mm (Standart termal)",
+    "thermal58mm": "58 mm (Ixcham termal)"
   },
   "receiptSettings": {
     "title": "Chek sozlamalari",

@@ -26,9 +26,10 @@ export function CustomersPage() {
   const { t } = useTranslation();
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
+  const [onlyDebtors, setOnlyDebtors] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  const { data: customerPage, isLoading } = useCustomers(search, page, 20);
+  const { data: customerPage, isLoading } = useCustomers(search, page, 20, onlyDebtors);
 
   return (
     <div className="space-y-6">
@@ -43,7 +44,18 @@ export function CustomersPage() {
         </Button>
       </div>
 
-      <CustomerSearchBar value={search} onChange={(val) => { setSearch(val); setPage(1); }} />
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <CustomerSearchBar value={search} onChange={(val) => { setSearch(val); setPage(1); }} />
+        <Button
+          type="button"
+          variant={onlyDebtors ? 'default' : 'outline'}
+          onClick={() => { setOnlyDebtors((v) => !v); setPage(1); }}
+          aria-pressed={onlyDebtors}
+          className="h-9 rounded-full text-xs"
+        >
+          {t('customers.onlyDebtors')}
+        </Button>
+      </div>
       <CustomersTable customers={customerPage?.items ?? []} isLoading={isLoading} />
 
       {customerPage && customerPage.total > 0 && (

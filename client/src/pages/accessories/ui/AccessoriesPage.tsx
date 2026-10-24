@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Plus } from 'lucide-react';
 import { Button } from '@/shared/ui';
@@ -8,7 +8,7 @@ import {
   type AccessoryStockFilters,
 } from '@/entities/accessory-stock';
 import { AccessoryStockFormDialog } from '@/features/manage-accessory-stock';
-import { AccessoriesFilters } from './AccessoriesFilters';
+import { AccessoriesFilters, type StockLevelFilter } from './AccessoriesFilters';
 import { AccessoriesTable } from './AccessoriesTable';
 
 function AccessoriesHeader({ onAdd, canReceiveBatch }: { onAdd: () => void; canReceiveBatch: boolean }) {
@@ -42,15 +42,23 @@ export function AccessoriesPage() {
   const canReceiveBatch = useAuthStore((state) => state.hasPermission('receive_batch'));
 
   const [filters, setFilters] = useState<AccessoryStockFilters>({});
+  const [stockLevel, setStockLevel] = useState<StockLevelFilter>('ALL');
   const [page, setPage] = useState(1);
   const pageSize = 20;
 
   const [dialogOpen, setDialogOpen] = useState(false);
 
   const { data, isLoading } = useAccessoryStock(filters, page, pageSize);
-  const items = data?.items ?? [];
   const total = data?.total ?? 0;
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
+
+  const filteredItems = useMemo(() => {
+    const raw = data?.items ?? [];
+    if (stockLevel === 'IN_STOCK') return raw.filter((i) => i.quantity > 0);
+    if (stockLevel === 'LOW_STOCK') return raw.filter((i) => i.quantity > 0 && i.quantity <= 3);
+    if (stockLevel === 'OUT_OF_STOCK') return raw.filter((i) => i.quantity === 0);
+    return raw;
+  }, [data?.items, stockLevel]);
 
   const handleFilterChange = (newFilters: AccessoryStockFilters) => {
     setFilters(newFilters);
@@ -60,10 +68,18 @@ export function AccessoriesPage() {
   return (
     <div className="space-y-6">
       <AccessoriesHeader onAdd={() => setDialogOpen(true)} canReceiveBatch={canReceiveBatch} />
-      <AccessoriesFilters filters={filters} onChange={handleFilterChange} />
+      <AccessoriesFilters
+        filters={filters}
+        onChange={handleFilterChange}
+        stockLevel={stockLevel}
+        onStockLevelChange={(lvl) => {
+          setStockLevel(lvl);
+          setPage(1);
+        }}
+      />
 
       <AccessoriesTable
-        items={items}
+        items={filteredItems}
         isLoading={isLoading}
         page={page}
         totalPages={totalPages}

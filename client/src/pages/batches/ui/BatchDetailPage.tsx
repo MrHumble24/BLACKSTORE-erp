@@ -12,6 +12,7 @@ import {
   LinePriceDialog,
   PriceAllDialog,
 } from '@/features/receive-batch';
+import { BatchLabelsButton } from '@/features/print-label';
 import { BatchHeaderCard } from './BatchHeaderCard';
 import { BatchLinesTable } from './BatchLinesTable';
 
@@ -81,12 +82,11 @@ function BatchDetailBody({ batch, locked }: { batch: Batch; locked: boolean }) {
       />
       {locked && <LockedNotice />}
       {!locked && <BatchScanPanel batchId={batch.id} />}
-      {!locked && (
-        <div className="flex justify-end gap-2">
-          <PriceAllButton batch={batch} onClick={() => setPriceAllOpen(true)} />
-          <AddAccessoriesButton onClick={() => setAccessoryOpen(true)} />
-        </div>
-      )}
+      <div className="flex flex-wrap justify-end gap-2">
+        <BatchLabelsButton batchId={batch.id} deviceCount={batch.deviceCount} />
+        {!locked && <PriceAllButton batch={batch} onClick={() => setPriceAllOpen(true)} />}
+        {!locked && <AddAccessoriesButton onClick={() => setAccessoryOpen(true)} />}
+      </div>
       <BatchLinesTable
         batchId={batch.id}
         lines={batch.lines}

@@ -40,6 +40,38 @@ function AccessoriesTableHeader({ canViewCost }: { canViewCost: boolean }) {
   );
 }
 
+function QuantityBadge({ quantity }: { quantity: number }) {
+  const { t } = useTranslation();
+
+  if (quantity === 0) {
+    return (
+      <div className="flex items-center justify-end gap-1.5">
+        <span className="font-mono text-xs font-semibold text-launch-orange">0</span>
+        <span className="inline-flex items-center rounded-full bg-launch-orange/10 px-2 py-0.5 text-[10px] font-medium text-launch-orange border border-launch-orange/20">
+          {t('accessories.outOfStock')}
+        </span>
+      </div>
+    );
+  }
+
+  if (quantity <= 3) {
+    return (
+      <div className="flex items-center justify-end gap-1.5">
+        <span className="font-mono text-xs font-semibold text-ink">{quantity}</span>
+        <span className="inline-flex items-center rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-medium text-amber-600 dark:text-amber-400 border border-amber-500/20">
+          {t('accessories.lowStock')}
+        </span>
+      </div>
+    );
+  }
+
+  return (
+    <span className="font-mono text-xs font-semibold text-ink">
+      {quantity}
+    </span>
+  );
+}
+
 function AccessoryRow({
   item,
   canViewCost,
@@ -52,8 +84,8 @@ function AccessoryRow({
       <TableCell className="font-medium text-ink tracking-tight">{item.productModel.name}</TableCell>
       <TableCell className="text-slate text-xs">{item.productModel.category.name}</TableCell>
       <TableCell className="text-xs text-slate">{item.location.name}</TableCell>
-      <TableCell className="text-right font-mono text-xs font-semibold text-ink">
-        {item.quantity}
+      <TableCell className="text-right">
+        <QuantityBadge quantity={item.quantity} />
       </TableCell>
       {canViewCost && (
         <TableCell className="text-right font-mono text-xs text-ink">

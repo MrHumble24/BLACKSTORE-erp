@@ -1,32 +1,36 @@
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@/features/auth';
-import { Badge, Card } from '@/shared/ui';
+import { useDashboardSummary } from '@/entities/dashboard';
+import { HomeGreeting } from './HomeGreeting';
+import { QuickActions } from './QuickActions';
+import { HomeKpiTiles } from './HomeKpiTiles';
+import { RecentSalesList } from './RecentSalesList';
+import { NeedsAttentionList } from './NeedsAttentionList';
+import { HomeSkeleton } from './HomeSkeleton';
 
-/**
- * Empty welcome home page for a logged-in user (handoff F01-FE-01).
- */
+/** Role-aware home dashboard: greeting, quick actions, KPI tiles and the two activity lists. */
 export function HomePage() {
   const { t } = useTranslation();
-  const user = useAuthStore((state) => state.user);
+  const name = useAuthStore((s) => s.user?.name ?? '');
+  const { data, isLoading, isError } = useDashboardSummary();
 
   return (
-    <Card className="rounded-[28px] border border-hairline-silver/70 bg-gallery-white p-8 md:p-12 shadow-none">
-      <div className="max-w-2xl space-y-3">
-        <span className="text-xs font-semibold text-launch-orange tracking-[-0.01em]">
-          BLACKSTORE
-        </span>
-        <h1 className="text-3xl md:text-4xl font-semibold font-sf-pro-display text-ink tracking-tight">
-          {t('home.welcome', { name: user?.name || '' })}
-        </h1>
-        <p className="text-sm md:text-base text-slate tracking-[-0.022em]">
-          {t('home.description')}
-        </p>
-        <div className="pt-2 flex items-center gap-2">
-          <Badge variant="secondary" className="px-3 py-1 text-xs">
-            {user?.role.name === 'Admin' ? t('users.adminRole') : t('users.staffRole')}
-          </Badge>
-        </div>
-      </div>
-    </Card>
+    <div className="space-y-5">
+      <HomeGreeting name={name} />
+      <QuickActions />
+
+      {isLoading && <HomeSkeleton />}
+      {isError && <p className="text-[13px] text-slate">{t('common.error')}</p>}
+
+      {data && (
+        <>
+          <HomeKpiTiles summary={data} />
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            <RecentSalesList sales={data.recentSales} />
+            <NeedsAttentionList summary={data} />
+          </div>
+        </>
+      )}
+    </div>
   );
 }

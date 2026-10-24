@@ -33,6 +33,7 @@ export function useSellCart() {
       prev.map((l, i) => (i === idx && l.type === 'device' ? { ...l, warrantyUntil: w } : l)),
     );
   const removeLine = (idx: number) => setLines((prev) => prev.filter((_, i) => i !== idx));
+  const clearCart = () => setLines([]);
 
   return {
     lines,
@@ -45,5 +46,6 @@ export function useSellCart() {
     updatePrice,
     updateWarranty,
     removeLine,
+    clearCart,
   };
 }

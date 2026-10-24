@@ -10,9 +10,9 @@ interface FilterSelectProps {
 /** Compact pill select for report filters; the "ALL" entry means no filter. */
 export function FilterSelect({ value, placeholder, onChange, options }: FilterSelectProps) {
   return (
-    <div className="w-40">
+    <div className="w-full sm:w-auto">
       <Select value={value} onValueChange={onChange}>
-        <SelectTrigger className="h-8 text-xs rounded-full">
+        <SelectTrigger className="h-8 text-xs rounded-full w-full sm:w-auto sm:min-w-[11rem]">
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
         <SelectContent>

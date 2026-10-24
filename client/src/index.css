@@ -1,17 +1,19 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
-  /* Colors actually used */
-  --color-gallery-white: #ffffff;
-  --color-studio-mist: #f5f5f7;
-  --color-hairline-silver: #d6d6d6;
-  --color-control-gray: #e6e6e8;
-  --color-ink: #1d1d1f;
-  --color-slate: #707070;
-  --color-steel: #86868b;
-  --color-apple-blue: #0066cc;
-  --color-pricing-blue: #0071e3;
-  --color-launch-orange: #b64400;
+  /* Colors actually used - mapped to CSS variables for authentic Apple Dark Mode */
+  --color-gallery-white: var(--gallery-white);
+  --color-studio-mist: var(--studio-mist);
+  --color-hairline-silver: var(--hairline-silver);
+  --color-control-gray: var(--control-gray);
+  --color-ink: var(--ink);
+  --color-slate: var(--slate);
+  --color-steel: var(--steel);
+  --color-apple-blue: var(--apple-blue);
+  --color-pricing-blue: var(--pricing-blue);
+  --color-launch-orange: var(--launch-orange);
 
   /* Semantic UI Tokens mapped to Apple palette */
   --color-background: var(--background);
@@ -45,6 +47,18 @@
 }
 
 :root {
+  /* Apple Light Palette */
+  --gallery-white: #ffffff;
+  --studio-mist: #f5f5f7;
+  --hairline-silver: #d6d6d6;
+  --control-gray: #e6e6e8;
+  --ink: #1d1d1f;
+  --slate: #707070;
+  --steel: #86868b;
+  --apple-blue: #0066cc;
+  --pricing-blue: #0071e3;
+  --launch-orange: #b64400;
+
   /* Semantic UI mappings */
   --background: #f5f5f7;
   --foreground: #1d1d1f;
@@ -68,6 +82,41 @@
   --radius: 28px;
 }
 
+.dark {
+  /* Apple Dark Palette (macOS / iOS system colors) */
+  --gallery-white: #1c1c1e;
+  --studio-mist: #000000;
+  --hairline-silver: #38383a;
+  --control-gray: #2c2c2e;
+  --ink: #f5f5f7;
+  --slate: #98989d;
+  --steel: #8e8e93;
+  --apple-blue: #2997ff;
+  --pricing-blue: #2997ff;
+  --launch-orange: #ff453a;
+
+  /* Semantic UI mappings */
+  --background: #000000;
+  --foreground: #f5f5f7;
+  --card: #1c1c1e;
+  --card-foreground: #f5f5f7;
+  --popover: #1c1c1e;
+  --popover-foreground: #f5f5f7;
+  --primary: #2997ff;
+  --primary-foreground: #ffffff;
+  --secondary: #2c2c2e;
+  --secondary-foreground: #f5f5f7;
+  --muted: #1c1c1e;
+  --muted-foreground: #98989d;
+  --accent: #2c2c2e;
+  --accent-foreground: #f5f5f7;
+  --destructive: #ff453a;
+  --destructive-foreground: #ffffff;
+  --border: #38383a;
+  --input: #8e8e93;
+  --ring: #2997ff;
+}
+
 * {
   border-color: var(--border);
 }
@@ -83,15 +132,46 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* 50×30 mm label printing: the label route renders without the app shell, so the
-   print page is the label itself — pure white background, exact barcode colors. */
+/* 50×30 mm label printing and 80mm/58mm thermal receipts */
 @media print {
+  @page {
+    margin: 0;
+  }
+
   html,
   body {
     background: #ffffff !important;
+    color: #000000 !important;
   }
 
   .print-label {
     print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .thermal-receipt {
+    margin: 0 auto !important;
+    padding: 3mm !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+
+  .thermal-label-container {
+    display: block !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .thermal-label-card {
+    page-break-after: always !important;
+    break-after: page !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    margin: 0 auto !important;
+  }
+
+  .thermal-label-card:last-child {
+    page-break-after: auto !important;
+    break-after: auto !important;
   }
 }

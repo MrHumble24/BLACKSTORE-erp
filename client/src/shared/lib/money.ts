@@ -1,3 +1,17 @@
+import { formatMoney } from './formatMoney';
+
+/**
+ * Finance display currency. The app is currency-less by convention (formatMoney), but the finance
+ * surfaces (reports, dashboard) show an explicit currency. Single source of truth — change to switch.
+ */
+export const CURRENCY = '$';
+
+/** Full amount with the finance currency, e.g. "$2 625.00"; passes the em dash through for empty values. */
+export function money(amount: string | number | null | undefined): string {
+  const formatted = formatMoney(amount);
+  return formatted === '—' ? formatted : `${CURRENCY}${formatted}`;
+}
+
 /** Positive decimal money string, optional integer part up to 2 decimals ("," accepted). */
 export const POSITIVE_MONEY_PATTERN = /^\d+(?:[.,]\d{1,2})?$/;
 
