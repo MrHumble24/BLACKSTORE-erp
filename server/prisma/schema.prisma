@@ -101,6 +101,11 @@ enum FlagRefType {
   INCOME
 }
 
+enum TelegramLinkKind {
+  CUSTOMER
+  INVESTOR
+}
+
 // ─────────────────────────────────────────────
 // Users and permissions (#26, #27)
 // ─────────────────────────────────────────────
@@ -179,6 +184,8 @@ model Investor {
   shareType  ShareType @default(NONE)
   shareValue Decimal   @default(0) @db.Decimal(12, 2)
   isActive   Boolean   @default(true) // false = hidden from pick-lists; the OWN investor can never be deactivated
+
+  telegramChatId String? @unique // linked via /start deep link (F16); null until they opt in
 
   items        Item[]
   batches      Batch[]
@@ -420,12 +427,13 @@ model TransferAccessory {
 // ─────────────────────────────────────────────
 
 model Customer {
-  id        Int      @id @default(autoincrement())
-  name      String
-  phone     String   @unique
-  note      String?
-  createdAt DateTime @default(now())
-  sales     Sale[]
+  id             Int      @id @default(autoincrement())
+  name           String
+  phone          String   @unique
+  note           String?
+  telegramChatId String?  @unique // linked via /start deep link (F16); null until they opt in
+  createdAt      DateTime @default(now())
+  sales          Sale[]
 }
 
 model Sale {
@@ -646,4 +654,19 @@ model DayCloseFlag {
   createdAt     DateTime    @default(now())
 
   @@index([businessDayId])
+}
+
+// One-time, 7-day-expiring deep-link token (F16). A customer/investor taps
+// https://t.me/<bot>?start=<token>; /start consumes it and links their chat. High-entropy random
+// token, so no signing secret is needed — the row itself gives one-time + expiry.
+model TelegramLinkToken {
+  id        Int              @id @default(autoincrement())
+  token     String           @unique
+  kind      TelegramLinkKind
+  refId     Int // Customer.id or Investor.id, per kind
+  expiresAt DateTime
+  usedAt    DateTime? // set when consumed; null = still usable
+  createdAt DateTime         @default(now())
+
+  @@index([kind, refId]) // reuse lookup: newest live token for a (kind, refId)
 }

@@ -1,5 +1,6 @@
 import type { DashboardService } from '../dashboard/dashboard.service';
 import type { TelegramConfigService } from '../integrations/telegram-config.service';
+import type { LinkTokenService } from './link-token.service';
 import type { BotUpdate } from '../common/telegram';
 import { TelegramBotService } from './telegram-bot.service';
 
@@ -15,10 +16,15 @@ const makeService = () => {
   const ownerSnapshot = jest.fn().mockResolvedValue({ any: 'data' });
   const dashboard = { ownerSnapshot } as unknown as DashboardService;
   const telegram = {
-    isFeatureEnabled: jest.fn().mockResolvedValue(true),
-    getCredentials: jest.fn().mockResolvedValue({ token: 't', alertChatId: OWNER, backupChatId: '' }),
+    getRuntime: jest.fn().mockResolvedValue({
+      enabled: true,
+      token: 't',
+      alertChatId: OWNER,
+      ownerSnapshotEnabled: true,
+    }),
   } as unknown as TelegramConfigService;
-  return { service: new TelegramBotService(dashboard, telegram), ownerSnapshot };
+  const linkToken = { linkChat: jest.fn() } as unknown as LinkTokenService;
+  return { service: new TelegramBotService(dashboard, telegram, linkToken), ownerSnapshot, telegram };
 };
 
 describe('TelegramBotService.poll', () => {
@@ -38,6 +44,34 @@ describe('TelegramBotService.poll', () => {
 
     await service.poll();
     expect(sendMessage).toHaveBeenCalledWith('t', OWNER, 'SNAPSHOT');
+  });
+
+  it('runs the loop but keeps /status silent when ownerSnapshot is off (gate survived the move)', async () => {
+    const { service, telegram } = makeService();
+    (telegram.getRuntime as jest.Mock).mockResolvedValue({
+      enabled: true,
+      token: 't',
+      alertChatId: OWNER,
+      ownerSnapshotEnabled: false, // feature off
+    });
+    (getBotUpdates as jest.Mock).mockResolvedValueOnce([statusUpdate]);
+
+    await service.poll();
+    // loop still polled (master switch on) but /status did not send
+    expect(getBotUpdates).toHaveBeenCalled();
+    expect(sendMessage).not.toHaveBeenCalled();
+  });
+
+  it('skips the whole loop when Telegram is disabled (master switch off)', async () => {
+    const { service, telegram } = makeService();
+    (telegram.getRuntime as jest.Mock).mockResolvedValue({
+      enabled: false,
+      token: '',
+      alertChatId: '',
+      ownerSnapshotEnabled: false,
+    });
+    await service.poll();
+    expect(getBotUpdates).not.toHaveBeenCalled();
   });
 
   it('skips when a previous cycle is still in flight (no overlap)', async () => {

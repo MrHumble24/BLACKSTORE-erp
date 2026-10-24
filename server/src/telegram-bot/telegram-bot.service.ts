@@ -4,6 +4,7 @@ import { getBotUpdates } from '../common/telegram';
 import { DashboardService } from '../dashboard/dashboard.service';
 import { TelegramConfigService } from '../integrations/telegram-config.service';
 import { routeUpdate } from './commands';
+import { LinkTokenService } from './link-token.service';
 
 /** How often to long-poll Telegram for new commands. Named so it is easy to find/tune. */
 const POLL_INTERVAL_MS = 5000;
@@ -22,6 +23,7 @@ export class TelegramBotService {
   constructor(
     private readonly dashboard: DashboardService,
     private readonly telegram: TelegramConfigService,
+    private readonly linkToken: LinkTokenService,
   ) {}
 
   /** Poll on a fixed interval; the whole cycle is guarded so a failure is logged, never thrown. */
@@ -30,10 +32,12 @@ export class TelegramBotService {
     if (this.inFlight) return;
     this.inFlight = true;
     try {
-      // Off = skip silently (same flag as the push; isFeatureEnabled also respects the master switch).
-      if (!(await this.telegram.isFeatureEnabled('ownerSnapshot'))) return;
-      const { token, alertChatId } = await this.telegram.getCredentials();
-      if (!token) return; // not configured → nothing to poll
+      // ONE row read per cycle (getRuntime), not three. Gate the loop on the master switch only
+      // (Telegram enabled + token present); each command gates itself below. `/status` keeps its
+      // FR-29 gate via ownerSnapshotEnabled, so turning ownerSnapshot off still silences `/status`
+      // while `/start` (any user) keeps working.
+      const { enabled, token, alertChatId, ownerSnapshotEnabled } = await this.telegram.getRuntime();
+      if (!enabled) return; // master switch off or not configured → nothing to poll
 
       const updates = await getBotUpdates(token, this.offset);
 
@@ -45,7 +49,13 @@ export class TelegramBotService {
       for (const update of updates) {
         this.offset = update.updateId + 1; // ack this one even if routing is a no-op
         // eslint-disable-next-line no-await-in-loop
-        await routeUpdate(update, { dashboard: this.dashboard, token, alertChatId });
+        await routeUpdate(update, {
+          dashboard: this.dashboard,
+          linkToken: this.linkToken,
+          token,
+          alertChatId,
+          ownerSnapshotEnabled,
+        });
       }
     } catch (e) {
       this.logger.error(`Telegram poll failed: ${e instanceof Error ? e.message : String(e)}`);
