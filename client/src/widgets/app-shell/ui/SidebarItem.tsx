@@ -9,9 +9,10 @@ export interface SidebarItemProps {
   isActive: boolean;
   destructive?: boolean;
   onClick?: () => void;
+  isShrunk?: boolean;
 }
 
-/** One pill-shaped sidebar navigation link with active state and optional destructive styling. */
+/** One pill-shaped sidebar navigation link with active state and optional shrunk icon rail styling. */
 export function SidebarItem({
   to,
   icon: Icon,
@@ -19,14 +20,20 @@ export function SidebarItem({
   isActive,
   destructive,
   onClick,
+  isShrunk,
 }: SidebarItemProps) {
   return (
     <Link
       to={to}
       onClick={onClick}
+      title={label}
+      aria-label={label}
       aria-current={isActive ? 'page' : undefined}
       className={cn(
-        'flex items-center gap-3 rounded-full px-4 py-2.5 text-xs font-medium tracking-[-0.01em] transition-all duration-150',
+        'flex items-center transition-all duration-150',
+        isShrunk
+          ? 'h-10 w-10 mx-auto justify-center rounded-xl p-0'
+          : 'gap-3 rounded-full px-4 py-2.5 text-xs font-medium tracking-[-0.01em]',
         isActive
           ? 'bg-ink text-white dark:bg-control-gray dark:text-ink shadow-xs'
           : destructive
@@ -35,7 +42,11 @@ export function SidebarItem({
       )}
     >
       <Icon className="h-4 w-4 shrink-0" />
-      <span className="truncate">{label}</span>
+      {isShrunk ? (
+        <span className="sr-only">{label}</span>
+      ) : (
+        <span className="truncate">{label}</span>
+      )}
     </Link>
   );
 }

@@ -63,7 +63,9 @@
     "backups": "Backups",
     "telegram": "Telegram",
     "closeDay": "Close day",
-    "hardDelete": "Danger zone"
+    "hardDelete": "Danger zone",
+    "shrinkSidebar": "Collapse sidebar (⌘B)",
+    "expandSidebar": "Expand sidebar (⌘B)"
   },
   "auth": {
     "title": "Sign in",

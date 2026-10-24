@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { LogOut, User as UserIcon, Menu, Search, Barcode } from 'lucide-react';
+import { LogOut, User as UserIcon, Menu, Search, Barcode, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { Button, Badge, Sheet, SheetContent } from '@/shared/ui';
 import { useAuthStore, useLogout } from '@/features/auth';
 import type { User } from '@/entities/user';
 import { ScanField } from '@/features/scan';
 import { CommandTrigger, useCommandStore } from '@/features/command-search';
+import { useSidebarStore } from '../model/sidebar.store';
 import { SidebarNavList } from './AppSidebar';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { HelpDialog } from './HelpDialog';
@@ -137,6 +138,8 @@ export function AppHeader() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mobileScanOpen, setMobileScanOpen] = useState(false);
   const user = useAuthStore((state) => state.user);
+  const isShrunk = useSidebarStore((state) => state.isShrunk);
+  const toggleShrunk = useSidebarStore((state) => state.toggleShrunk);
   const canViewStock = useAuthStore((state) => state.hasPermission('view_stock'));
   const setCommandOpen = useCommandStore((state) => state.setOpen);
   const { mutate: logout, isPending } = useLogout();
@@ -144,7 +147,7 @@ export function AppHeader() {
   return (
     <header className="sticky top-0 z-40 w-full border-b border-hairline-silver/70 bg-gallery-white/80 backdrop-blur-md">
       <div className="flex h-14 w-full items-center justify-between px-3 sm:px-6 lg:px-8">
-        <div className="flex items-center gap-2 sm:gap-3 lg:gap-5">
+        <div className="flex items-center gap-2 sm:gap-3 lg:gap-3">
           <Button
             variant="ghost"
             size="icon"
@@ -154,7 +157,17 @@ export function AppHeader() {
           >
             <Menu className="h-4 w-4" />
           </Button>
-          <span className="text-base font-semibold tracking-tight text-ink">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleShrunk}
+            className="hidden lg:inline-flex h-8 w-8 text-slate hover:text-ink hover:bg-control-gray/60 rounded-full cursor-pointer transition-colors"
+            aria-label={isShrunk ? t('nav.expandSidebar') : t('nav.shrinkSidebar')}
+            title={isShrunk ? t('nav.expandSidebar') : t('nav.shrinkSidebar')}
+          >
+            {isShrunk ? <PanelLeftOpen className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
+          </Button>
+          <span className="text-base font-semibold tracking-tight text-ink select-none">
             BLACKSTORE
           </span>
           {user && (

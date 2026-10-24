@@ -63,7 +63,9 @@
     "backups": "Резервные копии",
     "telegram": "Telegram",
     "closeDay": "Закрытие дня",
-    "hardDelete": "Опасная зона"
+    "hardDelete": "Опасная зона",
+    "shrinkSidebar": "Свернуть панель (⌘B)",
+    "expandSidebar": "Развернуть панель (⌘B)"
   },
   "auth": {
     "title": "Вход в систему",

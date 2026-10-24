@@ -63,7 +63,9 @@
     "backups": "Zaxira nusxalari",
     "telegram": "Telegram",
     "closeDay": "Kun yakuni",
-    "hardDelete": "Xavfli hudud"
+    "hardDelete": "Xavfli hudud",
+    "shrinkSidebar": "Yon panelni yig'ish (⌘B)",
+    "expandSidebar": "Yon panelni yoyish (⌘B)"
   },
   "auth": {
     "title": "Tizimga kirish",
