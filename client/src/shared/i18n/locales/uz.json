@@ -761,6 +761,9 @@
     "itemsCount": "Mahsulotlar",
     "clearCustomer": "Boshqa mijoz",
     "noCustomersFound": "Mijozlar topilmadi",
+    "consignmentHint": "Hamkor do'konga tovar beryapsizmi?",
+    "consignmentLink": "Konsignatsiyaga berish →",
+    "partnerPrompt": "Hamkorni qidiryapsizmi? Konsignatsiyaga o'ting →",
     "saleSuccessTitle": "Savdo muvaffaqiyatli amalga oshirildi",
     "saleSuccessSubtitle": "Chekni chop etishingiz yoki yangi savdo boshlashingiz mumkin",
     "printReceipt": "Chekni chop etish",
@@ -1258,5 +1261,9 @@
       "sameImei": "IMEI 2 IMEI 1 dan farq qilishi kerak",
       "priceInvalid": "Noto'g'ri narx"
     }
+  },
+  "pwa": {
+    "updateAvailable": "Yangi versiya tayyor",
+    "reload": "Yangilash"
   }
 }

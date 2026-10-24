@@ -39,6 +39,30 @@ export interface LowStockLine {
 }
 
 /**
+ * Low rows (model name, location name, quantity, threshold), ordered by model name. Shared by the
+ * daily digest cron and the owner's "Kam qolgan tovarlar" bot button so both list the same items.
+ */
+export async function lowStockLines(prisma: PrismaService): Promise<LowStockLine[]> {
+  const rows = await prisma.accessoryStock.findMany({
+    where: LOW_CANDIDATE_WHERE,
+    select: {
+      quantity: true,
+      productModel: { select: { name: true, lowStockThreshold: true } },
+      location: { select: { name: true } },
+    },
+    orderBy: { productModel: { name: 'asc' } },
+  });
+  return rows
+    .filter((r) => isLowStock(r.quantity, r.productModel.lowStockThreshold))
+    .map((r) => ({
+      model: r.productModel.name,
+      location: r.location.name,
+      quantity: r.quantity,
+      threshold: r.productModel.lowStockThreshold ?? 0,
+    }));
+}
+
+/**
  * One Telegram HTML message listing the low items, or null when there are none. Pure.
  * Model and location are free text, so they are HTML-escaped; a name like "AirPods & Case"
  * would otherwise make Telegram reject the whole message (400) and silently drop the digest.

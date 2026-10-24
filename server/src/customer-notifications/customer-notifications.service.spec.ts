@@ -100,7 +100,10 @@ describe('remindDebts (weekly cron)', () => {
     (sendMessage as jest.Mock).mockResolvedValue(true);
     const { service } = build({
       flagOn: true,
-      customers: [{ telegramChatId: '999', sales: [debtSale('1500', '500')] }],
+      customers: [
+        { telegramChatId: '999', sales: [debtSale('1500', '500')] },
+        { telegramChatId: '888', sales: [debtSale('100', '100')] }, // balance 0 → no "$0.00" reminder
+      ],
     });
     await service.remindDebts();
     expect(sendMessage).toHaveBeenCalledTimes(1);

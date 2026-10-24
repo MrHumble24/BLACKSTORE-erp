@@ -41,7 +41,7 @@ export function buildInvestorReportText(data: InvestorReportData): string {
 }
 
 /** `YYYY-MM` → `MM.YYYY` for display (formatDate is day-level, meaningless for a whole-month report). */
-function monthLabel(month: string): string {
+export function monthLabel(month: string): string {
   const [year, mo] = month.split('-');
   return `${mo}.${year}`;
 }
@@ -51,6 +51,10 @@ function monthLabel(month: string): string {
  * returns the prior December of year−1 (new Date(y, -1, 1) rolls the month back a year for us).
  */
 export function previousMonth(now: Date): string {
-  const d = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  return currentMonth(new Date(now.getFullYear(), now.getMonth() - 1, 1));
+}
+
+/** The calendar month of `now` as `YYYY-MM` (the investor's "Shu oy" bot button). */
+export function currentMonth(now: Date): string {
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
 }

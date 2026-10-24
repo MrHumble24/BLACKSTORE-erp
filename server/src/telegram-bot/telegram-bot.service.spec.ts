@@ -1,21 +1,33 @@
 import type { DashboardService } from '../dashboard/dashboard.service';
-import type { TelegramConfigService } from '../integrations/telegram-config.service';
+import type { TelegramConfigService, TelegramFeatures } from '../integrations/telegram-config.service';
 import type { LinkTokenService } from './link-token.service';
 import type { PrismaService } from '../prisma/prisma.service';
 import { KnownChatService } from './known-chat.service';
 import type { BotUpdate } from '../common/telegram';
 import { TelegramBotService } from './telegram-bot.service';
+import type { BotRoleService } from './bot-role.service';
+import type { BotReportsService } from './bot-reports.service';
 
 // Mock the network edges; routeUpdate runs for real against them (covers the wiring too).
-jest.mock('../common/telegram', () => ({
-  getBotUpdates: jest.fn(),
-  sendMessage: jest.fn(),
-  errorMessage: (e: unknown) => String(e),
-}));
+// safeSend delegates to the mocked sendMessage so the existing send assertions stay meaningful.
+jest.mock('../common/telegram', () => {
+  const sendMessage = jest.fn();
+  return {
+    getBotUpdates: jest.fn(),
+    sendMessage,
+    safeSend: (_logger: unknown, token: string, chatId: string, text: string) => sendMessage(token, chatId, text),
+    errorMessage: (e: unknown) => String(e),
+  };
+});
 jest.mock('../dashboard/owner-snapshot', () => ({ buildOwnerSnapshot: jest.fn(() => 'SNAPSHOT') }));
 import { getBotUpdates, sendMessage } from '../common/telegram';
+import { Logger } from '@nestjs/common';
 
 const OWNER = '111';
+const FEATURES = { ownerSnapshot: true } as unknown as TelegramFeatures;
+/** Role lookups are covered in commands.spec; here the owner chat simply has no extra buttons. */
+const roles = { resolve: jest.fn().mockResolvedValue({ owner: false }) } as unknown as BotRoleService;
+const reports = {} as BotReportsService;
 const statusUpdate: BotUpdate = {
   updateId: 7,
   chatId: OWNER,
@@ -33,18 +45,20 @@ const makeService = () => {
       token: 't',
       alertChatId: OWNER,
       ownerSnapshotEnabled: true,
+      features: FEATURES,
     }),
   } as unknown as TelegramConfigService;
   const linkToken = { linkChat: jest.fn() } as unknown as LinkTokenService;
   const track = jest.fn().mockResolvedValue(undefined);
   const knownChats = { track } as unknown as KnownChatService;
-  const service = new TelegramBotService(dashboard, telegram, linkToken, knownChats);
+  const service = new TelegramBotService(dashboard, telegram, linkToken, knownChats, roles, reports);
   return { service, ownerSnapshot, telegram, track };
 };
 
 describe('TelegramBotService.poll', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    jest.spyOn(Logger.prototype, 'log').mockImplementation(); // keep "/status answered" out of test output
     (sendMessage as jest.Mock).mockResolvedValue(true);
   });
 
@@ -68,6 +82,7 @@ describe('TelegramBotService.poll', () => {
       token: 't',
       alertChatId: OWNER,
       ownerSnapshotEnabled: false, // feature off
+      features: FEATURES,
     });
     (getBotUpdates as jest.Mock).mockResolvedValueOnce([statusUpdate]);
 
@@ -84,6 +99,7 @@ describe('TelegramBotService.poll', () => {
       token: '',
       alertChatId: '',
       ownerSnapshotEnabled: false,
+      features: FEATURES,
     });
     await service.poll();
     expect(getBotUpdates).not.toHaveBeenCalled();
@@ -134,7 +150,7 @@ describe('TelegramBotService.poll', () => {
     jest.spyOn(knownChats['logger'], 'warn').mockImplementation();
     const dashboard = { ownerSnapshot: jest.fn().mockResolvedValue({}) } as unknown as DashboardService;
     const linkToken = {} as LinkTokenService;
-    const service = new TelegramBotService(dashboard, telegram, linkToken, knownChats);
+    const service = new TelegramBotService(dashboard, telegram, linkToken, knownChats, roles, reports);
     (getBotUpdates as jest.Mock).mockResolvedValueOnce([statusUpdate]);
 
     await service.poll();
@@ -155,6 +171,7 @@ describe('TelegramBotService.poll', () => {
       token: 'new',
       alertChatId: OWNER,
       ownerSnapshotEnabled: true,
+      features: FEATURES,
     });
     await service.poll();
     expect(getBotUpdates).toHaveBeenLastCalledWith('new', undefined);

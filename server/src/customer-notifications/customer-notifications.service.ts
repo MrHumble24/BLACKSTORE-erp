@@ -14,6 +14,7 @@ import {
   ReceiptLine,
   WarrantyItem,
 } from './customer-messages';
+import { deviceName, warrantyItemSelect } from './warranty-select';
 
 /** Monday 10:00 server-local — weekly, not daily, so debtors are nudged once, not nagged. */
 const DEBT_CRON = '0 10 * * 1';
@@ -80,7 +81,7 @@ export class CustomerNotificationsService {
       });
       for (const c of customers) {
         const owed = c.sales.reduce((sum, s) => sum.plus(debtBalanceOf(s)), new Prisma.Decimal(0));
-        if (!c.telegramChatId || !owed.isPositive()) continue;
+        if (!c.telegramChatId || !owed.gt(0)) continue;
         // eslint-disable-next-line no-await-in-loop -- sequential sends; one failure must not stop the rest
         await safeSend(this.logger, token, c.telegramChatId, buildDebtReminderText(shop, owed.toFixed(2)), 'Customer reminder');
       }
@@ -111,9 +112,7 @@ export class CustomerNotificationsService {
           sale: { customer: { telegramChatId: { not: null } } },
         },
         select: {
-          warrantyUntil: true,
-          productModel: { select: { name: true } },
-          item: { select: { identifiers: { select: { value: true }, take: 1 } } },
+          ...warrantyItemSelect,
           sale: { select: { customer: { select: { telegramChatId: true } } } },
         },
       });
@@ -160,12 +159,4 @@ function dayWindow(days: number): { gte: Date; lt: Date } {
 /** Receipt line from a sale item: accessory model name, else the device identifier, else generic. */
 function toReceiptLine(item: SaleDetailRow['items'][number]): ReceiptLine {
   return { model: deviceName(item), quantity: item.quantity, unitPrice: item.unitPrice.toFixed(2) };
-}
-
-/** Human label for a sale item: accessory model name, else the first device identifier, else a generic. */
-function deviceName(item: {
-  productModel: { name: string } | null;
-  item: { identifiers: { value: string }[] } | null;
-}): string {
-  return item.productModel?.name ?? item.item?.identifiers[0]?.value ?? 'Mahsulot';
 }

@@ -761,6 +761,9 @@
     "itemsCount": "Items",
     "clearCustomer": "Change customer",
     "noCustomersFound": "No customers found",
+    "consignmentHint": "Handing goods to a partner shop?",
+    "consignmentLink": "Consignment handover →",
+    "partnerPrompt": "Looking for a partner? Go to Consignment →",
     "saleSuccessTitle": "Sale completed successfully",
     "saleSuccessSubtitle": "You can print the receipt or start a new sale",
     "printReceipt": "Print receipt",
@@ -1258,5 +1261,9 @@
       "sameImei": "IMEI 2 must differ from IMEI 1",
       "priceInvalid": "Invalid price"
     }
+  },
+  "pwa": {
+    "updateAvailable": "A new version is ready",
+    "reload": "Reload"
   }
 }

@@ -114,20 +114,30 @@ describe('safeSend', () => {
 
   it('sends and logs nothing on a 2xx response', async () => {
     global.fetch = jest.fn().mockResolvedValue({ ok: true }) as unknown as typeof fetch;
-    await safeSend(logger, 't', 'c', 'hi', 'Investor report');
+    await expect(safeSend(logger, 't', 'c', 'hi', 'Investor report')).resolves.toBe(true);
     expect(logger.warn).not.toHaveBeenCalled();
   });
 
   it('logs a labelled "failed to send" on a non-2xx response (no throw)', async () => {
     global.fetch = jest.fn().mockResolvedValue({ ok: false }) as unknown as typeof fetch;
-    await safeSend(logger, 't', 'c', 'hi', 'Investor report');
+    await expect(safeSend(logger, 't', 'c', 'hi', 'Investor report')).resolves.toBe(false);
     expect(logger.warn).toHaveBeenCalledWith('Investor report failed to send');
   });
 
   it('swallows a thrown error and logs it labelled (never throws)', async () => {
     global.fetch = jest.fn().mockRejectedValue(new Error('network')) as unknown as typeof fetch;
-    await expect(safeSend(logger, 't', 'c', 'hi', 'Investor report')).resolves.toBeUndefined();
+    await expect(safeSend(logger, 't', 'c', 'hi', 'Investor report')).resolves.toBe(false);
     expect(logger.warn).toHaveBeenCalledWith('Investor report errored: network');
+  });
+
+  it('passes reply_markup through when given, and omits it otherwise', async () => {
+    const fetchMock = jest.fn().mockResolvedValue({ ok: true });
+    global.fetch = fetchMock as unknown as typeof fetch;
+    await safeSend(logger, 't', 'c', 'hi', 'Bot', { remove_keyboard: true });
+    await safeSend(logger, 't', 'c', 'hi', 'Bot');
+    const bodies = fetchMock.mock.calls.map((c: [string, { body: string }]) => JSON.parse(c[1].body));
+    expect(bodies[0].reply_markup).toEqual({ remove_keyboard: true });
+    expect(bodies[1]).not.toHaveProperty('reply_markup');
   });
 });
 

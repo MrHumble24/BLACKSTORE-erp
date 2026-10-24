@@ -761,6 +761,9 @@
     "itemsCount": "Позиций",
     "clearCustomer": "Выбрать другого",
     "noCustomersFound": "Клиенты не найдены",
+    "consignmentHint": "Передаете товар партнерскому магазину?",
+    "consignmentLink": "Передать на консигнацию →",
+    "partnerPrompt": "Ищете партнера? Перейти к консигнации →",
     "saleSuccessTitle": "Продажа успешно оформлена",
     "saleSuccessSubtitle": "Вы можете распечатать чек или начать новую продажу",
     "printReceipt": "Распечатать чек",
@@ -1258,5 +1261,9 @@
       "sameImei": "IMEI 2 должен отличаться от IMEI 1",
       "priceInvalid": "Некорректная цена"
     }
+  },
+  "pwa": {
+    "updateAvailable": "Доступна новая версия",
+    "reload": "Обновить"
   }
 }

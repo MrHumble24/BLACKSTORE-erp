@@ -1,5 +1,5 @@
 import { money } from '../common/money';
-import { buildInvestorReportText, previousMonth } from './investor-messages';
+import { buildInvestorReportText, currentMonth, previousMonth } from './investor-messages';
 
 describe('buildInvestorReportText', () => {
   const data = {
@@ -34,5 +34,11 @@ describe('previousMonth', () => {
 
   it('rolls back across the year boundary (1-Jan → prior December)', () => {
     expect(previousMonth(new Date(2026, 0, 1))).toBe('2025-12');
+  });
+});
+
+describe('currentMonth', () => {
+  it('returns the month of now, zero-padded', () => {
+    expect(currentMonth(new Date(2026, 0, 31))).toBe('2026-01');
   });
 });

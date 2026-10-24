@@ -28,15 +28,30 @@ export async function sendDocument(token: string, chatId: string, filePath: stri
   return res.ok;
 }
 
+/** A persistent reply keyboard (the bot's button menu, F22) or the instruction to remove it. */
+export type ReplyMarkup =
+  | { keyboard: string[][]; resize_keyboard: true; is_persistent: true }
+  | { remove_keyboard: true };
+
 /**
- * Sends a text message to a Telegram chat with the Bot API `sendMessage` (global fetch, JSON body).
- * Returns true on a 2xx response. The caller decides when to skip (empty vars).
+ * Sends a text message to a Telegram chat with the Bot API `sendMessage` (global fetch, JSON body),
+ * with `reply_markup` when given. Returns true on a 2xx response. The caller decides when to skip.
  */
-export async function sendMessage(token: string, chatId: string, text: string): Promise<boolean> {
+export async function sendMessage(
+  token: string,
+  chatId: string,
+  text: string,
+  replyMarkup?: ReplyMarkup,
+): Promise<boolean> {
   const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'HTML' }),
+    body: JSON.stringify({
+      chat_id: chatId,
+      text,
+      parse_mode: 'HTML',
+      ...(replyMarkup ? { reply_markup: replyMarkup } : {}),
+    }),
   });
   return res.ok;
 }
@@ -50,7 +65,8 @@ export function errorMessage(e: unknown): string {
  * Sends one Telegram message, logging (never throwing) on a failure so a send loop continues. Shared
  * by every per-recipient cron (customer reminders, investor reports); `label` names the caller in the
  * log line (e.g. 'Customer reminder', 'Investor report'). Behaviour: a failed send or a thrown error
- * is warned and swallowed — the loop keeps going and nothing propagates out.
+ * is warned and swallowed — the loop keeps going and nothing propagates out. Returns true when sent.
+ * The log line carries only the label and the error, never the chat id or text (Logging rule).
  */
 export async function safeSend(
   logger: Logger,
@@ -58,12 +74,15 @@ export async function safeSend(
   chatId: string,
   text: string,
   label: string,
-): Promise<void> {
+  replyMarkup?: ReplyMarkup,
+): Promise<boolean> {
   try {
-    if (!(await sendMessage(token, chatId, text))) logger.warn(`${label} failed to send`);
+    if (await sendMessage(token, chatId, text, replyMarkup)) return true;
+    logger.warn(`${label} failed to send`);
   } catch (e) {
     logger.warn(`${label} errored: ${errorMessage(e)}`);
   }
+  return false;
 }
 
 /** The bot behind a token (F12), as the UI shows it after "verify". */

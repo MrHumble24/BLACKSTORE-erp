@@ -50,6 +50,7 @@ export interface TelegramRuntime {
   token: string;
   alertChatId: string;
   ownerSnapshotEnabled: boolean; // enabled AND the ownerSnapshot feature flag
+  features: TelegramFeatures; // per-feature flags, for the bot's button menu (F22)
 }
 
 /**
@@ -106,6 +107,7 @@ export class TelegramConfigService {
       token,
       alertChatId: c.alertChatId || this.env('TELEGRAM_ALERT_CHAT_ID'),
       ownerSnapshotEnabled: enabled && (c.features.ownerSnapshot ?? true),
+      features: c.features,
     };
   }
 
@@ -140,14 +142,7 @@ export class TelegramConfigService {
       backupChatId: dto.backupChatId ?? before.backupChatId,
       alertChatId: dto.alertChatId ?? before.alertChatId,
       enabled: dto.enabled ?? before.enabled,
-      features: {
-        lowStockDigest: dto.features?.lowStockDigest ?? before.features.lowStockDigest,
-        ownerSnapshot: dto.features?.ownerSnapshot ?? before.features.ownerSnapshot,
-        customerReceipts: dto.features?.customerReceipts ?? before.features.customerReceipts,
-        debtReminders: dto.features?.debtReminders ?? before.features.debtReminders,
-        warrantyReminders: dto.features?.warrantyReminders ?? before.features.warrantyReminders,
-        investorReports: dto.features?.investorReports ?? before.features.investorReports,
-      },
+      features: { ...before.features, ...definedFlags(dto.features) },
     };
     // A different bot sees different chats: forget the old bot's chats in the same transaction.
     // Compare against the token in use (stored, else env) so re-saving the env bot keeps its chats.
@@ -170,14 +165,7 @@ export class TelegramConfigService {
       backupChatId: dto.backupChatId ?? before.backupChatId,
       alertChatId: dto.alertChatId ?? before.alertChatId,
       enabled: dto.enabled ?? before.enabled,
-      features: {
-        lowStockDigest: dto.features?.lowStockDigest ?? before.features.lowStockDigest,
-        ownerSnapshot: dto.features?.ownerSnapshot ?? before.features.ownerSnapshot,
-        customerReceipts: dto.features?.customerReceipts ?? before.features.customerReceipts,
-        debtReminders: dto.features?.debtReminders ?? before.features.debtReminders,
-        warrantyReminders: dto.features?.warrantyReminders ?? before.features.warrantyReminders,
-        investorReports: dto.features?.investorReports ?? before.features.investorReports,
-      },
+      features: { ...before.features, ...definedFlags(dto.features) },
     };
     await this.persist(next, before, actorId);
     return this.toStatus(next);
@@ -295,4 +283,9 @@ export class TelegramConfigService {
     const { botTokenEnc, ...rest } = c;
     return { ...rest, configured: botTokenEnc != null };
   }
+}
+
+/** Flags the DTO actually sets (`?? before` per key): spread over the old flags, the rest are kept. */
+function definedFlags(dto: Partial<TelegramFeatures> | undefined): Partial<TelegramFeatures> {
+  return Object.fromEntries(Object.entries(dto ?? {}).filter(([, v]) => v != null));
 }

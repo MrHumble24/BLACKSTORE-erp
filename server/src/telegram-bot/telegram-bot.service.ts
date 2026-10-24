@@ -3,6 +3,8 @@ import { Interval } from '@nestjs/schedule';
 import { getBotUpdates } from '../common/telegram';
 import { DashboardService } from '../dashboard/dashboard.service';
 import { TelegramConfigService } from '../integrations/telegram-config.service';
+import { BotReportsService } from './bot-reports.service';
+import { BotRoleService } from './bot-role.service';
 import { routeUpdate } from './commands';
 import { KnownChatService } from './known-chat.service';
 import { LinkTokenService } from './link-token.service';
@@ -27,6 +29,8 @@ export class TelegramBotService {
     private readonly telegram: TelegramConfigService,
     private readonly linkToken: LinkTokenService,
     private readonly knownChats: KnownChatService,
+    private readonly roles: BotRoleService,
+    private readonly reports: BotReportsService,
   ) {}
 
   /** Poll on a fixed interval; the whole cycle is guarded so a failure is logged, never thrown. */
@@ -39,7 +43,7 @@ export class TelegramBotService {
       // (Telegram enabled + token present); each command gates itself below. `/status` keeps its
       // FR-29 gate via ownerSnapshotEnabled, so turning ownerSnapshot off still silences `/status`
       // while `/start` (any user) keeps working.
-      const { enabled, token, alertChatId, ownerSnapshotEnabled } = await this.telegram.getRuntime();
+      const { enabled, token, alertChatId, ownerSnapshotEnabled, features } = await this.telegram.getRuntime();
       if (!enabled) return; // master switch off or not configured → nothing to poll
       // Update ids are per bot: after "Change bot" the old offset may sit above every new update id.
       if (token !== this.offsetToken) {
@@ -62,9 +66,13 @@ export class TelegramBotService {
         await routeUpdate(update, {
           dashboard: this.dashboard,
           linkToken: this.linkToken,
+          roles: this.roles,
+          reports: this.reports,
           token,
           alertChatId,
           ownerSnapshotEnabled,
+          features,
+          logger: this.logger,
         });
       }
     } catch (e) {
