@@ -1204,7 +1204,13 @@
     "linked": "Linked",
     "hint": "The link works once and expires within 7 days. After opening it, the person gets messages from the bot.",
     "copy": "Copy",
-    "noBot": "Connect the Telegram bot in Super admin first."
+    "noBot": "Connect the Telegram bot in Super admin first.",
+    "linkedInfo": "Linked {{date}}{{by}}",
+    "linkedBy": " · by {{name}}",
+    "unlink": "Unlink",
+    "unlinkTitle": "Unlink Telegram?",
+    "unlinkWarning": "This person will stop receiving Telegram messages until they open a new link.",
+    "unlinked": "Telegram unlinked"
   },
   "closeDay": {
     "title": "Daily close",

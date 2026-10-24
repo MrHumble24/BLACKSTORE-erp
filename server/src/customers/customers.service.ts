@@ -73,9 +73,15 @@ export class CustomersService {
     return map;
   }
 
-  /** One customer with their current debt (Σ balance of their DEBT sales); 404 if missing. */
+  /**
+   * One customer with their current debt (Σ balance of their DEBT sales) and Telegram link state
+   * (when, and the NAME of who issued the link; never ids or the chat id); 404 if missing.
+   */
   async findOne(id: number) {
-    const customer = await this.prisma.customer.findUnique({ where: { id } });
+    const customer = await this.prisma.customer.findUnique({
+      where: { id },
+      include: { telegramLinkedBy: { select: { name: true } } },
+    });
     if (!customer) throw new NotFoundException('Customer not found');
     // One query loads every unpaid sale's total, payments and refunds for the BR-8 sum.
     const debtSales = await this.prisma.sale.findMany({
@@ -87,19 +93,33 @@ export class CustomersService {
       new Prisma.Decimal(0),
     );
     // Only whether a chat is linked is exposed; the chat id itself never leaves the server.
-    return { ...toCustomer(customer), debt: debt.toFixed(2), telegramLinked: customer.telegramChatId !== null };
+    return {
+      ...toCustomer(customer),
+      debt: debt.toFixed(2),
+      telegramLinked: customer.telegramChatId !== null,
+      telegramLinkedAt: customer.telegramLinkedAt?.toISOString() ?? null,
+      telegramLinkedBy: customer.telegramLinkedBy?.name ?? null,
+    };
   }
 
   /**
    * Telegram invite link for this customer (F23). Already linked → no token is minted, so a staff
    * member can't take over a linked chat (same rule as the sale detail). `link` is null when no bot
-   * is configured. Not audited: issuing a token changes no business record.
+   * is configured. Not audited: issuing a token changes no business record; the actor is stored on the
+   * token as its issuer (F24).
    */
-  async telegramLink(id: number): Promise<TelegramLinkResult> {
+  async telegramLink(id: number, actorId: number): Promise<TelegramLinkResult> {
     const customer = await this.prisma.customer.findUnique({ where: { id }, select: { telegramChatId: true } });
     if (!customer) throw new NotFoundException('Customer not found');
     if (customer.telegramChatId !== null) return { link: null, linked: true };
-    return { link: await this.linkToken.buildInviteLink(TelegramLinkKind.CUSTOMER, id), linked: false };
+    return { link: await this.linkToken.buildInviteLink(TelegramLinkKind.CUSTOMER, id, actorId), linked: false };
+  }
+
+  /** Clears the customer's Telegram link (F24); 404 unknown, 400 not linked. Audited by LinkTokenService. */
+  async telegramUnlink(id: number, actorId: number): Promise<void> {
+    const customer = await this.prisma.customer.findUnique({ where: { id }, select: { id: true } });
+    if (!customer) throw new NotFoundException('Customer not found');
+    await this.linkToken.unlink(TelegramLinkKind.CUSTOMER, id, actorId);
   }
 
   /** Creates a customer; the phone is trimmed and unique (409 via the Prisma filter). */

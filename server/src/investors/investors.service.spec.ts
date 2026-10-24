@@ -19,7 +19,7 @@ describe('InvestorsService', () => {
     $transaction: (cb: (tx: unknown) => unknown) => cb({ investor, auditLog: { create: jest.fn() } }),
   } as unknown as PrismaService;
   const audit = { log: jest.fn() } as unknown as AuditService;
-  const linkToken = { buildInviteLink: jest.fn() };
+  const linkToken = { buildInviteLink: jest.fn(), unlink: jest.fn() };
   const service = new InvestorsService(prisma, audit, linkToken as unknown as LinkTokenService);
 
   // No transactions → balance is 0.00.
@@ -81,31 +81,64 @@ describe('InvestorsService', () => {
     expect(result).not.toHaveProperty('telegramChatId');
   });
 
+  it('detail exposes link date and issuer name, never ids or the relation object (F24)', async () => {
+    const linkedAt = new Date('2026-10-01T10:00:00Z');
+    investor.findUnique.mockResolvedValue({
+      id: 1, name: 'A', code: 'A', isOwn: null, isActive: true, shareType: 'NONE',
+      shareValue: new Prisma.Decimal('0'), telegramChatId: '9', telegramLinkedAt: linkedAt,
+      telegramLinkedBy: { name: 'Ali' },
+    });
+    const result = await service.findOne(1);
+    expect(result.telegramLinkedAt).toBe(linkedAt.toISOString());
+    expect(result.telegramLinkedBy).toBe('Ali');
+    expect(result).not.toHaveProperty('telegramLinkedById');
+  });
+
+  describe('telegramUnlink (F24)', () => {
+    it('delegates to LinkTokenService.unlink with the actor', async () => {
+      investor.findUnique.mockResolvedValue({ id: 3 });
+      await service.telegramUnlink(3, 7);
+      expect(linkToken.unlink).toHaveBeenCalledWith('INVESTOR', 3, 7);
+    });
+
+    it('404 for an unknown investor, nothing unlinked', async () => {
+      investor.findUnique.mockResolvedValue(null);
+      await expect(service.telegramUnlink(99, 7)).rejects.toThrow(NotFoundException);
+      expect(linkToken.unlink).not.toHaveBeenCalled();
+    });
+
+    it('400 when not linked (raised by unlink)', async () => {
+      investor.findUnique.mockResolvedValue({ id: 3 });
+      linkToken.unlink.mockRejectedValueOnce(new BadRequestException('Not linked'));
+      await expect(service.telegramUnlink(3, 7)).rejects.toThrow('Not linked');
+    });
+  });
+
   describe('telegramLink (F23)', () => {
     const row = (over: object) => ({ isOwn: null, isActive: true, telegramChatId: null, ...over });
 
     it('returns the invite link with linked:false for an unlinked investor', async () => {
       investor.findUnique.mockResolvedValue(row({}));
       linkToken.buildInviteLink.mockResolvedValue('https://t.me/bot?start=t');
-      await expect(service.telegramLink(3)).resolves.toEqual({ link: 'https://t.me/bot?start=t', linked: false });
-      expect(linkToken.buildInviteLink).toHaveBeenCalledWith('INVESTOR', 3);
+      await expect(service.telegramLink(3, 7)).resolves.toEqual({ link: 'https://t.me/bot?start=t', linked: false });
+      expect(linkToken.buildInviteLink).toHaveBeenCalledWith('INVESTOR', 3, 7); // the actor is the issuer
     });
 
     it('already linked → { link: null, linked: true } and no token minted', async () => {
       investor.findUnique.mockResolvedValue(row({ telegramChatId: '777' }));
-      await expect(service.telegramLink(3)).resolves.toEqual({ link: null, linked: true });
+      await expect(service.telegramLink(3, 7)).resolves.toEqual({ link: null, linked: true });
       expect(linkToken.buildInviteLink).not.toHaveBeenCalled();
     });
 
     it('null link when no bot is configured', async () => {
       investor.findUnique.mockResolvedValue(row({}));
       linkToken.buildInviteLink.mockResolvedValue(null);
-      await expect(service.telegramLink(3)).resolves.toEqual({ link: null, linked: false });
+      await expect(service.telegramLink(3, 7)).resolves.toEqual({ link: null, linked: false });
     });
 
     it('404 for an unknown investor', async () => {
       investor.findUnique.mockResolvedValue(null);
-      await expect(service.telegramLink(99)).rejects.toThrow(NotFoundException);
+      await expect(service.telegramLink(99, 7)).rejects.toThrow(NotFoundException);
     });
 
     // buildInviteLink returns null (no bot) here: the refusals must not depend on a bot existing.
@@ -115,7 +148,7 @@ describe('InvestorsService', () => {
     ])('refuses %s with 400 even with no bot', async (_label, over, message) => {
       investor.findUnique.mockResolvedValue(row(over));
       linkToken.buildInviteLink.mockResolvedValue(null);
-      await expect(service.telegramLink(1)).rejects.toThrow(new BadRequestException(message));
+      await expect(service.telegramLink(1, 7)).rejects.toThrow(new BadRequestException(message));
       expect(linkToken.buildInviteLink).not.toHaveBeenCalled();
     });
   });

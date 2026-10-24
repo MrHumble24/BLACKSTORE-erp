@@ -11,6 +11,9 @@ export interface Investor {
   balance?: string;
   /** Detail response only: true once the investor opened the bot invite link. */
   telegramLinked?: boolean;
+  /** Detail only: link time and the name of the staff user who issued the used invite (null for pre-F24 links). */
+  telegramLinkedAt?: string | null;
+  telegramLinkedBy?: string | null;
   createdAt: string;
   updatedAt: string;
 }

@@ -7,24 +7,42 @@ import { formatMoney } from '@/shared/lib';
 import {
   useInvestor,
   useInvestorTelegramLink,
+  useInvestorTelegramUnlink,
   useInvestorTransactions,
   type Investor,
   type ShareType,
 } from '@/entities/investor';
 import { InvestorFormDialog, InvestorTransactionDialog } from '@/features/manage-investors';
-import { TelegramInviteButton } from '@/features/telegram-invite';
+import { TelegramInviteButton, TelegramLinkStatus } from '@/features/telegram-invite';
 import { InvestorTransactionsTable } from './InvestorTransactionsTable';
 
 const TRANSACTIONS_PAGE_SIZE = 20;
 
-/** Telegram invite for a real, active investor; the business investor has no chat to link. */
+/**
+ * Telegram link status (with Unlink, even for inactive investors so they can be cleaned up) or the
+ * invite button for a real, active investor; the business investor has no chat to link.
+ * The page already requires manage_investors, which is also the unlink permission.
+ */
 function InvestorTelegramInvite({ investor, onRefresh }: { investor: Investor; onRefresh: () => void }) {
   const telegramLink = useInvestorTelegramLink();
+  const telegramUnlink = useInvestorTelegramUnlink();
+  if (investor.telegramLinked) {
+    return (
+      <TelegramLinkStatus
+        id={investor.id}
+        linkedAt={investor.telegramLinkedAt}
+        linkedBy={investor.telegramLinkedBy}
+        canUnlink
+        unlink={telegramUnlink}
+        onDone={onRefresh}
+      />
+    );
+  }
   if (investor.isOwn || !investor.isActive) return null;
   return (
     <TelegramInviteButton
       name={investor.name}
-      linked={investor.telegramLinked ?? false}
+      linked={false}
       request={() => telegramLink.mutateAsync(investor.id)}
       onClose={onRefresh}
     />

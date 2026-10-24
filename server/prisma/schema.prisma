@@ -139,6 +139,10 @@ model User {
   stockCounts   StockCount[]
   ledgerEntries LedgerEntry[]
   businessDays  BusinessDay[] // days this user closed
+
+  issuedTelegramTokens    TelegramLinkToken[] // invite links this user handed out (F24)
+  telegramLinkedCustomers Customer[]          @relation("CustomerTelegramLinkedBy")
+  telegramLinkedInvestors Investor[]          @relation("InvestorTelegramLinkedBy")
 }
 
 model AuditLog {
@@ -185,7 +189,10 @@ model Investor {
   shareValue Decimal   @default(0) @db.Decimal(12, 2)
   isActive   Boolean   @default(true) // false = hidden from pick-lists; the OWN investor can never be deactivated
 
-  telegramChatId String? @unique // linked via /start deep link (F16); null until they opt in
+  telegramChatId     String?   @unique // linked via /start deep link (F16); null until they opt in
+  telegramLinkedAt   DateTime?
+  telegramLinkedById Int? // issuer of the token that was consumed (F24)
+  telegramLinkedBy   User?     @relation("InvestorTelegramLinkedBy", fields: [telegramLinkedById], references: [id])
 
   items        Item[]
   batches      Batch[]
@@ -427,13 +434,16 @@ model TransferAccessory {
 // ─────────────────────────────────────────────
 
 model Customer {
-  id             Int      @id @default(autoincrement())
-  name           String
-  phone          String   @unique
-  note           String?
-  telegramChatId String?  @unique // linked via /start deep link (F16); null until they opt in
-  createdAt      DateTime @default(now())
-  sales          Sale[]
+  id                 Int       @id @default(autoincrement())
+  name               String
+  phone              String    @unique
+  note               String?
+  telegramChatId     String?   @unique // linked via /start deep link (F16); null until they opt in
+  telegramLinkedAt   DateTime?
+  telegramLinkedById Int? // issuer of the token that was consumed (F24)
+  telegramLinkedBy   User?     @relation("CustomerTelegramLinkedBy", fields: [telegramLinkedById], references: [id])
+  createdAt          DateTime  @default(now())
+  sales              Sale[]
 }
 
 model Sale {
@@ -660,13 +670,15 @@ model DayCloseFlag {
 // https://t.me/<bot>?start=<token>; /start consumes it and links their chat. High-entropy random
 // token, so no signing secret is needed — the row itself gives one-time + expiry.
 model TelegramLinkToken {
-  id        Int              @id @default(autoincrement())
-  token     String           @unique
-  kind      TelegramLinkKind
-  refId     Int // Customer.id or Investor.id, per kind
-  expiresAt DateTime
-  usedAt    DateTime? // set when consumed; null = still usable
-  createdAt DateTime         @default(now())
+  id         Int              @id @default(autoincrement())
+  token      String           @unique
+  kind       TelegramLinkKind
+  refId      Int // Customer.id or Investor.id, per kind
+  expiresAt  DateTime
+  usedAt     DateTime? // set when consumed; null = still usable
+  createdAt  DateTime         @default(now())
+  issuedById Int? // staff user who minted the link (F24); null for tokens from before F24
+  issuedBy   User?            @relation(fields: [issuedById], references: [id])
 
   @@index([kind, refId]) // reuse lookup: newest live token for a (kind, refId)
 }

@@ -12,6 +12,9 @@ export interface CustomerDetail extends Customer {
   debt: string;
   /** True once the customer opened the bot invite link (detail only, never the chat id). */
   telegramLinked: boolean;
+  /** When the link was made and the name of the staff user who issued the used invite (null for pre-F24 links). */
+  telegramLinkedAt: string | null;
+  telegramLinkedBy: string | null;
 }
 
 export interface CreateCustomerPayload {

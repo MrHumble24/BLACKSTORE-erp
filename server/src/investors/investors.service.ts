@@ -47,24 +47,38 @@ export class InvestorsService {
     return rows.map((r) => Object.assign(r, { isOwn: r.isOwn ?? false }));
   }
 
-  /** Full investor with the computed balance and `telegramLinked`; 404 if missing. */
+  /**
+   * Full investor with the computed balance and Telegram link state (`telegramLinked`, when, and the
+   * NAME of who issued the link); 404 if missing.
+   */
   async findOne(id: number) {
     const row = await this.prisma.investor.findUnique({
       where: { id },
-      select: { ...fullSelect, telegramChatId: true },
+      select: {
+        ...fullSelect,
+        telegramChatId: true,
+        telegramLinkedAt: true,
+        telegramLinkedBy: { select: { name: true } },
+      },
     });
     if (!row) throw new NotFoundException('Investor not found');
-    // Drop the chat id before withBalance spreads the row: only the boolean leaves the server.
-    const { telegramChatId, ...investor } = row;
-    return { ...(await this.withBalance(investor)), telegramLinked: telegramChatId !== null };
+    // Drop the link fields before withBalance spreads the row: the chat id and user ids never leave the server.
+    const { telegramChatId, telegramLinkedAt, telegramLinkedBy, ...investor } = row;
+    return {
+      ...(await this.withBalance(investor)),
+      telegramLinked: telegramChatId !== null,
+      telegramLinkedAt: telegramLinkedAt?.toISOString() ?? null,
+      telegramLinkedBy: telegramLinkedBy?.name ?? null,
+    };
   }
 
   /**
    * Telegram invite link for a real, active investor (F23). Checks run before buildInviteLink, which
    * returns null early with no bot, so the business/inactive refusals hold either way. Already
-   * linked → no token is minted. Not audited: issuing a token changes no business record.
+   * linked → no token is minted. Not audited: issuing a token changes no business record; the actor
+   * is stored on the token as its issuer (F24).
    */
-  async telegramLink(id: number): Promise<TelegramLinkResult> {
+  async telegramLink(id: number, actorId: number): Promise<TelegramLinkResult> {
     const investor = await this.prisma.investor.findUnique({
       where: { id },
       select: { isOwn: true, isActive: true, telegramChatId: true },
@@ -73,7 +87,14 @@ export class InvestorsService {
     if (investor.isOwn) throw new BadRequestException('The business investor cannot be linked');
     if (!investor.isActive) throw new BadRequestException('Inactive investor');
     if (investor.telegramChatId !== null) return { link: null, linked: true };
-    return { link: await this.linkToken.buildInviteLink(TelegramLinkKind.INVESTOR, id), linked: false };
+    return { link: await this.linkToken.buildInviteLink(TelegramLinkKind.INVESTOR, id, actorId), linked: false };
+  }
+
+  /** Clears the investor's Telegram link (F24), active or not; 404 unknown, 400 not linked. Audited by LinkTokenService. */
+  async telegramUnlink(id: number, actorId: number): Promise<void> {
+    const investor = await this.prisma.investor.findUnique({ where: { id }, select: { id: true } });
+    if (!investor) throw new NotFoundException('Investor not found');
+    await this.linkToken.unlink(TelegramLinkKind.INVESTOR, id, actorId);
   }
 
   /** Creates an investor. isOwn stays null (only the seeded OWN row is true). Duplicate code → 409. */

@@ -15,7 +15,7 @@ import { KnownChatService } from './known-chat.service';
  * DashboardModule (snapshot data), SettingsModule (shop name) and ReportsModule (investor figures);
  * none of them imports this module, so there is no cycle. ScheduleModule is already global (the
  * @Interval poll runs).
- * Exports LinkTokenService so F17/F18 can call `buildInviteLink(kind, refId)`.
+ * Exports LinkTokenService so F17/F18 can call `buildInviteLink(kind, refId, issuedById)`.
  */
 @Module({
   imports: [IntegrationsModule, DashboardModule, SettingsModule, ReportsModule],

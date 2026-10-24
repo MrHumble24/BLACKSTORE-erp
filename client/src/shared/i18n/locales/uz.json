@@ -1204,7 +1204,13 @@
     "linked": "Ulangan",
     "hint": "Havola bir martalik va 7 kun ichida amal qiladi. Uni ochgandan so'ng odam botdan xabarlar oladi.",
     "copy": "Nusxalash",
-    "noBot": "Avval Super admin bo'limida Telegram botni ulang."
+    "noBot": "Avval Super admin bo'limida Telegram botni ulang.",
+    "linkedInfo": "{{date}} ulangan{{by}}",
+    "linkedBy": " · {{name}} tomonidan",
+    "unlink": "Uzish",
+    "unlinkTitle": "Telegramni uzasizmi?",
+    "unlinkWarning": "Bu odam yangi havolani ochmaguncha Telegram xabarlarini olmaydi.",
+    "unlinked": "Telegram uzildi"
   },
   "closeDay": {
     "title": "Kun yakuni",

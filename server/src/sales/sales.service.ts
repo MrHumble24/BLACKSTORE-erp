@@ -58,7 +58,7 @@ export class SalesService {
   async findOne(id: number, actor: PublicUser) {
     const row = await this.prisma.sale.findUnique({ where: { id }, select: saleDetailSelect });
     if (!row) throw new NotFoundException('Sale not found');
-    const inviteLink = await this.inviteLinkFor(row.customer);
+    const inviteLink = await this.inviteLinkFor(row.customer, actor.id);
     return toSale(row, hasPermission(actor, 'view_cost'), inviteLink);
   }
 
@@ -66,12 +66,14 @@ export class SalesService {
    * Telegram deep link for the receipt page, only for a customer who hasn't linked yet (null for
    * walk-ins and already-linked customers). buildInviteLink mints a token row, so the single-sale
    * GET carries one token-upsert write side-effect — acceptable, and only here (never on the list).
+   * The viewer is recorded as the token's issuer (F24 attribution).
    */
   private async inviteLinkFor(
     customer: SaleDetailRow['customer'],
+    viewerId: number,
   ): Promise<string | null> {
     if (!customer || customer.telegramChatId) return null;
-    return this.linkToken.buildInviteLink(TelegramLinkKind.CUSTOMER, customer.id);
+    return this.linkToken.buildInviteLink(TelegramLinkKind.CUSTOMER, customer.id, viewerId);
   }
 
   /** Creates a sale in one transaction: validate lines, snapshot, move stock, optional payment (W2). */

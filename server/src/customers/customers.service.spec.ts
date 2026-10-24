@@ -1,4 +1,4 @@
-import { NotFoundException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { AuditService } from '../audit/audit.service';
 import { PrismaService } from '../prisma/prisma.service';
@@ -40,6 +40,19 @@ describe('CustomersService.findOne debt (BR-8)', () => {
     const result = await service.findOne(2);
     expect(result.telegramLinked).toBe(true);
     expect(result).not.toHaveProperty('telegramChatId');
+  });
+
+  it('exposes when and by whom (a name string) it was linked, never user ids (F24)', async () => {
+    const linkedAt = new Date('2026-10-01T10:00:00Z');
+    customer.findUnique.mockResolvedValue({
+      id: 2, name: 'A', phone: '+99890', note: null, createdAt: new Date(), telegramChatId: '555',
+      telegramLinkedAt: linkedAt, telegramLinkedById: 4, telegramLinkedBy: { name: 'Ali' },
+    });
+    sale.findMany.mockResolvedValue([]);
+    const result = await service.findOne(2);
+    expect(result.telegramLinkedAt).toBe(linkedAt.toISOString());
+    expect(result.telegramLinkedBy).toBe('Ali');
+    expect(result).not.toHaveProperty('telegramLinkedById');
   });
 
   it('404 when the customer is missing', async () => {
@@ -108,24 +121,54 @@ describe('CustomersService.telegramLink (F23)', () => {
   it('returns the invite link with linked:false for an unlinked customer', async () => {
     customer.findUnique.mockResolvedValue({ telegramChatId: null });
     linkToken.buildInviteLink.mockResolvedValue('https://t.me/bot?start=t');
-    await expect(service.telegramLink(2)).resolves.toEqual({ link: 'https://t.me/bot?start=t', linked: false });
-    expect(linkToken.buildInviteLink).toHaveBeenCalledWith('CUSTOMER', 2);
+    await expect(service.telegramLink(2, 7)).resolves.toEqual({ link: 'https://t.me/bot?start=t', linked: false });
+    expect(linkToken.buildInviteLink).toHaveBeenCalledWith('CUSTOMER', 2, 7); // the actor is the issuer
   });
 
   it('already linked → { link: null, linked: true } and no token minted', async () => {
     customer.findUnique.mockResolvedValue({ telegramChatId: '555' });
-    await expect(service.telegramLink(2)).resolves.toEqual({ link: null, linked: true });
+    await expect(service.telegramLink(2, 7)).resolves.toEqual({ link: null, linked: true });
     expect(linkToken.buildInviteLink).not.toHaveBeenCalled();
   });
 
   it('null link when no bot is configured', async () => {
     customer.findUnique.mockResolvedValue({ telegramChatId: null });
     linkToken.buildInviteLink.mockResolvedValue(null);
-    await expect(service.telegramLink(2)).resolves.toEqual({ link: null, linked: false });
+    await expect(service.telegramLink(2, 7)).resolves.toEqual({ link: null, linked: false });
   });
 
   it('404 for an unknown customer', async () => {
     customer.findUnique.mockResolvedValue(null);
-    await expect(service.telegramLink(99)).rejects.toThrow(NotFoundException);
+    await expect(service.telegramLink(99, 7)).rejects.toThrow(NotFoundException);
+  });
+});
+
+describe('CustomersService.telegramUnlink (F24)', () => {
+  const customer = { findUnique: jest.fn() };
+  const linkToken = { unlink: jest.fn() };
+  const service = new CustomersService(
+    { customer } as unknown as PrismaService,
+    {} as AuditService,
+    linkToken as unknown as LinkTokenService,
+  );
+
+  beforeEach(() => jest.clearAllMocks());
+
+  it('delegates to LinkTokenService.unlink with the actor', async () => {
+    customer.findUnique.mockResolvedValue({ id: 2 });
+    await service.telegramUnlink(2, 7);
+    expect(linkToken.unlink).toHaveBeenCalledWith('CUSTOMER', 2, 7);
+  });
+
+  it('404 for an unknown customer, nothing unlinked', async () => {
+    customer.findUnique.mockResolvedValue(null);
+    await expect(service.telegramUnlink(99, 7)).rejects.toThrow(NotFoundException);
+    expect(linkToken.unlink).not.toHaveBeenCalled();
+  });
+
+  it('400 when not linked (raised by unlink)', async () => {
+    customer.findUnique.mockResolvedValue({ id: 2 });
+    linkToken.unlink.mockRejectedValueOnce(new BadRequestException('Not linked'));
+    await expect(service.telegramUnlink(2, 7)).rejects.toThrow('Not linked');
   });
 });

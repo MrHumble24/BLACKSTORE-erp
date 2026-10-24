@@ -91,3 +91,12 @@ export function useCustomerTelegramLink() {
     },
   });
 }
+
+/** Removes the customer's Telegram link (DELETE /customers/:id/telegram-link, delete_records only). */
+export function useCustomerTelegramUnlink() {
+  return useMutation({
+    mutationFn: async (id: number) => {
+      await api.delete(`/customers/${id}/telegram-link`);
+    },
+  });
+}

@@ -1,7 +1,9 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
+  HttpCode,
   Param,
   ParseIntPipe,
   Patch,
@@ -75,7 +77,15 @@ export class InvestorsController {
   /** Mints (or reuses) the investor's Telegram invite link (F23); POST because it may write a token row. */
   @Post(':id/telegram-link')
   @Permissions('manage_investors')
-  telegramLink(@Param('id', ParseIntPipe) id: number) {
-    return this.investors.telegramLink(id);
+  telegramLink(@Param('id', ParseIntPipe) id: number, @CurrentUser() actor: PublicUser) {
+    return this.investors.telegramLink(id, actor.id);
+  }
+
+  /** Clears the investor's Telegram link (F24), also for inactive investors so they can be cleaned up. */
+  @Delete(':id/telegram-link')
+  @Permissions('manage_investors')
+  @HttpCode(204)
+  async telegramUnlink(@Param('id', ParseIntPipe) id: number, @CurrentUser() actor: PublicUser) {
+    await this.investors.telegramUnlink(id, actor.id);
   }
 }

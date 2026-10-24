@@ -1,6 +1,7 @@
 import { randomBytes } from 'node:crypto';
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { Prisma, TelegramLinkKind } from '@prisma/client';
+import { AuditService } from '../audit/audit.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { TelegramConfigService } from '../integrations/telegram-config.service';
 
@@ -12,6 +13,23 @@ export interface TokenRef {
   kind: TelegramLinkKind;
   refId: number;
 }
+
+/** A claimed token: its ref plus the staff user who issued it (null for tokens from before F24). */
+interface ClaimedToken extends TokenRef {
+  issuedById: number | null;
+}
+
+/** The three link columns shared by Customer and Investor (F24). */
+interface ChatFields {
+  telegramChatId: string | null;
+  telegramLinkedAt: Date | null;
+  telegramLinkedById: number | null;
+}
+
+const UNLINKED: ChatFields = { telegramChatId: null, telegramLinkedAt: null, telegramLinkedById: null };
+
+/** AuditLog entity name per link kind. */
+const entityOf = (kind: TelegramLinkKind) => (kind === TelegramLinkKind.CUSTOMER ? 'Customer' : 'Investor');
 
 /** Invite-link answer for a Customer/Investor: the deep link (null when no bot or already linked). */
 export interface TelegramLinkResult {
@@ -30,13 +48,16 @@ export class LinkTokenService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly telegram: TelegramConfigService,
+    private readonly audit: AuditService,
   ) {}
 
   /**
-   * Returns a usable token for (kind, refId): reuse the newest live (unused, unexpired) one if it
-   * exists so reprinting a receipt doesn't spawn endless rows; otherwise mint a fresh url-safe token.
+   * Returns a usable token for (kind, refId) issued by `issuedById`: reuse the newest live (unused,
+   * unexpired) one by the SAME issuer so reprinting a receipt doesn't spawn endless rows; otherwise
+   * mint a fresh url-safe token. Reuse is per issuer so the issuer on a consumed token is really the
+   * person who handed it out (F24 attribution).
    */
-  async issueToken(kind: TelegramLinkKind, refId: number): Promise<string> {
+  async issueToken(kind: TelegramLinkKind, refId: number, issuedById: number): Promise<string> {
     // The OWN/business investor's report folds in whole-business and accessory figures, so its record
     // must never be linked to a Telegram chat. Refuse at the single mint point (covers buildInviteLink
     // and any future caller), so no token can ever exist for it — defense in depth with the F18 query.
@@ -48,13 +69,13 @@ export class LinkTokenService {
     // ponytail: find-then-create can race and mint two live tokens; linkChat consumes all siblings on
     // the first successful link, so the extra one is harmless. Add a partial unique index if it matters.
     const live = await this.prisma.telegramLinkToken.findFirst({
-      where: { kind, refId, usedAt: null, expiresAt: { gt: now } },
+      where: { kind, refId, issuedById, usedAt: null, expiresAt: { gt: now } },
       orderBy: { createdAt: 'desc' },
     });
     if (live) return live.token;
     const token = randomBytes(16).toString('base64url'); // ~22 chars, well under Telegram's 64-char limit
     const expiresAt = new Date(now.getTime() + TOKEN_TTL_MS);
-    const created = await this.prisma.telegramLinkToken.create({ data: { token, kind, refId, expiresAt } });
+    const created = await this.prisma.telegramLinkToken.create({ data: { token, kind, refId, expiresAt, issuedById } });
     return created.token;
   }
 
@@ -62,10 +83,10 @@ export class LinkTokenService {
    * Deep link a customer/investor taps: `https://t.me/<bot>?start=<token>`. Null when no bot is
    * configured (no username) — F17/F18 fall back to no link in that case.
    */
-  async buildInviteLink(kind: TelegramLinkKind, refId: number): Promise<string | null> {
+  async buildInviteLink(kind: TelegramLinkKind, refId: number, issuedById: number): Promise<string | null> {
     const { botUsername } = await this.telegram.getStatus();
     if (!botUsername) return null;
-    const token = await this.issueToken(kind, refId);
+    const token = await this.issueToken(kind, refId, issuedById);
     return `https://t.me/${botUsername}?start=${token}`;
   }
 
@@ -74,30 +95,89 @@ export class LinkTokenService {
    * window where the token is spent but the chat is not linked (or vice versa). Returns the ref on
    * success (for the confirmation reply), or null for an absent/used/expired/unknown token, or when
    * the record is already linked (a second live token must never take over a linked chat; the token
-   * stays consumed). On success every other unused token for the same record is consumed too.
+   * stays consumed). On success every other unused token for the same record is consumed too, and
+   * the link is stamped with when and by whose token it happened (F24).
+   *
+   * A /start link is audited under the user who issued the token: the Telegram user has no account,
+   * and the issuer is the staff member who handed the link out (`via: 'invite'`). Tokens without an
+   * issuer only exist for the 7-day TTL after F24 deployed, so for them no audit row is written
+   * (AuditLog.userId is required); this is a transition case, not a lasting exception.
    */
   async linkChat(token: string, chatId: string): Promise<TokenRef | null> {
     return this.prisma.$transaction(async (tx) => {
-      const ref = await this.markUsed(tx, token);
-      if (!ref) return null;
+      const claimed = await this.markUsed(tx, token);
+      if (!claimed) return null;
+      const ref: TokenRef = { kind: claimed.kind, refId: claimed.refId };
       if (await this.isLinked(tx, ref)) return null;
-      await tx.telegramLinkToken.updateMany({
-        where: { kind: ref.kind, refId: ref.refId, usedAt: null },
-        data: { usedAt: new Date() },
-      });
-      // Latest link wins: telegramChatId is @unique per table, so clear any other record of THIS
+      await this.consumeLiveTokens(tx, ref);
+      // Latest link wins: telegramChatId is @unique per table, so clear the other record of THIS
       // kind that already holds this chat id before assigning it here — all in the same transaction.
       // The clear is same-kind only on purpose: one person can be both a Customer and an Investor,
       // so the same chat id may legitimately sit on one of each at once (cross-kind coexistence).
-      if (ref.kind === TelegramLinkKind.CUSTOMER) {
-        await tx.customer.updateMany({ where: { telegramChatId: chatId }, data: { telegramChatId: null } });
-        await tx.customer.update({ where: { id: ref.refId }, data: { telegramChatId: chatId } });
-      } else {
-        await tx.investor.updateMany({ where: { telegramChatId: chatId }, data: { telegramChatId: null } });
-        await tx.investor.update({ where: { id: ref.refId }, data: { telegramChatId: chatId } });
+      const previousId = await this.chatHolderId(tx, ref.kind, chatId);
+      if (previousId !== null) await this.setChat(tx, ref.kind, previousId, UNLINKED);
+      await this.setChat(tx, ref.kind, ref.refId, {
+        telegramChatId: chatId,
+        telegramLinkedAt: new Date(),
+        telegramLinkedById: claimed.issuedById,
+      });
+      if (claimed.issuedById !== null) {
+        const entry = { userId: claimed.issuedById, entity: entityOf(ref.kind) };
+        if (previousId !== null) {
+          const after = { telegramLinked: false, via: 'relink' };
+          await this.audit.log({ ...entry, action: 'telegram_unlink', entityId: previousId, before: { telegramLinked: true }, after }, tx);
+        }
+        const after = { telegramLinked: true, via: 'invite' };
+        await this.audit.log({ ...entry, action: 'telegram_link', entityId: ref.refId, before: { telegramLinked: false }, after }, tx);
       }
       return ref;
     });
+  }
+
+  /**
+   * Admin unlink (F24): clears the chat and its attribution, consumes every live token so an old link
+   * still sitting in someone's chat can't re-link, and audits it under the actor — one transaction.
+   * The caller checks 404 first; 400 when the record has no chat linked.
+   */
+  async unlink(kind: TelegramLinkKind, refId: number, actorId: number): Promise<void> {
+    await this.prisma.$transaction(async (tx) => {
+      if (!(await this.isLinked(tx, { kind, refId }))) throw new BadRequestException('Not linked');
+      await this.setChat(tx, kind, refId, UNLINKED);
+      await this.consumeLiveTokens(tx, { kind, refId });
+      await this.audit.log(
+        {
+          userId: actorId,
+          action: 'telegram_unlink',
+          entity: entityOf(kind),
+          entityId: refId,
+          before: { telegramLinked: true },
+          after: { telegramLinked: false },
+        },
+        tx,
+      );
+    });
+  }
+
+  /** Marks every unused token of the record as used. */
+  private async consumeLiveTokens(tx: Prisma.TransactionClient, ref: TokenRef): Promise<void> {
+    await tx.telegramLinkToken.updateMany({
+      where: { kind: ref.kind, refId: ref.refId, usedAt: null },
+      data: { usedAt: new Date() },
+    });
+  }
+
+  /** Id of the record of this kind currently holding the chat (unique per table), or null. */
+  private async chatHolderId(tx: Prisma.TransactionClient, kind: TelegramLinkKind, chatId: string): Promise<number | null> {
+    const query = { where: { telegramChatId: chatId }, select: { id: true } };
+    const row =
+      kind === TelegramLinkKind.CUSTOMER ? await tx.customer.findUnique(query) : await tx.investor.findUnique(query);
+    return row?.id ?? null;
+  }
+
+  /** Writes the three link columns on one Customer/Investor. */
+  private async setChat(tx: Prisma.TransactionClient, kind: TelegramLinkKind, id: number, data: ChatFields): Promise<void> {
+    if (kind === TelegramLinkKind.CUSTOMER) await tx.customer.update({ where: { id }, data });
+    else await tx.investor.update({ where: { id }, data });
   }
 
   /** True when the target Customer/Investor already has a chat linked. */
@@ -113,9 +193,9 @@ export class LinkTokenService {
   /**
    * Finds a live token and claims it (usedAt = now) inside the caller's transaction. The guarded
    * updateMany makes the claim atomic, so two concurrent consumes can never both win. Returns the
-   * ref when this call claimed it, else null.
+   * ref and issuer when this call claimed it, else null.
    */
-  private async markUsed(tx: Prisma.TransactionClient, token: string): Promise<TokenRef | null> {
+  private async markUsed(tx: Prisma.TransactionClient, token: string): Promise<ClaimedToken | null> {
     const now = new Date();
     const row = await tx.telegramLinkToken.findUnique({ where: { token } });
     if (!row || row.usedAt || row.expiresAt <= now) return null;
@@ -124,6 +204,6 @@ export class LinkTokenService {
       data: { usedAt: now },
     });
     if (claim.count !== 1) return null; // another consume claimed it first
-    return { kind: row.kind, refId: row.refId };
+    return { kind: row.kind, refId: row.refId, issuedById: row.issuedById };
   }
 }

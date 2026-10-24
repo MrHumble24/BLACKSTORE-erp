@@ -2,13 +2,18 @@ import { useTranslation } from 'react-i18next';
 import { Edit2 } from 'lucide-react';
 import { Button, Card, CardHeader, CardTitle, CardContent } from '@/shared/ui';
 import { formatDate } from '@/shared/lib';
-import { useCustomerTelegramLink, type CustomerDetail } from '@/entities/customer';
-import { TelegramInviteButton } from '@/features/telegram-invite';
+import { useAuthStore } from '@/entities/session';
+import {
+  useCustomerTelegramLink,
+  useCustomerTelegramUnlink,
+  type CustomerDetail,
+} from '@/entities/customer';
+import { TelegramInviteButton, TelegramLinkStatus } from '@/features/telegram-invite';
 
 interface CustomerContactCardProps {
   customer: CustomerDetail;
   onEdit: () => void;
-  /** Re-reads the customer so "Linked" shows after the invite dialog closes. */
+  /** Re-reads the customer after the invite dialog closes or an unlink succeeds. */
   onRefresh: () => void;
 }
 
@@ -16,6 +21,9 @@ interface CustomerContactCardProps {
 export function CustomerContactCard({ customer, onEdit, onRefresh }: CustomerContactCardProps) {
   const { t } = useTranslation();
   const telegramLink = useCustomerTelegramLink();
+  const telegramUnlink = useCustomerTelegramUnlink();
+  // Unlinking removes a link, so it follows the admin-only delete_records permission (F24).
+  const canUnlink = useAuthStore((s) => s.hasPermission('delete_records'));
 
   return (
     <Card className="border-hairline-silver/70 shadow-sm md:col-span-2">
@@ -41,12 +49,23 @@ export function CustomerContactCard({ customer, onEdit, onRefresh }: CustomerCon
         </div>
         <div className="flex justify-between items-center">
           <span className="text-slate">{t('customers.telegram')}:</span>
-          <TelegramInviteButton
-            name={customer.name}
-            linked={customer.telegramLinked}
-            request={() => telegramLink.mutateAsync(customer.id)}
-            onClose={onRefresh}
-          />
+          {customer.telegramLinked ? (
+            <TelegramLinkStatus
+              id={customer.id}
+              linkedAt={customer.telegramLinkedAt}
+              linkedBy={customer.telegramLinkedBy}
+              canUnlink={canUnlink}
+              unlink={telegramUnlink}
+              onDone={onRefresh}
+            />
+          ) : (
+            <TelegramInviteButton
+              name={customer.name}
+              linked={false}
+              request={() => telegramLink.mutateAsync(customer.id)}
+              onClose={onRefresh}
+            />
+          )}
         </div>
       </CardContent>
     </Card>

@@ -119,3 +119,12 @@ export function useInvestorTelegramLink() {
     },
   });
 }
+
+/** Removes the investor's Telegram link (DELETE /investors/:id/telegram-link, manage_investors). */
+export function useInvestorTelegramUnlink() {
+  return useMutation({
+    mutationFn: async (id: number) => {
+      await api.delete(`/investors/${id}/telegram-link`);
+    },
+  });
+}

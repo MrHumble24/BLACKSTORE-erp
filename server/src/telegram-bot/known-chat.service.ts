@@ -5,7 +5,8 @@ import { PrismaService } from '../prisma/prisma.service';
 /**
  * Remembers every chat the bot sees (F21) so the owner's chat picker has something to list. The
  * poller is the only reader of Telegram's update queue, so this is the only place chats are learned.
- * No audit row: the bot, not an app user, saw the chat (same exception as `/start` in commands.ts).
+ * No audit row: the bot, not an app user, saw the chat and no business record changes. (A /start link
+ * is audited under the user who issued the token.)
  */
 @Injectable()
 export class KnownChatService {

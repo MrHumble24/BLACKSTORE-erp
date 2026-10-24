@@ -66,9 +66,8 @@ function statusIgnoreReason(update: BotUpdate, ctx: CommandContext): string | nu
  * re-sends the menu. Never returns business data and is NOT gated on ownerSnapshot. Only a private
  * chat is linked: in a group the token is left unused and the generic reply is sent.
  *
- * No AuditLog row is written here: a /start link is a self-service mutation by an external Telegram
- * user, not an app user, so there is no actor to attribute. This is the one sanctioned exception to
- * the "audit every change" rule.
+ * A /start link is audited under the user who issued the token (F24): LinkTokenService.linkChat writes
+ * the `telegram_link` row inside its transaction, so nothing is audited here.
  */
 export async function handleStart(update: BotUpdate, ctx: CommandContext): Promise<boolean> {
   const token = update.text.trim().split(/\s+/)[1]; // the argument after `/start`, if any
