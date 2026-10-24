@@ -19,13 +19,13 @@ function Row({ to, icon: Icon, title, accent }: AttentionRow) {
   return (
     <Link
       to={to}
-      className="flex items-center gap-3 py-2.5 transition-colors hover:text-apple-blue"
+      className="group flex items-center gap-3 px-2.5 py-2.5 -mx-2.5 rounded-xl transition-all duration-150 hover:bg-control-gray/40 dark:hover:bg-white/[0.03] cursor-pointer"
     >
-      <span className={cn('flex h-8 w-8 shrink-0 items-center justify-center rounded-full', accent)}>
+      <span className={cn('flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-transform duration-150 group-hover:scale-105', accent)}>
         <Icon className="h-4 w-4" />
       </span>
-      <span className="flex-1 text-[13px] font-medium text-ink">{title}</span>
-      <ChevronRight className="h-4 w-4 text-slate" />
+      <span className="flex-1 text-[13px] font-medium text-ink group-hover:text-pricing-blue transition-colors">{title}</span>
+      <ChevronRight className="h-4 w-4 text-slate/40 transition-transform duration-150 group-hover:text-pricing-blue group-hover:translate-x-0.5" />
     </Link>
   );
 }
