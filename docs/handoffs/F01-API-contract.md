@@ -30,6 +30,6 @@ No DELETE anywhere (BR-12). `passwordHash` is never returned.
 
 ## Session rules
 - Cookie: httpOnly, `SameSite=Lax`, `secure` outside development, path `/`.
-- Sliding expiry: every authenticated request re-issues the cookie with a new 30-minute expiry (SESSION_TTL_MINUTES, default 30). Idle longer than that → 401.
+- Sliding expiry: every authenticated request re-issues the cookie with a new expiry (SESSION_TTL_MINUTES, default 360 = 6 hours). Idle longer than that → 401.
 - The auth guard loads the user from the DB on every request and rejects `isActive=false` immediately.
 - Login is rate limited: 10 attempts per minute per IP → 429.

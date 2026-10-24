@@ -26,7 +26,7 @@ export class EnvironmentVariables {
 
   @IsInt()
   @Min(1)
-  SESSION_TTL_MINUTES: number = 30;
+  SESSION_TTL_MINUTES: number = 360; // 6 h sliding idle timeout: a shop shift must not log staff out
 
   @IsInt()
   @Min(1)
