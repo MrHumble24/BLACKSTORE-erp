@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/shared/api';
-import type { Page } from '@/shared/types';
+import type { Page, TelegramLinkResult } from '@/shared/types';
 import type {
   Customer,
   CustomerDetail,
@@ -78,6 +78,16 @@ export function useUpdateCustomer() {
     onSuccess: (_, variables) => {
       void queryClient.invalidateQueries({ queryKey: customerKeys.detail(variables.id) });
       void queryClient.invalidateQueries({ queryKey: customerKeys.lists() });
+    },
+  });
+}
+
+/** Mints the customer's one-time Telegram invite link (POST /customers/:id/telegram-link). */
+export function useCustomerTelegramLink() {
+  return useMutation({
+    mutationFn: async (id: number) => {
+      const { data } = await api.post<TelegramLinkResult>(`/customers/${id}/telegram-link`);
+      return data;
     },
   });
 }

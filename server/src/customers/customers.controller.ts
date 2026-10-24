@@ -35,4 +35,10 @@ export class CustomersController {
   ) {
     return this.customers.update(id, dto, actor.id);
   }
+
+  /** Mints (or reuses) the customer's Telegram invite link (F23); POST because it may write a token row. */
+  @Post(':id/telegram-link')
+  telegramLink(@Param('id', ParseIntPipe) id: number) {
+    return this.customers.telegramLink(id);
+  }
 }

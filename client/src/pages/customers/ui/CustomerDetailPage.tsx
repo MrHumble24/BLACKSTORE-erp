@@ -20,7 +20,7 @@ export function CustomerDetailPage() {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [paymentSale, setPaymentSale] = useState<SaleSummary | null>(null);
 
-  const { data: customer, isLoading } = useCustomer(customerId);
+  const { data: customer, isLoading, refetch } = useCustomer(customerId);
   const { data: salesPage } = useSales({ customerId }, page, 20);
 
   if (isLoading || !customer) {
@@ -37,7 +37,11 @@ export function CustomerDetailPage() {
         <p className="text-xs text-slate font-mono mt-0.5">{customer.phone}</p>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <CustomerContactCard customer={customer} onEdit={() => setEditDialogOpen(true)} />
+        <CustomerContactCard
+          customer={customer}
+          onEdit={() => setEditDialogOpen(true)}
+          onRefresh={() => void refetch()}
+        />
         <CustomerDebtCard debt={customer.debt} />
       </div>
       <CustomerSalesTable sales={salesPage?.items ?? []} onPay={setPaymentSale} />

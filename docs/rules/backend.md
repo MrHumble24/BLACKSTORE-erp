@@ -35,7 +35,7 @@ src/
   - Paginate every list endpoint.
   - Balances are calculated from records, never stored or typed in (BR-8).
   - Status changes go through one function that enforces the allowed list (BR-9).
-- **Audit log**: every create, change and delete writes an `AuditLog` row with user and before/after, from one shared helper.
+- **Audit log**: every create, change and delete writes an `AuditLog` row with user and before/after, from one shared helper. Issuing a Telegram link token is not audited; linking via /start is the documented exception.
 - **Logging**: use Nest `Logger`; never log passwords, tokens or personal data.
 - **Async**: always `await` promises; no floating promises.
 - **REST**: plural nouns (`/items`, `/sales/:id/payments`), correct status codes, consistent response shapes.

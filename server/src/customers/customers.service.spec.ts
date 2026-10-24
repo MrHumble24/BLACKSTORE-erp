@@ -1,6 +1,8 @@
+import { NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { AuditService } from '../audit/audit.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { LinkTokenService } from '../telegram-bot/link-token.service';
 import { CustomersService } from './customers.service';
 
 describe('CustomersService.findOne debt (BR-8)', () => {
@@ -8,7 +10,7 @@ describe('CustomersService.findOne debt (BR-8)', () => {
   const sale = { findMany: jest.fn() };
   const prisma = { customer, sale } as unknown as PrismaService;
   const audit = { log: jest.fn() } as unknown as AuditService;
-  const service = new CustomersService(prisma, audit);
+  const service = new CustomersService(prisma, audit, {} as LinkTokenService);
 
   beforeEach(() => jest.clearAllMocks());
 
@@ -30,6 +32,16 @@ describe('CustomersService.findOne debt (BR-8)', () => {
     expect(result.debt).toBe('1000.00'); // 600 + 400
   });
 
+  it('exposes telegramLinked but never the chat id', async () => {
+    customer.findUnique.mockResolvedValue({
+      id: 2, name: 'A', phone: '+99890', note: null, createdAt: new Date(), telegramChatId: '555',
+    });
+    sale.findMany.mockResolvedValue([]);
+    const result = await service.findOne(2);
+    expect(result.telegramLinked).toBe(true);
+    expect(result).not.toHaveProperty('telegramChatId');
+  });
+
   it('404 when the customer is missing', async () => {
     customer.findUnique.mockResolvedValue(null);
     await expect(service.findOne(99)).rejects.toThrow('not found');
@@ -46,7 +58,7 @@ describe('CustomersService.findAll debtBalance (BR-8)', () => {
     $transaction: (ops: Promise<unknown>[]) => Promise.all(ops),
   } as unknown as PrismaService;
   const audit = { log: jest.fn() } as unknown as AuditService;
-  const service = new CustomersService(prisma, audit);
+  const service = new CustomersService(prisma, audit, {} as LinkTokenService);
 
   beforeEach(() => jest.clearAllMocks());
 
@@ -78,5 +90,42 @@ describe('CustomersService.findAll debtBalance (BR-8)', () => {
 
     expect(customer.findMany.mock.calls[0][0].where.sales).toEqual({ some: { status: 'DEBT' } });
     expect(sale.findMany).not.toHaveBeenCalled(); // empty page skips the debt query
+  });
+});
+
+describe('CustomersService.telegramLink (F23)', () => {
+  const customer = { findUnique: jest.fn() };
+  const prisma = { customer } as unknown as PrismaService;
+  const linkToken = { buildInviteLink: jest.fn() };
+  const service = new CustomersService(
+    prisma,
+    {} as AuditService,
+    linkToken as unknown as LinkTokenService,
+  );
+
+  beforeEach(() => jest.clearAllMocks());
+
+  it('returns the invite link with linked:false for an unlinked customer', async () => {
+    customer.findUnique.mockResolvedValue({ telegramChatId: null });
+    linkToken.buildInviteLink.mockResolvedValue('https://t.me/bot?start=t');
+    await expect(service.telegramLink(2)).resolves.toEqual({ link: 'https://t.me/bot?start=t', linked: false });
+    expect(linkToken.buildInviteLink).toHaveBeenCalledWith('CUSTOMER', 2);
+  });
+
+  it('already linked → { link: null, linked: true } and no token minted', async () => {
+    customer.findUnique.mockResolvedValue({ telegramChatId: '555' });
+    await expect(service.telegramLink(2)).resolves.toEqual({ link: null, linked: true });
+    expect(linkToken.buildInviteLink).not.toHaveBeenCalled();
+  });
+
+  it('null link when no bot is configured', async () => {
+    customer.findUnique.mockResolvedValue({ telegramChatId: null });
+    linkToken.buildInviteLink.mockResolvedValue(null);
+    await expect(service.telegramLink(2)).resolves.toEqual({ link: null, linked: false });
+  });
+
+  it('404 for an unknown customer', async () => {
+    customer.findUnique.mockResolvedValue(null);
+    await expect(service.telegramLink(99)).rejects.toThrow(NotFoundException);
   });
 });

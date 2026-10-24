@@ -2,16 +2,20 @@ import { useTranslation } from 'react-i18next';
 import { Edit2 } from 'lucide-react';
 import { Button, Card, CardHeader, CardTitle, CardContent } from '@/shared/ui';
 import { formatDate } from '@/shared/lib';
-import type { CustomerDetail } from '@/entities/customer';
+import { useCustomerTelegramLink, type CustomerDetail } from '@/entities/customer';
+import { TelegramInviteButton } from '@/features/telegram-invite';
 
 interface CustomerContactCardProps {
   customer: CustomerDetail;
   onEdit: () => void;
+  /** Re-reads the customer so "Linked" shows after the invite dialog closes. */
+  onRefresh: () => void;
 }
 
-/** Card showing customer phone, notes, registration date, and edit trigger. */
-export function CustomerContactCard({ customer, onEdit }: CustomerContactCardProps) {
+/** Card showing customer phone, notes, registration date, Telegram link status and edit trigger. */
+export function CustomerContactCard({ customer, onEdit, onRefresh }: CustomerContactCardProps) {
   const { t } = useTranslation();
+  const telegramLink = useCustomerTelegramLink();
 
   return (
     <Card className="border-hairline-silver/70 shadow-sm md:col-span-2">
@@ -34,6 +38,15 @@ export function CustomerContactCard({ customer, onEdit }: CustomerContactCardPro
         <div className="flex justify-between">
           <span className="text-slate">{t('customers.createdAt')}:</span>
           <span className="text-slate">{formatDate(customer.createdAt)}</span>
+        </div>
+        <div className="flex justify-between items-center">
+          <span className="text-slate">{t('customers.telegram')}:</span>
+          <TelegramInviteButton
+            name={customer.name}
+            linked={customer.telegramLinked}
+            request={() => telegramLink.mutateAsync(customer.id)}
+            onClose={onRefresh}
+          />
         </div>
       </CardContent>
     </Card>

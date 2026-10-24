@@ -13,6 +13,12 @@ export interface TokenRef {
   refId: number;
 }
 
+/** Invite-link answer for a Customer/Investor: the deep link (null when no bot or already linked). */
+export interface TelegramLinkResult {
+  link: string | null;
+  linked: boolean;
+}
+
 /**
  * Owns the Telegram deep-link lifecycle (F16): issue a one-time, 7-day-expiring random token for a
  * Customer/Investor, build their invite link, and consume a token to link a chat. The token is a
@@ -39,6 +45,8 @@ export class LinkTokenService {
       if (investor?.isOwn) throw new BadRequestException('The business investor cannot be linked to Telegram');
     }
     const now = new Date();
+    // ponytail: find-then-create can race and mint two live tokens; linkChat consumes all siblings on
+    // the first successful link, so the extra one is harmless. Add a partial unique index if it matters.
     const live = await this.prisma.telegramLinkToken.findFirst({
       where: { kind, refId, usedAt: null, expiresAt: { gt: now } },
       orderBy: { createdAt: 'desc' },
@@ -64,12 +72,19 @@ export class LinkTokenService {
   /**
    * The /start operation: consume the token AND link the chat in ONE transaction, so there is no
    * window where the token is spent but the chat is not linked (or vice versa). Returns the ref on
-   * success (for the confirmation reply), or null for an absent/used/expired/unknown token.
+   * success (for the confirmation reply), or null for an absent/used/expired/unknown token, or when
+   * the record is already linked (a second live token must never take over a linked chat; the token
+   * stays consumed). On success every other unused token for the same record is consumed too.
    */
   async linkChat(token: string, chatId: string): Promise<TokenRef | null> {
     return this.prisma.$transaction(async (tx) => {
       const ref = await this.markUsed(tx, token);
       if (!ref) return null;
+      if (await this.isLinked(tx, ref)) return null;
+      await tx.telegramLinkToken.updateMany({
+        where: { kind: ref.kind, refId: ref.refId, usedAt: null },
+        data: { usedAt: new Date() },
+      });
       // Latest link wins: telegramChatId is @unique per table, so clear any other record of THIS
       // kind that already holds this chat id before assigning it here — all in the same transaction.
       // The clear is same-kind only on purpose: one person can be both a Customer and an Investor,
@@ -83,6 +98,16 @@ export class LinkTokenService {
       }
       return ref;
     });
+  }
+
+  /** True when the target Customer/Investor already has a chat linked. */
+  private async isLinked(tx: Prisma.TransactionClient, ref: TokenRef): Promise<boolean> {
+    const query = { where: { id: ref.refId }, select: { telegramChatId: true } };
+    const row =
+      ref.kind === TelegramLinkKind.CUSTOMER
+        ? await tx.customer.findUnique(query)
+        : await tx.investor.findUnique(query);
+    return Boolean(row?.telegramChatId);
   }
 
   /**

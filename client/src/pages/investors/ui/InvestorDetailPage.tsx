@@ -6,20 +6,37 @@ import { Badge, Button, Card, TablePagination, BackLink } from '@/shared/ui';
 import { formatMoney } from '@/shared/lib';
 import {
   useInvestor,
+  useInvestorTelegramLink,
   useInvestorTransactions,
   type Investor,
   type ShareType,
 } from '@/entities/investor';
 import { InvestorFormDialog, InvestorTransactionDialog } from '@/features/manage-investors';
+import { TelegramInviteButton } from '@/features/telegram-invite';
 import { InvestorTransactionsTable } from './InvestorTransactionsTable';
 
 const TRANSACTIONS_PAGE_SIZE = 20;
 
-/** Name with business/active badges and the edit + add-transaction actions. */
-function InvestorDetailHeader({ investor, onEdit, onAddTx }: {
+/** Telegram invite for a real, active investor; the business investor has no chat to link. */
+function InvestorTelegramInvite({ investor, onRefresh }: { investor: Investor; onRefresh: () => void }) {
+  const telegramLink = useInvestorTelegramLink();
+  if (investor.isOwn || !investor.isActive) return null;
+  return (
+    <TelegramInviteButton
+      name={investor.name}
+      linked={investor.telegramLinked ?? false}
+      request={() => telegramLink.mutateAsync(investor.id)}
+      onClose={onRefresh}
+    />
+  );
+}
+
+/** Name with business/active badges and the Telegram, edit and add-transaction actions. */
+function InvestorDetailHeader({ investor, onEdit, onAddTx, onRefresh }: {
   investor: Investor;
   onEdit: () => void;
   onAddTx: () => void;
+  onRefresh: () => void;
 }) {
   const { t } = useTranslation();
 
@@ -41,6 +58,7 @@ function InvestorDetailHeader({ investor, onEdit, onAddTx }: {
           </Badge>
         </div>
         <div className="flex items-center gap-2">
+          <InvestorTelegramInvite investor={investor} onRefresh={onRefresh} />
           <Button
             variant="outline"
             size="sm"
@@ -162,7 +180,7 @@ export function InvestorDetailPage() {
   const [txOpen, setTxOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
 
-  const { data: investor, isLoading } = useInvestor(
+  const { data: investor, isLoading, refetch } = useInvestor(
     Number.isNaN(investorId) ? undefined : investorId,
   );
 
@@ -185,6 +203,7 @@ export function InvestorDetailPage() {
         investor={investor}
         onEdit={() => setEditOpen(true)}
         onAddTx={() => setTxOpen(true)}
+        onRefresh={() => void refetch()}
       />
 
       <InvestorCards investor={investor} />

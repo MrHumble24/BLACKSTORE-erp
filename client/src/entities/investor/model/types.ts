@@ -9,6 +9,8 @@ export interface Investor {
   shareType?: ShareType;
   shareValue?: string | null;
   balance?: string;
+  /** Detail response only: true once the investor opened the bot invite link. */
+  telegramLinked?: boolean;
   createdAt: string;
   updatedAt: string;
 }

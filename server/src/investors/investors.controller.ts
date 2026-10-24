@@ -71,4 +71,11 @@ export class InvestorsController {
   ) {
     return this.transactions.create(id, dto, actor.id);
   }
+
+  /** Mints (or reuses) the investor's Telegram invite link (F23); POST because it may write a token row. */
+  @Post(':id/telegram-link')
+  @Permissions('manage_investors')
+  telegramLink(@Param('id', ParseIntPipe) id: number) {
+    return this.investors.telegramLink(id);
+  }
 }

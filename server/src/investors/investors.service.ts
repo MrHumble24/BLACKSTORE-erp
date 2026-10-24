@@ -3,9 +3,10 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { InvestorTxType, Prisma, ShareType } from '@prisma/client';
+import { InvestorTxType, Prisma, ShareType, TelegramLinkKind } from '@prisma/client';
 import { AuditService } from '../audit/audit.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { LinkTokenService, TelegramLinkResult } from '../telegram-bot/link-token.service';
 import { CreateInvestorDto } from './dto/create-investor.dto';
 import { UpdateInvestorDto } from './dto/update-investor.dto';
 
@@ -32,6 +33,7 @@ export class InvestorsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly audit: AuditService,
+    private readonly linkToken: LinkTokenService,
   ) {}
 
   /** Summary pick-list; active only unless all=true. Never exposes share or balance. */
@@ -45,14 +47,33 @@ export class InvestorsService {
     return rows.map((r) => Object.assign(r, { isOwn: r.isOwn ?? false }));
   }
 
-  /** Full investor with the computed balance; 404 if missing. */
+  /** Full investor with the computed balance and `telegramLinked`; 404 if missing. */
   async findOne(id: number) {
+    const row = await this.prisma.investor.findUnique({
+      where: { id },
+      select: { ...fullSelect, telegramChatId: true },
+    });
+    if (!row) throw new NotFoundException('Investor not found');
+    // Drop the chat id before withBalance spreads the row: only the boolean leaves the server.
+    const { telegramChatId, ...investor } = row;
+    return { ...(await this.withBalance(investor)), telegramLinked: telegramChatId !== null };
+  }
+
+  /**
+   * Telegram invite link for a real, active investor (F23). Checks run before buildInviteLink, which
+   * returns null early with no bot, so the business/inactive refusals hold either way. Already
+   * linked → no token is minted. Not audited: issuing a token changes no business record.
+   */
+  async telegramLink(id: number): Promise<TelegramLinkResult> {
     const investor = await this.prisma.investor.findUnique({
       where: { id },
-      select: fullSelect,
+      select: { isOwn: true, isActive: true, telegramChatId: true },
     });
     if (!investor) throw new NotFoundException('Investor not found');
-    return this.withBalance(investor);
+    if (investor.isOwn) throw new BadRequestException('The business investor cannot be linked');
+    if (!investor.isActive) throw new BadRequestException('Inactive investor');
+    if (investor.telegramChatId !== null) return { link: null, linked: true };
+    return { link: await this.linkToken.buildInviteLink(TelegramLinkKind.INVESTOR, id), linked: false };
   }
 
   /** Creates an investor. isOwn stays null (only the seeded OWN row is true). Duplicate code → 409. */

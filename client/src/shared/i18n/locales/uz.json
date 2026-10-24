@@ -819,7 +819,8 @@
     "salesHistory": "Xaridlar tarixi",
     "backToList": "Mijozlarga qaytish",
     "payDebt": "Qarzni to'lash",
-    "notFound": "Mijoz topilmadi"
+    "notFound": "Mijoz topilmadi",
+    "telegram": "Telegram"
   },
   "paymentDialog": {
     "title": "Qarz (nasiya) bo'yicha to'lov qabul qilish",
@@ -1196,6 +1197,14 @@
     "disconnectTitle": "Telegram uzilsinmi?",
     "disconnectWarning": "Saqlangan bot va chatlar o'chiriladi. Qayta ulamaguningizcha zaxira nusxalar va ogohlantirishlar to'xtaydi.",
     "disconnectSuccess": "Telegram uzildi"
+  },
+  "telegramInvite": {
+    "title": "Telegramga ulash",
+    "button": "Telegram havolasi",
+    "linked": "Ulangan",
+    "hint": "Havola bir martalik va 7 kun ichida amal qiladi. Uni ochgandan so'ng odam botdan xabarlar oladi.",
+    "copy": "Nusxalash",
+    "noBot": "Avval Super admin bo'limida Telegram botni ulang."
   },
   "closeDay": {
     "title": "Kun yakuni",

@@ -52,6 +52,8 @@ export interface SaleSummary {
 }
 
 export interface Sale extends SaleSummary {
+  /** One-time bot invite link for the customer; null for walk-ins, linked customers or no bot. */
+  telegramInviteLink: string | null;
   items: SaleItem[];
   payments: SalePayment[];
   returns: SaleReturn[];

@@ -10,6 +10,8 @@ export interface Customer {
 
 export interface CustomerDetail extends Customer {
   debt: string;
+  /** True once the customer opened the bot invite link (detail only, never the chat id). */
+  telegramLinked: boolean;
 }
 
 export interface CreateCustomerPayload {

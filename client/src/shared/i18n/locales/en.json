@@ -819,7 +819,8 @@
     "salesHistory": "Purchase history",
     "backToList": "Back to customers",
     "payDebt": "Pay debt",
-    "notFound": "Customer not found"
+    "notFound": "Customer not found",
+    "telegram": "Telegram"
   },
   "paymentDialog": {
     "title": "Receive debt payment",
@@ -1196,6 +1197,14 @@
     "disconnectTitle": "Disconnect Telegram?",
     "disconnectWarning": "The saved bot and chats will be cleared. Backups and alerts will stop until you connect again.",
     "disconnectSuccess": "Telegram disconnected"
+  },
+  "telegramInvite": {
+    "title": "Connect to Telegram",
+    "button": "Telegram link",
+    "linked": "Linked",
+    "hint": "The link works once and expires within 7 days. After opening it, the person gets messages from the bot.",
+    "copy": "Copy",
+    "noBot": "Connect the Telegram bot in Super admin first."
   },
   "closeDay": {
     "title": "Daily close",

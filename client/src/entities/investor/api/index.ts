@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/shared/api';
-import type { Page } from '@/shared/types';
+import type { Page, TelegramLinkResult } from '@/shared/types';
 import type {
   Investor,
   InvestorTransaction,
@@ -106,6 +106,16 @@ export function useCreateInvestorTransaction() {
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: investorKeys.all });
+    },
+  });
+}
+
+/** Mints the investor's one-time Telegram invite link (POST /investors/:id/telegram-link). */
+export function useInvestorTelegramLink() {
+  return useMutation({
+    mutationFn: async (id: number) => {
+      const { data } = await api.post<TelegramLinkResult>(`/investors/${id}/telegram-link`);
+      return data;
     },
   });
 }

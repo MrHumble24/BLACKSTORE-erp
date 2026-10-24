@@ -7,3 +7,4 @@ export * from './useCameraBarcodeScanner';
 export * from './formatDate';
 export * from './useSubmitWithError';
 export * from './formatFileSize';
+export * from './useQrSvg';

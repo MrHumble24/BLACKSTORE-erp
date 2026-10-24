@@ -14,6 +14,7 @@ export const SAMPLE_SALE: Sale = {
   balance: '5500000',
   dueDate: null,
   itemCount: 2,
+  telegramInviteLink: null,
   payments: [],
   returns: [],
   items: [

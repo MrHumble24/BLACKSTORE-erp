@@ -16,7 +16,7 @@ export function SaleDetailPage() {
   const { id } = useParams<{ id: string }>();
   const saleId = Number(id);
 
-  const { data: sale, isLoading } = useSale(saleId);
+  const { data: sale, isLoading, refetch } = useSale(saleId);
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
   const [returnDialogOpen, setReturnDialogOpen] = useState(false);
   const [selectedReturnItem, setSelectedReturnItem] = useState<SaleItem | null>(null);
@@ -39,7 +39,7 @@ export function SaleDetailPage() {
   return (
     <div className="space-y-6">
       <BackLink to="/sales" label={t('sales.backToList')} />
-      <SaleHeader sale={sale} />
+      <SaleHeader sale={sale} onRefresh={() => void refetch()} />
       <SaleMetrics sale={sale} />
       <SaleItemsCard items={sale.items} onReturn={handleOpenReturn} />
       <SaleLedgerCards sale={sale} onAddPayment={() => setPaymentDialogOpen(true)} />

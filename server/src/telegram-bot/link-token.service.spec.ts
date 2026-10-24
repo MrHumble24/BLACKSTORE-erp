@@ -13,7 +13,7 @@ const makePrisma = () => {
       create: jest.fn(),
       updateMany: jest.fn(),
     },
-    customer: { updateMany: jest.fn(), update: jest.fn() },
+    customer: { updateMany: jest.fn(), update: jest.fn(), findUnique: jest.fn() },
     investor: { updateMany: jest.fn(), update: jest.fn(), findUnique: jest.fn() },
     $transaction: jest.fn(),
   };
@@ -92,6 +92,28 @@ describe('LinkTokenService', () => {
       expect(prisma.customer.update).toHaveBeenCalledWith({ where: { id: 42 }, data: { telegramChatId: '555' } });
 
       expect(await service.linkChat('tok', '555')).toBeNull(); // already used
+    });
+
+    it('consumes every other unused token for the same record on a successful link', async () => {
+      prisma.telegramLinkToken.findUnique.mockResolvedValue({ id: 5, kind: TelegramLinkKind.INVESTOR, refId: 9, usedAt: null, expiresAt: future() });
+      prisma.telegramLinkToken.updateMany.mockResolvedValue({ count: 1 });
+      prisma.investor.findUnique.mockResolvedValue({ telegramChatId: null });
+      await service.linkChat('tok', '555');
+      expect(prisma.telegramLinkToken.updateMany).toHaveBeenCalledWith({
+        where: { kind: TelegramLinkKind.INVESTOR, refId: 9, usedAt: null },
+        data: { usedAt: expect.any(Date) as Date },
+      });
+      expect(prisma.investor.update).toHaveBeenCalledWith({ where: { id: 9 }, data: { telegramChatId: '555' } });
+    });
+
+    it('never relinks an already-linked record: returns null, token stays consumed', async () => {
+      prisma.telegramLinkToken.findUnique.mockResolvedValue({ id: 5, kind: TelegramLinkKind.CUSTOMER, refId: 42, usedAt: null, expiresAt: future() });
+      prisma.telegramLinkToken.updateMany.mockResolvedValue({ count: 1 });
+      prisma.customer.findUnique.mockResolvedValue({ telegramChatId: '111' });
+      expect(await service.linkChat('tok', '555')).toBeNull();
+      expect(prisma.telegramLinkToken.updateMany).toHaveBeenCalledTimes(1); // only the claim
+      expect(prisma.customer.updateMany).not.toHaveBeenCalled();
+      expect(prisma.customer.update).not.toHaveBeenCalled();
     });
 
     it('links nothing for an expired token', async () => {

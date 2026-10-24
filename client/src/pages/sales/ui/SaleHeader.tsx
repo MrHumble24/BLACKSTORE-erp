@@ -1,16 +1,17 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Printer } from 'lucide-react';
-import { Button } from '@/shared/ui';
 import { formatDate } from '@/shared/lib';
 import { SaleStatusBadge, type Sale } from '@/entities/sale';
+import { SaleActions } from './SaleActions';
 
 interface SaleHeaderProps {
   sale: Sale;
+  /** Re-reads the sale after the Telegram invite dialog closes. */
+  onRefresh: () => void;
 }
 
-/** Header section for sale details with metadata and receipt print trigger. */
-export function SaleHeader({ sale }: SaleHeaderProps) {
+/** Header section for sale details with metadata and the receipt / Telegram actions. */
+export function SaleHeader({ sale, onRefresh }: SaleHeaderProps) {
   const { t } = useTranslation();
 
   return (
@@ -34,15 +35,7 @@ export function SaleHeader({ sale }: SaleHeaderProps) {
           )}
         </div>
       </div>
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={() => window.open(`/sales/${sale.id}/receipt`, '_blank')}
-        className="gap-1.5 text-xs h-9"
-      >
-        <Printer className="h-4 w-4" />
-        {t('sales.receiptButton')}
-      </Button>
+      <SaleActions sale={sale} onRefresh={onRefresh} />
     </div>
   );
 }

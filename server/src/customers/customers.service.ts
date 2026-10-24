@@ -1,8 +1,9 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Customer, Prisma, SaleStatus } from '@prisma/client';
+import { Customer, Prisma, SaleStatus, TelegramLinkKind } from '@prisma/client';
 import { AuditService } from '../audit/audit.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { debtBalanceOf, debtSaleSelect } from '../sales/sale-totals';
+import { LinkTokenService, TelegramLinkResult } from '../telegram-bot/link-token.service';
 import { CreateCustomerDto } from './dto/create-customer.dto';
 import { QueryCustomersDto } from './dto/query-customers.dto';
 import { UpdateCustomerDto } from './dto/update-customer.dto';
@@ -13,6 +14,7 @@ export class CustomersService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly audit: AuditService,
+    private readonly linkToken: LinkTokenService,
   ) {}
 
   /**
@@ -84,7 +86,20 @@ export class CustomersService {
       (sum, s) => sum.plus(debtBalanceOf(s)),
       new Prisma.Decimal(0),
     );
-    return { ...toCustomer(customer), debt: debt.toFixed(2) };
+    // Only whether a chat is linked is exposed; the chat id itself never leaves the server.
+    return { ...toCustomer(customer), debt: debt.toFixed(2), telegramLinked: customer.telegramChatId !== null };
+  }
+
+  /**
+   * Telegram invite link for this customer (F23). Already linked → no token is minted, so a staff
+   * member can't take over a linked chat (same rule as the sale detail). `link` is null when no bot
+   * is configured. Not audited: issuing a token changes no business record.
+   */
+  async telegramLink(id: number): Promise<TelegramLinkResult> {
+    const customer = await this.prisma.customer.findUnique({ where: { id }, select: { telegramChatId: true } });
+    if (!customer) throw new NotFoundException('Customer not found');
+    if (customer.telegramChatId !== null) return { link: null, linked: true };
+    return { link: await this.linkToken.buildInviteLink(TelegramLinkKind.CUSTOMER, id), linked: false };
   }
 
   /** Creates a customer; the phone is trimmed and unique (409 via the Prisma filter). */
