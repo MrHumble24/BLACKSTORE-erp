@@ -51,6 +51,13 @@ export function endOfDay(day: string | Date): Date {
   return date;
 }
 
+/** `24.10.2026` — day.month.year, the display format every finance/Telegram surface uses. */
+export function formatDate(d: Date): string {
+  const dd = String(d.getDate()).padStart(2, '0');
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  return `${dd}.${mm}.${d.getFullYear()}`;
+}
+
 /** Builds an inclusive `{ gte, lte }` date filter from optional `from`/`to`, or undefined when both absent. */
 export function dateRange(
   from: string | undefined,

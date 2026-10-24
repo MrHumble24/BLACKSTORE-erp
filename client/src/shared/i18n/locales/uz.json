@@ -1159,7 +1159,10 @@
     "enabledHint": "Barcha Telegram xabarlari uchun asosiy tugma.",
     "features": {
       "lowStockDigest": "Kam qolgan tovarlar kunlik hisoboti",
-      "ownerSnapshot": "Egaga kunlik hisobot"
+      "ownerSnapshot": "Egaga kunlik hisobot",
+      "customerReceipts": "Mijozlarga cheklar",
+      "debtReminders": "Qarz eslatmalari",
+      "warrantyReminders": "Kafolat eslatmalari"
     },
     "disconnect": "Uzish",
     "disconnectTitle": "Telegram uzilsinmi?",

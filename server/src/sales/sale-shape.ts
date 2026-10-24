@@ -25,7 +25,8 @@ export const saleDetailSelect = {
   status: true,
   dueDate: true,
   total: true,
-  customer: { select: { id: true, name: true, phone: true } },
+  // telegramChatId drives the receipt-send + invite-link decision; stripped from the response in toSale.
+  customer: { select: { id: true, name: true, phone: true, telegramChatId: true } },
   location: { select: { id: true, name: true } },
   seller: { select: { id: true, name: true } },
   items: {
@@ -126,10 +127,17 @@ function toSaleItem(line: SaleItemRow, canViewCost: boolean) {
   };
 }
 
-/** Full Sale: the summary shape plus the full items, payments and returns. */
-export function toSale(row: SaleDetailRow, canViewCost: boolean) {
+/**
+ * Full Sale: the summary shape plus the full items, payments and returns. `telegramInviteLink` is the
+ * customer's deep link for the receipt page (null for walk-ins/linked customers); the caller mints it.
+ * The customer's telegramChatId is used internally (receipt/link decision) but never returned.
+ */
+export function toSale(row: SaleDetailRow, canViewCost: boolean, telegramInviteLink: string | null = null) {
+  const c = row.customer;
   return {
     ...toSaleSummary(row),
+    customer: c ? { id: c.id, name: c.name, phone: c.phone } : null, // never leak telegramChatId
+    telegramInviteLink,
     items: row.items.map((line) => toSaleItem(line, canViewCost)),
     payments: row.payments.map((p) => ({
       id: p.id,

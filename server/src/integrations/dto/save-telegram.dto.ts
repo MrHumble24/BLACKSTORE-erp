@@ -19,6 +19,21 @@ export class TelegramFeaturesDto {
   @IsOptional()
   @IsBoolean()
   ownerSnapshot?: boolean;
+
+  // Send a Telegram receipt to a linked customer after each sale (F17, roadmap #3). Default off.
+  @IsOptional()
+  @IsBoolean()
+  customerReceipts?: boolean;
+
+  // Weekly debt reminder to linked customers who owe money (F17, roadmap #4). Default off.
+  @IsOptional()
+  @IsBoolean()
+  debtReminders?: boolean;
+
+  // Daily warranty-expiry reminder to linked customers (F17, roadmap #4). Default off.
+  @IsOptional()
+  @IsBoolean()
+  warrantyReminders?: boolean;
 }
 
 /** Everyday Telegram settings (no token): toggles + chat ids. Needs a bot already configured. */

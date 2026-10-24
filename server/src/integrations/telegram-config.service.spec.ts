@@ -85,6 +85,13 @@ describe('TelegramConfigService.isFeatureEnabled', () => {
     const service = makeService(null);
     expect(await service.isFeatureEnabled('lowStockDigest')).toBe(true);
   });
+
+  it('defaults the customer-facing flags OFF when nothing is stored (F17 opt-in)', async () => {
+    const service = makeService(null);
+    expect(await service.isFeatureEnabled('customerReceipts')).toBe(false);
+    expect(await service.isFeatureEnabled('debtReminders')).toBe(false);
+    expect(await service.isFeatureEnabled('warrantyReminders')).toBe(false);
+  });
 });
 
 describe('TelegramConfigService.updateSettings (no token)', () => {

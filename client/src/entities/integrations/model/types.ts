@@ -5,6 +5,12 @@ export interface TelegramFeatures {
   lowStockDigest: boolean;
   /** Daily owner business snapshot pushed to the owner's chat (F14). */
   ownerSnapshot: boolean;
+  /** Send a receipt to the customer's Telegram after a sale (F17). */
+  customerReceipts: boolean;
+  /** Weekly debt reminders to customers with outstanding balance (F17). */
+  debtReminders: boolean;
+  /** Warranty-expiry reminders to customers (F17). */
+  warrantyReminders: boolean;
 }
 
 /** Saved Telegram state from GET /integrations/telegram (never includes a token). */

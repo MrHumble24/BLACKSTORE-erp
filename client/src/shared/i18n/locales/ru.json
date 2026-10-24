@@ -1159,7 +1159,10 @@
     "enabledHint": "Главный переключатель для всех сообщений Telegram.",
     "features": {
       "lowStockDigest": "Ежедневная сводка по остаткам",
-      "ownerSnapshot": "Ежедневная сводка владельцу"
+      "ownerSnapshot": "Ежедневная сводка владельцу",
+      "customerReceipts": "Чеки клиентам",
+      "debtReminders": "Напоминания о долге",
+      "warrantyReminders": "Напоминания о гарантии"
     },
     "disconnect": "Отключить",
     "disconnectTitle": "Отключить Telegram?",

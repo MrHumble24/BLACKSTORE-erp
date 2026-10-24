@@ -6,5 +6,6 @@ import { SettingsService } from './settings.service';
 @Module({
   controllers: [SettingsController],
   providers: [SettingsService],
+  exports: [SettingsService], // CustomerNotificationsModule reads the shop name for receipts/reminders
 })
 export class SettingsModule {}

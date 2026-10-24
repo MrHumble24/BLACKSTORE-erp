@@ -2,8 +2,10 @@
  * Pure builder for the owner's daily Telegram snapshot (roadmap #1). Kept out of the service so it
  * is trivial to unit-test. Every value below is a number or a decimal string from the dashboard, so
  * nothing untrusted is interpolated; if names/categories are added later, escapeHtml them first
- * (see accessory-stock/low-stock.ts for the pattern).
+ * (see common/html.ts).
  */
+import { formatDate } from '../common/dates';
+import { money } from '../common/money';
 
 /** The profit-inclusive dashboard figures the snapshot renders (subset of DashboardService.collect). */
 export interface OwnerSnapshotData {
@@ -13,23 +15,6 @@ export interface OwnerSnapshotData {
   debts: { customerDebtTotal: string; debtorCount: number };
   partners: { overdueCount: number };
   monthNetProfit?: string;
-}
-
-/**
- * `$1 500.00` — `$` prefix, 2 decimals, thousands grouped with a non-breaking space.
- * Mirrors the client's formatMoney (shared/lib/formatMoney.ts), which treats "," as a decimal
- * separator, so grouping must use a space — not toLocaleString's comma.
- */
-function money(amount: string): string {
-  const [whole = '0', decimals = '00'] = Number(amount).toFixed(2).split('.');
-  return `$${whole.replace(/\B(?=(\d{3})+(?!\d))/g, ' ')}.${decimals}`;
-}
-
-/** `24.10.2026` — day.month.year, the format the finance surfaces use. */
-function formatDate(d: Date): string {
-  const dd = String(d.getDate()).padStart(2, '0');
-  const mm = String(d.getMonth() + 1).padStart(2, '0');
-  return `${dd}.${mm}.${d.getFullYear()}`;
 }
 
 /** One concise HTML snapshot message (sendMessage sets parse_mode HTML). */

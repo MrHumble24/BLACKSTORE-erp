@@ -1,6 +1,6 @@
 import { PrismaService } from '../prisma/prisma.service';
 import type { TelegramConfigService } from '../integrations/telegram-config.service';
-import { buildLowStockDigest, escapeHtml, isLowStock } from './low-stock';
+import { buildLowStockDigest, isLowStock } from './low-stock';
 import { LowStockAlertsService } from './low-stock-alerts.service';
 
 describe('isLowStock (LOW_STOCK predicate)', () => {
@@ -38,12 +38,6 @@ describe('buildLowStockDigest', () => {
     ]);
     expect(msg).toContain('AirPods &amp; Case — &lt;Shop&gt;: 1/2');
     expect(msg).not.toContain('AirPods & Case');
-  });
-});
-
-describe('escapeHtml', () => {
-  it('replaces & first, then < and >', () => {
-    expect(escapeHtml('a & b < c > d')).toBe('a &amp; b &lt; c &gt; d');
   });
 });
 

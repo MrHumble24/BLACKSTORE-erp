@@ -1,16 +1,18 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { ItemStatus, Prisma, SaleStatus } from '@prisma/client';
+import { ItemStatus, Prisma, SaleStatus, TelegramLinkKind } from '@prisma/client';
 import { AuditService } from '../audit/audit.service';
 import type { PublicUser } from '../common/auth-user';
 import { endOfDay, parseTodayOrFutureDate } from '../common/dates';
 import { hasPermission } from '../common/permissions';
+import { CustomerNotificationsService } from '../customer-notifications/customer-notifications.service';
 import { assertActiveLocation } from '../items/item-queries';
 import { ItemsService } from '../items/items.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { LinkTokenService } from '../telegram-bot/link-token.service';
 import { CreateSaleDto } from './dto/create-sale.dto';
 import { QuerySalesDto } from './dto/query-sales.dto';
 import { BuiltLine, buildLine } from './sale-create';
-import { saleDetailSelect, saleSummarySelect, toSale, toSaleSummary } from './sale-shape';
+import { SaleDetailRow, saleDetailSelect, saleSummarySelect, toSale, toSaleSummary } from './sale-shape';
 
 type Tx = Prisma.TransactionClient;
 
@@ -21,6 +23,8 @@ export class SalesService {
     private readonly prisma: PrismaService,
     private readonly audit: AuditService,
     private readonly items: ItemsService,
+    private readonly linkToken: LinkTokenService,
+    private readonly notifications: CustomerNotificationsService,
   ) {}
 
   /** Paginated, newest-first customer sales; `to` is inclusive of that day. */
@@ -54,7 +58,20 @@ export class SalesService {
   async findOne(id: number, actor: PublicUser) {
     const row = await this.prisma.sale.findUnique({ where: { id }, select: saleDetailSelect });
     if (!row) throw new NotFoundException('Sale not found');
-    return toSale(row, hasPermission(actor, 'view_cost'));
+    const inviteLink = await this.inviteLinkFor(row.customer);
+    return toSale(row, hasPermission(actor, 'view_cost'), inviteLink);
+  }
+
+  /**
+   * Telegram deep link for the receipt page, only for a customer who hasn't linked yet (null for
+   * walk-ins and already-linked customers). buildInviteLink mints a token row, so the single-sale
+   * GET carries one token-upsert write side-effect — acceptable, and only here (never on the list).
+   */
+  private async inviteLinkFor(
+    customer: SaleDetailRow['customer'],
+  ): Promise<string | null> {
+    if (!customer || customer.telegramChatId) return null;
+    return this.linkToken.buildInviteLink(TelegramLinkKind.CUSTOMER, customer.id);
   }
 
   /** Creates a sale in one transaction: validate lines, snapshot, move stock, optional payment (W2). */
@@ -99,6 +116,9 @@ export class SalesService {
       );
       return after;
     });
+    // Fire-and-forget bilingual receipt AFTER the transaction commits (never inside it, and never
+    // awaited — sendSaleReceipt swallows every error, so a Telegram failure can't fail the sale).
+    void this.notifications.sendSaleReceipt(detail);
     return toSale(detail, hasPermission(actor, 'view_cost'));
   }
 

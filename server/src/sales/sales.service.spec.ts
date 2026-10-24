@@ -1,8 +1,10 @@
 import { ItemStatus, Prisma, ShareType } from '@prisma/client';
 import { AuditService } from '../audit/audit.service';
 import type { PublicUser } from '../common/auth-user';
+import { CustomerNotificationsService } from '../customer-notifications/customer-notifications.service';
 import { ItemsService } from '../items/items.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { LinkTokenService } from '../telegram-bot/link-token.service';
 import { CreateSaleDto } from './dto/create-sale.dto';
 import { SalesService } from './sales.service';
 
@@ -58,7 +60,11 @@ function build() {
   } as unknown as PrismaService;
   const audit = { log: jest.fn() } as unknown as AuditService;
   const items = { changeStatus } as unknown as ItemsService;
-  return { service: new SalesService(prisma, audit, items), tx, changeStatus };
+  const linkToken = { buildInviteLink: jest.fn() } as unknown as LinkTokenService;
+  const sendSaleReceipt = jest.fn().mockResolvedValue(undefined);
+  const notifications = { sendSaleReceipt } as unknown as CustomerNotificationsService;
+  const service = new SalesService(prisma, audit, items, linkToken, notifications);
+  return { service, tx, changeStatus, sendSaleReceipt };
 }
 
 describe('SalesService.create', () => {
@@ -80,6 +86,17 @@ describe('SalesService.create', () => {
     };
     await service.create(dto, actor(['sell', 'manage_prices']));
     expect(changeStatus).toHaveBeenCalledWith(expect.anything(), 7, ItemStatus.SOLD);
+  });
+
+  it('fires a fire-and-forget customer receipt after the sale commits (F17)', async () => {
+    const { service, sendSaleReceipt } = build();
+    const dto: CreateSaleDto = {
+      locationId: 1,
+      lines: [{ itemId: 7, unitPrice: '1500' }],
+      payment: { amount: '1500', method: 'CASH' },
+    };
+    await service.create(dto, actor(['sell', 'manage_prices']));
+    expect(sendSaleReceipt).toHaveBeenCalledWith(detailRow);
   });
 
   it('rejects a payment larger than the total', async () => {

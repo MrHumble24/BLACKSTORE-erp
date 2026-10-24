@@ -10,6 +10,7 @@ import { BatchesModule } from './batches/batches.module';
 import { BusinessDayModule } from './business-day/business-day.module';
 import { CategoriesModule } from './categories/categories.module';
 import { ConsignmentsModule } from './consignments/consignments.module';
+import { CustomerNotificationsModule } from './customer-notifications/customer-notifications.module';
 import { CustomersModule } from './customers/customers.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { ItemsModule } from './items/items.module';
@@ -57,6 +58,7 @@ import { WalkInPurchasesModule } from './walk-in-purchases/walk-in-purchases.mod
     LedgerModule,
     CustomersModule,
     SalesModule,
+    CustomerNotificationsModule,
     PartnersModule,
     ConsignmentsModule,
     ReportsModule,
