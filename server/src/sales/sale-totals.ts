@@ -22,6 +22,22 @@ export function balanceOf(
   return balance.isNegative() ? new Prisma.Decimal(0) : balance;
 }
 
+/** Select shape for computing a DEBT sale's outstanding balance (BR-8), loaded in one query. */
+export const debtSaleSelect = {
+  total: true,
+  payments: { select: { amount: true } },
+  returns: { select: { refundAmount: true } },
+} satisfies Prisma.SaleSelect;
+
+/** Per-sale outstanding balance from a `debtSaleSelect` row: balanceOf(total, paid, refunded). */
+export function debtBalanceOf(sale: {
+  total: Prisma.Decimal;
+  payments: { amount: Prisma.Decimal }[];
+  returns: { refundAmount: Prisma.Decimal }[];
+}): Prisma.Decimal {
+  return balanceOf(sale.total, sumPaid(sale.payments), sumRefunded(sale.returns));
+}
+
 /**
  * Sale status once a payment lands: PAID when the balance reaches 0, otherwise it
  * stays a DEBT sale.

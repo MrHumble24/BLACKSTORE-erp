@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { Customer, Prisma, SaleStatus } from '@prisma/client';
 import { AuditService } from '../audit/audit.service';
 import { PrismaService } from '../prisma/prisma.service';
-import { balanceOf, sumPaid, sumRefunded } from '../sales/sale-totals';
+import { debtBalanceOf, debtSaleSelect } from '../sales/sale-totals';
 import { CreateCustomerDto } from './dto/create-customer.dto';
 import { QueryCustomersDto } from './dto/query-customers.dto';
 import { UpdateCustomerDto } from './dto/update-customer.dto';
@@ -15,16 +15,24 @@ export class CustomersService {
     private readonly audit: AuditService,
   ) {}
 
-  /** Paginated, newest-first list; `search` matches name or phone (case-insensitive contains). */
+  /**
+   * Paginated, newest-first list; `search` matches name or phone (case-insensitive contains).
+   * Each row carries `debtBalance` (BR-8); `hasDebt` keeps only customers who still owe money.
+   */
   async findAll(query: QueryCustomersDto) {
-    const where: Prisma.CustomerWhereInput = query.search
-      ? {
-          OR: [
-            { name: { contains: query.search.trim(), mode: 'insensitive' } },
-            { phone: { contains: query.search.trim(), mode: 'insensitive' } },
-          ],
-        }
-      : {};
+    const where: Prisma.CustomerWhereInput = {
+      ...(query.search
+        ? {
+            OR: [
+              { name: { contains: query.search.trim(), mode: 'insensitive' } },
+              { phone: { contains: query.search.trim(), mode: 'insensitive' } },
+            ],
+          }
+        : {}),
+      // A customer owes money iff they have a DEBT sale: any sale with a positive
+      // balance stays DEBT, so this is exactly debtBalance > 0 and keeps paging correct.
+      ...(query.hasDebt ? { sales: { some: { status: SaleStatus.DEBT } } } : {}),
+    };
     const [rows, total] = await this.prisma.$transaction([
       this.prisma.customer.findMany({
         where,
@@ -34,7 +42,33 @@ export class CustomersService {
       }),
       this.prisma.customer.count({ where }),
     ]);
-    return { items: rows.map(toCustomer), total, page: query.page, pageSize: query.pageSize };
+    const debtByCustomer = await this.debtByCustomerId(rows.map((c) => c.id));
+    // toCustomer returns a fresh object per row, so assigning debtBalance onto it is safe.
+    const items = rows.map((c) =>
+      Object.assign(toCustomer(c), {
+        debtBalance: (debtByCustomer.get(c.id) ?? new Prisma.Decimal(0)).toFixed(2),
+      }),
+    );
+    return { items, total, page: query.page, pageSize: query.pageSize };
+  }
+
+  /**
+   * Outstanding debt per customer id for the whole page in one query (BR-8, no N+1).
+   * Ids with no unpaid sales are absent from the map (treated as zero by the caller).
+   */
+  private async debtByCustomerId(ids: number[]): Promise<Map<number, Prisma.Decimal>> {
+    const map = new Map<number, Prisma.Decimal>();
+    if (ids.length === 0) return map;
+    const debtSales = await this.prisma.sale.findMany({
+      where: { customerId: { in: ids }, status: SaleStatus.DEBT },
+      select: { customerId: true, ...debtSaleSelect },
+    });
+    for (const s of debtSales) {
+      if (s.customerId == null) continue;
+      const balance = debtBalanceOf(s);
+      map.set(s.customerId, (map.get(s.customerId) ?? new Prisma.Decimal(0)).plus(balance));
+    }
+    return map;
   }
 
   /** One customer with their current debt (Σ balance of their DEBT sales); 404 if missing. */
@@ -44,14 +78,10 @@ export class CustomersService {
     // One query loads every unpaid sale's total, payments and refunds for the BR-8 sum.
     const debtSales = await this.prisma.sale.findMany({
       where: { customerId: id, status: SaleStatus.DEBT },
-      select: {
-        total: true,
-        payments: { select: { amount: true } },
-        returns: { select: { refundAmount: true } },
-      },
+      select: debtSaleSelect,
     });
     const debt = debtSales.reduce(
-      (sum, s) => sum.plus(balanceOf(s.total, sumPaid(s.payments), sumRefunded(s.returns))),
+      (sum, s) => sum.plus(debtBalanceOf(s)),
       new Prisma.Decimal(0),
     );
     return { ...toCustomer(customer), debt: debt.toFixed(2) };

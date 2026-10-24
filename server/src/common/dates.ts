@@ -42,11 +42,11 @@ export function startOfToday(): Date {
 }
 
 /**
- * Returns the last millisecond of the given ISO date's day, so a `to` filter
- * includes everything that happened on that day. Callers guard the absent case.
+ * Returns the last millisecond of the given day (an ISO string or a Date), so a `to`
+ * filter includes everything that happened on that day. Callers guard the absent case.
  */
-export function endOfDay(iso: string): Date {
-  const date = parseIso(iso);
+export function endOfDay(day: string | Date): Date {
+  const date = typeof day === 'string' ? parseIso(day) : new Date(day);
   date.setHours(23, 59, 59, 999);
   return date;
 }

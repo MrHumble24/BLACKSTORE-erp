@@ -1,6 +1,7 @@
 import { Prisma, SaleStatus } from '@prisma/client';
 import {
   balanceOf,
+  debtBalanceOf,
   saleStatusAfterPayment,
   saleStatusAfterReturn,
   sumPaid,
@@ -20,6 +21,24 @@ describe('sale-totals (BR-8)', () => {
     expect(balanceOf(dec('100'), dec('30'), dec('20')).toFixed(2)).toBe('50.00');
     // Over-collection/refund can't drive the balance negative.
     expect(balanceOf(dec('100'), dec('80'), dec('40')).toFixed(2)).toBe('0.00');
+  });
+
+  it('debtBalanceOf sums a sale row the same as balanceOf, floored at 0', () => {
+    expect(
+      debtBalanceOf({
+        total: dec('100'),
+        payments: [{ amount: dec('30') }],
+        returns: [{ refundAmount: dec('20') }],
+      }).toFixed(2),
+    ).toBe('50.00');
+    // Over-collection/refund can't drive the balance negative.
+    expect(
+      debtBalanceOf({
+        total: dec('100'),
+        payments: [{ amount: dec('80') }],
+        returns: [{ refundAmount: dec('40') }],
+      }).toFixed(2),
+    ).toBe('0.00');
   });
 
   it('status after a payment: PAID only at a zero balance', () => {

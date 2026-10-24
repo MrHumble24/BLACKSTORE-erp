@@ -10,6 +10,7 @@ import { BatchesModule } from './batches/batches.module';
 import { CategoriesModule } from './categories/categories.module';
 import { ConsignmentsModule } from './consignments/consignments.module';
 import { CustomersModule } from './customers/customers.module';
+import { DashboardModule } from './dashboard/dashboard.module';
 import { ItemsModule } from './items/items.module';
 import { PrismaExceptionFilter } from './common/prisma-exception.filter';
 import { validateEnv } from './config/env.validation';
@@ -55,6 +56,7 @@ import { WalkInPurchasesModule } from './walk-in-purchases/walk-in-purchases.mod
     PartnersModule,
     ConsignmentsModule,
     ReportsModule,
+    DashboardModule,
     SettingsModule,
     HealthModule,
   ],

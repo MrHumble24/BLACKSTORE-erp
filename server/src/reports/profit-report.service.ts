@@ -58,6 +58,16 @@ export class ProfitReportService {
     };
   }
 
+  /**
+   * Gross line profit and net profit (BR-5) over a period, reusing the report line builder and the
+   * same ledger rule as the report. Used by the dashboard summary; no grouping/paging overhead.
+   */
+  async profitFor(period: Period): Promise<{ gross: Prisma.Decimal; net: Prisma.Decimal }> {
+    const [lines, ledger] = await Promise.all([loadReportLines(this.prisma, period), this.ledgerTotals(period)]);
+    const gross = sumLines(lines).profit;
+    return { gross, net: gross.minus(ledger.expenses).plus(ledger.otherIncome) };
+  }
+
   /** Loads the report lines for a period, filtered to the query scope and ordered newest first. */
   private async loadScopedLines(period: Period, query: QueryProfitDto) {
     return (await loadReportLines(this.prisma, period, this.saleWhere(query)))
