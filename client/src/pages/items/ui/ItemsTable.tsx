@@ -7,8 +7,6 @@ import {
   Table,
   TableBody,
   TableCell,
-  TableHead,
-  TableHeader,
   TableRow,
   TablePagination,
   TableLoadingRow,
@@ -18,14 +16,23 @@ import {
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
 } from '@/shared/ui';
 import { useAuthStore } from '@/entities/session';
 import {
   ItemStatusBadge,
   ItemConditionBadge,
   type Item,
+  type ItemSortBy,
+  type SortOrder,
 } from '@/entities/item';
-import { formatMoney } from '@/shared/lib';
+import { money } from '@/shared/lib';
+import { ItemsTableHeader } from './ItemsTableHeader';
+import { ItemSpecsBadges } from './ItemSpecsBadges';
 
 interface ItemsTableProps {
   items: Item[];
@@ -33,7 +40,12 @@ interface ItemsTableProps {
   page: number;
   totalPages: number;
   total: number;
+  pageSize: number;
+  sortBy?: ItemSortBy;
+  sortOrder?: SortOrder;
   onPageChange: (p: number) => void;
+  onPageSizeChange: (size: number) => void;
+  onSortChange: (by: ItemSortBy) => void;
 }
 
 function CopyableIdentifier({ type, value }: { type: string; value: string }) {
@@ -42,7 +54,7 @@ function CopyableIdentifier({ type, value }: { type: string; value: string }) {
 
   const handleCopy = (e: React.MouseEvent) => {
     e.stopPropagation();
-    navigator.clipboard.writeText(value);
+    void navigator.clipboard.writeText(value);
     setCopied(true);
     toast.success(`${type} ${t('common.copied')}`);
     setTimeout(() => setCopied(false), 1500);
@@ -96,42 +108,28 @@ function ItemRowActions({ itemId, canPrint }: { itemId: number; canPrint: boolea
   );
 }
 
-function ItemsTableHeader({ canViewCost }: { canViewCost: boolean }) {
-  const { t } = useTranslation();
-  return (
-    <TableHeader className="bg-gallery-white sticky top-0 z-10 shadow-[0_1px_0_0_rgba(0,0,0,0.05)]">
-      <TableRow className="border-b border-hairline-silver/60 hover:bg-transparent">
-        <TableHead className="px-4 py-3 min-w-[160px]">{t('items.model')}</TableHead>
-        <TableHead className="px-4 py-3 min-w-[100px]">{t('items.category')}</TableHead>
-        <TableHead className="px-4 py-3 min-w-[190px]">{t('items.identifiers')}</TableHead>
-        <TableHead className="px-4 py-3 min-w-[90px]">{t('items.owner')}</TableHead>
-        <TableHead className="px-4 py-3 min-w-[90px]">{t('items.location')}</TableHead>
-        <TableHead className="px-4 py-3 min-w-[110px] text-center">{t('items.statusLabel')}</TableHead>
-        <TableHead className="px-4 py-3 min-w-[95px] text-center">{t('items.conditionLabel')}</TableHead>
-        <TableHead className="px-4 py-3 min-w-[110px] text-right whitespace-nowrap">{t('items.salePrice')}</TableHead>
-        <TableHead className="px-4 py-3 min-w-[110px] text-right whitespace-nowrap">{t('items.minSalePrice')}</TableHead>
-        {canViewCost && <TableHead className="px-4 py-3 min-w-[110px] text-right whitespace-nowrap">{t('items.cost')}</TableHead>}
-        <TableHead className="w-12 px-3 text-center" />
-      </TableRow>
-    </TableHeader>
-  );
-}
-
 function ItemRow({ item, canViewCost }: { item: Item; canViewCost: boolean }) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const canReceiveBatch = useAuthStore((state) => state.hasPermission('receive_batch'));
 
   return (
     <TableRow
-      key={item.id}
       onClick={() => navigate(`/items/${item.id}`)}
       className="border-b border-hairline-silver/40 hover:bg-studio-mist/70 transition-colors cursor-pointer group"
     >
-      <TableCell className="px-4 py-3 font-medium text-ink tracking-tight whitespace-nowrap">
-        {item.productModel.name}
+      <TableCell className="px-4 py-3 whitespace-nowrap">
+        <div className="flex flex-col">
+          <span className="font-medium text-ink tracking-tight">
+            {item.productModel.name}
+          </span>
+          <span className="text-[11px] text-slate font-normal">
+            {item.productModel.category.name}
+          </span>
+        </div>
       </TableCell>
-      <TableCell className="px-4 py-3 text-slate text-xs whitespace-nowrap">
-        {item.productModel.category.name}
+      <TableCell className="px-4 py-3">
+        <ItemSpecsBadges attributes={item.attributes} />
       </TableCell>
       <TableCell className="px-4 py-3 text-xs">
         <div className="space-y-1">
@@ -149,14 +147,20 @@ function ItemRow({ item, canViewCost }: { item: Item; canViewCost: boolean }) {
         <ItemConditionBadge condition={item.condition} />
       </TableCell>
       <TableCell className="px-4 py-3 text-right font-mono text-xs whitespace-nowrap tabular-nums">
-        {formatMoney(item.salePrice)}
+        {item.salePrice ? (
+          money(item.salePrice)
+        ) : (
+          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+            {t('items.unpricedBadge')}
+          </span>
+        )}
       </TableCell>
       <TableCell className="px-4 py-3 text-right font-mono text-xs text-slate whitespace-nowrap tabular-nums">
-        {formatMoney(item.minSalePrice)}
+        {item.minSalePrice ? money(item.minSalePrice) : '—'}
       </TableCell>
       {canViewCost && (
         <TableCell className="px-4 py-3 text-right font-mono text-xs text-ink font-medium whitespace-nowrap tabular-nums">
-          {formatMoney(item.cost)}
+          {item.cost ? money(item.cost) : '—'}
         </TableCell>
       )}
       <TableCell className="px-3 py-3 text-center" onClick={(e) => e.stopPropagation()}>
@@ -166,37 +170,99 @@ function ItemRow({ item, canViewCost }: { item: Item; canViewCost: boolean }) {
   );
 }
 
-/** Modern ERP inventory items table with integrated sticky header, quick actions, and pagination. */
+interface TableFooterProps {
+  page: number;
+  totalPages: number;
+  total: number;
+  pageSize: number;
+  onPageChange: (p: number) => void;
+  onPageSizeChange: (size: number) => void;
+}
+
+function TableFooter({
+  page,
+  totalPages,
+  total,
+  pageSize,
+  onPageChange,
+  onPageSizeChange,
+}: TableFooterProps) {
+  const { t } = useTranslation();
+  return (
+    <div className="flex flex-col sm:flex-row items-center justify-between gap-2.5 border-t border-hairline-silver/60 bg-gallery-white px-4 sm:px-6 py-3 text-xs text-slate dark:bg-card">
+      <div className="flex items-center gap-3">
+        <span>
+          {t('common.total')}: <span className="font-semibold text-ink">{total}</span>
+        </span>
+        <div className="flex items-center gap-1.5 pl-3 border-l border-hairline-silver/50">
+          <span className="text-[11px] text-slate">{t('items.pageSize')}:</span>
+          <Select value={String(pageSize)} onValueChange={(val) => onPageSizeChange(Number(val))}>
+            <SelectTrigger className="h-6 w-16 text-[11px] rounded-md px-1.5 py-0 border-hairline-silver/70">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="20">20</SelectItem>
+              <SelectItem value="50">50</SelectItem>
+              <SelectItem value="100">100</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+      <TablePagination
+        page={page}
+        totalPages={totalPages}
+        total={total}
+        onPageChange={onPageChange}
+      />
+    </div>
+  );
+}
+
+/** Modern ERP inventory items table with integrated sticky header, quick actions, sorting, and pagination. */
 export function ItemsTable({
   items,
   isLoading,
   page,
   totalPages,
   total,
+  pageSize,
+  sortBy,
+  sortOrder,
   onPageChange,
+  onPageSizeChange,
+  onSortChange,
 }: ItemsTableProps) {
   const { t } = useTranslation();
   const canViewCost = useAuthStore((state) => state.hasPermission('view_cost'));
   const colSpan = canViewCost ? 11 : 10;
 
   return (
-    <div className="rounded-[24px] border border-hairline-silver/70 bg-gallery-white overflow-hidden shadow-none">
+    <div className="rounded-[24px] border border-hairline-silver/70 bg-gallery-white overflow-hidden shadow-none dark:bg-card">
       <Table>
-        <ItemsTableHeader canViewCost={canViewCost} />
+        <ItemsTableHeader
+          canViewCost={canViewCost}
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          onSort={onSortChange}
+        />
         <TableBody>
           {isLoading && <TableLoadingRow colSpan={colSpan} />}
           {!isLoading && items.length === 0 && (
             <TableEmptyRow colSpan={colSpan} message={t('items.noItems')} />
           )}
           {!isLoading &&
-            items.map((item) => <ItemRow key={item.id} item={item} canViewCost={canViewCost} />)}
+            items.map((item) => (
+              <ItemRow key={item.id} item={item} canViewCost={canViewCost} />
+            ))}
         </TableBody>
       </Table>
-      <TablePagination
+      <TableFooter
         page={page}
         totalPages={totalPages}
         total={total}
+        pageSize={pageSize}
         onPageChange={onPageChange}
+        onPageSizeChange={onPageSizeChange}
       />
     </div>
   );

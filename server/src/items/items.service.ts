@@ -1,9 +1,5 @@
 import {
-  BadRequestException,
-  ConflictException,
-  ForbiddenException,
-  Injectable,
-  NotFoundException,
+  BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException,
 } from '@nestjs/common';
 import { IdentifierType, ItemStatus, Prisma } from '@prisma/client';
 import { AuditService } from '../audit/audit.service';
@@ -21,6 +17,7 @@ import {
   loadForEdit,
   syncLatestPurchaseLine,
 } from './item-queries';
+import { resolveItemOrderBy } from './item-sort';
 import { itemSelect, toItem } from './item-shape';
 import {
   assertHasPrimaryIdentifier,
@@ -51,13 +48,16 @@ export class ItemsService {
     private readonly audit: AuditService,
   ) {}
 
-  /** Paginated, newest-first list with optional filters and identifier/model search. */
+  /** Paginated, sorted list with optional filters and identifier/model search. */
   async findAll(query: QueryItemsDto, actor: PublicUser) {
+    const canViewCost = hasPermission(actor, 'view_cost');
     const where: Prisma.ItemWhereInput = {
       status: query.status,
+      condition: query.condition,
       locationId: query.locationId,
       investorId: query.investorId,
       productModel: query.categoryId ? { categoryId: query.categoryId } : undefined,
+      ...(query.isUnpriced ? { salePrice: null } : {}),
     };
     if (query.search) {
       const term = query.search.trim();
@@ -70,13 +70,12 @@ export class ItemsService {
       this.prisma.item.findMany({
         where,
         select: itemSelect,
-        orderBy: { id: 'desc' },
+        orderBy: resolveItemOrderBy(query.sortBy, query.sortOrder, canViewCost),
         skip: (query.page - 1) * query.pageSize,
         take: query.pageSize,
       }),
       this.prisma.item.count({ where }),
     ]);
-    const canViewCost = hasPermission(actor, 'view_cost');
     return {
       items: rows.map((row) => toItem(row, canViewCost)),
       total,

@@ -10,7 +10,18 @@ import { money } from '../common/money';
 /** The profit-inclusive dashboard figures the snapshot renders (subset of DashboardService.collect). */
 export interface OwnerSnapshotData {
   today: { salesCount: number; salesTotal: string; profit?: string };
-  stock: { inStockDevices: number; atPartnerDevices: number };
+  stock: {
+    inStockDevices: number;
+    atPartnerDevices: number;
+    inStockSaleValue?: string;
+    inStockCostValue?: string;
+    atPartnerSaleValue?: string;
+    atPartnerCostValue?: string;
+    accessoriesCount?: number;
+    accessoriesCostValue?: string;
+    totalSaleValue?: string;
+    totalCostValue?: string;
+  };
   lowStockCount: number;
   debts: { customerDebtTotal: string; debtorCount: number };
   partners: { overdueCount: number };

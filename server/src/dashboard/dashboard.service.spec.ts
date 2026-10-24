@@ -29,18 +29,35 @@ function makeService() {
       ),
     },
     item: {
-      count: jest.fn((args: { where: { status: string } }) =>
-        Promise.resolve(args.where.status === 'IN_STOCK' ? 42 : 5),
-      ),
+      aggregate: jest.fn((args: { where: { status: string } }) => {
+        if (args.where.status === 'IN_STOCK') {
+          return Promise.resolve({
+            _count: 42,
+            _sum: { salePrice: d('42000'), purchasePrice: d('30000'), extraCost: d('1000') },
+          });
+        }
+        return Promise.resolve({
+          _count: 5,
+          _sum: { salePrice: d('5000'), purchasePrice: d('3500'), extraCost: d('100') },
+        });
+      }),
     },
-    // Two low rows (both pass isLowStock) → lowStockCount 2.
     accessoryStock: {
+      aggregate: jest.fn().mockResolvedValue({
+        _sum: { quantity: 15 },
+      }),
       findMany: jest.fn().mockResolvedValue([
-        { id: 1, quantity: 2, productModel: { lowStockThreshold: 5 } },
-        { id: 2, quantity: 1, productModel: { lowStockThreshold: 3 } },
+        { id: 1, quantity: 2, avgCost: d('10'), productModel: { lowStockThreshold: 5 } },
+        { id: 2, quantity: 1, avgCost: d('20'), productModel: { lowStockThreshold: 3 } },
       ]),
     },
-    consignmentItem: { count: jest.fn().mockResolvedValue(2) },
+    consignmentItem: {
+      aggregate: jest.fn().mockResolvedValue({
+        _count: 5,
+        _sum: { minPrice: d('6000') },
+      }),
+      count: jest.fn().mockResolvedValue(2),
+    },
   } as unknown as PrismaService;
   const profit = {
     profitFor: jest.fn().mockResolvedValue({ gross: d('200'), net: d('900') }),
@@ -54,7 +71,14 @@ describe('DashboardService.summary (F10)', () => {
     const res = await service.summary(actor(['view_stock']));
     expect(res.today.salesCount).toBe(3);
     expect(res.today.salesTotal).toBe('1500.00');
-    expect(res.stock).toEqual({ inStockDevices: 42, atPartnerDevices: 5 });
+    expect(res.stock.inStockDevices).toBe(42);
+    expect(res.stock.atPartnerDevices).toBe(5);
+    expect(res.stock.inStockSaleValue).toBe('42000.00');
+    expect(res.stock.atPartnerSaleValue).toBe('6000.00');
+    expect(res.stock.totalSaleValue).toBe('48000.00');
+    expect(res.stock.accessoriesCount).toBe(15);
+    expect(res.stock).not.toHaveProperty('inStockCostValue');
+    expect(res.stock).not.toHaveProperty('totalCostValue');
     expect(res.lowStockCount).toBe(2); // two accessory rows at/under threshold (#7)
     // Only customer 1 still owes (600 + 500); customer 2's balance is 0 → excluded.
     expect(res.debts).toEqual({ customerDebtTotal: '1100.00', debtorCount: 1 });
@@ -65,19 +89,25 @@ describe('DashboardService.summary (F10)', () => {
     ]);
   });
 
-  it('exposes profit fields only with view_profit', async () => {
+  it('exposes profit and cost valuation fields with view_profit', async () => {
     const { service, profit } = makeService();
     const admin = await service.summary(actor(['view_stock', 'view_profit']));
     expect(admin.today).toHaveProperty('profit', '200.00'); // today's gross
     expect(admin).toHaveProperty('monthNetProfit', '900.00'); // month net (BR-5)
+    expect(admin.stock).toHaveProperty('inStockCostValue', '31000.00');
+    expect(admin.stock).toHaveProperty('atPartnerCostValue', '3600.00');
+    expect(admin.stock).toHaveProperty('accessoriesCostValue', '40.00');
+    expect(admin.stock).toHaveProperty('totalCostValue', '34640.00');
     expect(profit.profitFor).toHaveBeenCalledTimes(2);
   });
 
-  it('masks profit fields for a staff user (no view_profit)', async () => {
+  it('masks profit and cost fields for a staff user (no view_profit or view_cost)', async () => {
     const { service, profit } = makeService();
     const staff = await service.summary(actor(['view_stock']));
     expect(staff.today).not.toHaveProperty('profit');
     expect(staff).not.toHaveProperty('monthNetProfit');
+    expect(staff.stock).not.toHaveProperty('inStockCostValue');
+    expect(staff.stock).not.toHaveProperty('totalCostValue');
     expect(profit.profitFor).not.toHaveBeenCalled();
   });
 });

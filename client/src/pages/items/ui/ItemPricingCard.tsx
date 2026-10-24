@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { DollarSign } from 'lucide-react';
 import { Button, Card, CardHeader, CardTitle, CardContent } from '@/shared/ui';
 import type { Item } from '@/entities/item';
-import { formatMoney } from '@/shared/lib';
+import { money } from '@/shared/lib';
 
 interface PriceStatProps {
   label: string;
@@ -16,7 +16,7 @@ function PriceStat({ label, value, muted }: PriceStatProps) {
     <div>
       <span className="text-slate">{label}:</span>
       <div className={`font-semibold text-sm mt-0.5 ${muted ? 'text-slate' : 'text-ink'}`}>
-        {formatMoney(value)}
+        {money(value)}
       </div>
     </div>
   );

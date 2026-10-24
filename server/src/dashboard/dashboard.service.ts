@@ -32,7 +32,9 @@ export class DashboardService {
 
   /** Builds the role-masked summary; profit is shown only to view_profit. */
   async summary(actor: PublicUser) {
-    return this.collect(hasPermission(actor, 'view_profit'));
+    const canViewProfit = hasPermission(actor, 'view_profit');
+    const canViewCost = hasPermission(actor, 'view_cost') || canViewProfit;
+    return this.collect(canViewProfit, canViewCost);
   }
 
   /**
@@ -40,16 +42,16 @@ export class DashboardService {
    * profit-inclusive — it only ever goes to the owner's private chat (FR-29).
    */
   async ownerSnapshot(): Promise<OwnerSnapshotData> {
-    return this.collect(true);
+    return this.collect(true, true);
   }
 
   /** One parallel batch of reads (no N+1, no writes); profit fields included only when allowed. */
-  private async collect(canViewProfit: boolean) {
+  private async collect(canViewProfit: boolean, canViewCost = true) {
     const today = startOfToday();
     const [todaySales, stock, lowStockCount, debts, overdueCount, recentSales, todayProfit, monthProfit] =
       await Promise.all([
         this.todaySales(today),
-        this.stockCounts(),
+        this.stockValuation(canViewCost),
         lowStockIds(this.prisma).then((ids) => ids.length),
         this.customerDebt(),
         this.overdueConsignments(today),
@@ -82,13 +84,49 @@ export class DashboardService {
     return { salesCount: count, salesTotal: (sum.total ?? new Prisma.Decimal(0)).toFixed(2) };
   }
 
-  /** Device item counts by status (devices are Items; accessories are tracked separately). */
-  private async stockCounts() {
-    const [inStockDevices, atPartnerDevices] = await Promise.all([
-      this.prisma.item.count({ where: { status: ItemStatus.IN_STOCK } }),
-      this.prisma.item.count({ where: { status: ItemStatus.AT_PARTNER } }),
+  /** Device and accessory balances with retail and cost valuations. */
+  private async stockValuation(canViewCost: boolean) {
+    const [inStockAgg, atPartnerAgg, atPartnerCostAgg, accQtyAgg, accList] = await Promise.all([
+      this.prisma.item.aggregate({
+        where: { status: ItemStatus.IN_STOCK },
+        _count: true,
+        _sum: { salePrice: true, purchasePrice: true, extraCost: true },
+      }),
+      this.prisma.consignmentItem.aggregate({
+        where: { status: ConsignmentItemStatus.AT_PARTNER },
+        _count: true,
+        _sum: { minPrice: true },
+      }),
+      canViewCost
+        ? this.prisma.item.aggregate({
+            where: { status: ItemStatus.AT_PARTNER },
+            _sum: { purchasePrice: true, extraCost: true },
+          })
+        : Promise.resolve(null),
+      this.prisma.accessoryStock.aggregate({ _sum: { quantity: true } }),
+      canViewCost
+        ? this.prisma.accessoryStock.findMany({
+            where: { quantity: { gt: 0 } },
+            select: { quantity: true, avgCost: true },
+          })
+        : Promise.resolve([]),
     ]);
-    return { inStockDevices, atPartnerDevices };
+
+    const { _count: inStockDevices, _sum: inStockSum } = inStockAgg;
+    const { _count: atPartnerDevices, _sum: atPartnerSum } = atPartnerAgg;
+    const { _sum: accQtySum } = accQtyAgg;
+    const inStockSale = inStockSum.salePrice ?? new Prisma.Decimal(0);
+    const atPartnerSale = atPartnerSum.minPrice ?? new Prisma.Decimal(0);
+
+    return {
+      inStockDevices,
+      atPartnerDevices,
+      inStockSaleValue: inStockSale.toFixed(2),
+      atPartnerSaleValue: atPartnerSale.toFixed(2),
+      totalSaleValue: inStockSale.plus(atPartnerSale).toFixed(2),
+      accessoriesCount: accQtySum.quantity ?? 0,
+      ...computeStockCosts(canViewCost, inStockSum, atPartnerCostAgg, accList),
+    };
   }
 
   /**
@@ -143,3 +181,37 @@ function monthRange(day: Date): { gte: Date; lte: Date } {
     lte: new Date(day.getFullYear(), day.getMonth() + 1, 0, 23, 59, 59, 999),
   };
 }
+
+interface CostSums {
+  inStockCostValue?: string;
+  atPartnerCostValue?: string;
+  accessoriesCostValue?: string;
+  totalCostValue?: string;
+}
+
+function computeStockCosts(
+  canViewCost: boolean,
+  inStockSum: { purchasePrice: Prisma.Decimal | null; extraCost: Prisma.Decimal | null },
+  atPartnerCostAgg: { _sum: { purchasePrice: Prisma.Decimal | null; extraCost: Prisma.Decimal | null } } | null,
+  accList: Array<{ quantity: number; avgCost: Prisma.Decimal }>,
+): CostSums {
+  if (!canViewCost || !atPartnerCostAgg || !accList) return {};
+  const { _sum: partnerSum } = atPartnerCostAgg;
+  const inStockCost = (inStockSum.purchasePrice ?? new Prisma.Decimal(0)).plus(
+    inStockSum.extraCost ?? new Prisma.Decimal(0),
+  );
+  const atPartnerCost = (partnerSum.purchasePrice ?? new Prisma.Decimal(0)).plus(
+    partnerSum.extraCost ?? new Prisma.Decimal(0),
+  );
+  const accCost = accList.reduce(
+    (acc, a) => acc.plus(new Prisma.Decimal(a.quantity).mul(a.avgCost)),
+    new Prisma.Decimal(0),
+  );
+  return {
+    inStockCostValue: inStockCost.toFixed(2),
+    atPartnerCostValue: atPartnerCost.toFixed(2),
+    accessoriesCostValue: accCost.toFixed(2),
+    totalCostValue: inStockCost.plus(atPartnerCost).plus(accCost).toFixed(2),
+  };
+}
+

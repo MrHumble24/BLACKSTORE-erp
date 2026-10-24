@@ -1,8 +1,9 @@
 import { BadRequestException, ConflictException, ForbiddenException } from '@nestjs/common';
-import { IdentifierType, ItemStatus, Prisma } from '@prisma/client';
+import { IdentifierType, ItemCondition, ItemStatus, Prisma } from '@prisma/client';
 import { AuditService } from '../audit/audit.service';
 import type { PublicUser } from '../common/auth-user';
 import { PrismaService } from '../prisma/prisma.service';
+import { ItemSortBy, SortOrder } from './dto/query-items.dto';
 import { ItemsService } from './items.service';
 import {
   assertHasPrimaryIdentifier,
@@ -225,3 +226,45 @@ describe('ItemsService.setSystemCode (FR-15)', () => {
     expect(result).toEqual({ identifier: existing, created: false });
   });
 });
+
+describe('ItemsService.findAll (sorting and filtering)', () => {
+  const item = { findMany: jest.fn(), count: jest.fn() };
+  const prisma = {
+    $transaction: (promises: Promise<unknown>[]) => Promise.all(promises),
+    item,
+  } as unknown as PrismaService;
+  const audit = { log: jest.fn() } as unknown as AuditService;
+  const service = new ItemsService(prisma, audit);
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    item.findMany.mockResolvedValue([]);
+    item.count.mockResolvedValue(0);
+  });
+
+  it('filters by condition and unpriced flag', async () => {
+    await service.findAll(
+      { page: 1, pageSize: 20, condition: ItemCondition.USED, isUnpriced: true },
+      user(['view_stock']),
+    );
+    expect(item.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ condition: ItemCondition.USED, salePrice: null }),
+      }),
+    );
+  });
+
+  it('sorts by sale price in ascending order', async () => {
+    await service.findAll(
+      { page: 1, pageSize: 20, sortBy: ItemSortBy.SALE_PRICE, sortOrder: SortOrder.ASC },
+      user(['view_stock']),
+    );
+    expect(item.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        orderBy: [{ salePrice: 'asc' }, { id: 'desc' }],
+      }),
+    );
+  });
+});
+
+

@@ -4,6 +4,7 @@ import { useDashboardSummary } from '@/entities/dashboard';
 import { HomeGreeting } from './HomeGreeting';
 import { QuickActions } from './QuickActions';
 import { HomeKpiTiles } from './HomeKpiTiles';
+import { StockValuationCard } from './StockValuationCard';
 import { RecentSalesList } from './RecentSalesList';
 import { NeedsAttentionList } from './NeedsAttentionList';
 import { HomeSkeleton } from './HomeSkeleton';
@@ -25,6 +26,7 @@ export function HomePage() {
       {data && (
         <>
           <HomeKpiTiles summary={data} />
+          <StockValuationCard summary={data} />
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
             <RecentSalesList sales={data.recentSales} />
             <NeedsAttentionList summary={data} />

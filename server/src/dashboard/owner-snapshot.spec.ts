@@ -55,7 +55,7 @@ describe('OwnerSnapshotService.sendDailySnapshot (flag gating)', () => {
     await service.sendDailySnapshot();
 
     expect(ownerSnapshot).toHaveBeenCalled();
-    expect(sendMessage).toHaveBeenCalledWith('t', 'owner', expect.stringContaining('24'));
+    expect(sendMessage).toHaveBeenCalledWith('t', 'owner', expect.stringContaining('In stock: 42'));
   });
 
   it('skips silently (no read, no send) when the ownerSnapshot flag is off', async () => {

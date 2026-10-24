@@ -31,10 +31,14 @@ export function useItems(filters: ItemFilters, page = 1, pageSize = 20) {
         pageSize: String(pageSize),
       };
       if (filters.status) params.status = filters.status;
+      if (filters.condition) params.condition = filters.condition;
       if (filters.locationId) params.locationId = String(filters.locationId);
       if (filters.categoryId) params.categoryId = String(filters.categoryId);
       if (filters.investorId) params.investorId = String(filters.investorId);
       if (filters.search) params.search = filters.search.trim();
+      if (filters.isUnpriced) params.isUnpriced = 'true';
+      if (filters.sortBy) params.sortBy = filters.sortBy;
+      if (filters.sortOrder) params.sortOrder = filters.sortOrder;
 
       const { data } = await api.get<Page<Item>>('/items', { params });
       return data;

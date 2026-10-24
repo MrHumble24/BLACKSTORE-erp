@@ -96,12 +96,26 @@ export interface AddIdentifierPayload {
   value: string;
 }
 
+export type ItemSortBy =
+  | 'createdAt'
+  | 'model'
+  | 'salePrice'
+  | 'minSalePrice'
+  | 'cost'
+  | 'status';
+
+export type SortOrder = 'asc' | 'desc';
+
 export interface ItemFilters {
   status?: ItemStatus;
+  condition?: ItemCondition;
   locationId?: number;
   categoryId?: number;
   investorId?: number;
   search?: string;
+  isUnpriced?: boolean;
+  sortBy?: ItemSortBy;
+  sortOrder?: SortOrder;
 }
 
 export type { Page } from '@/shared/types';
