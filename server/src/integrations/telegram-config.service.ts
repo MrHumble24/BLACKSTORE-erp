@@ -12,6 +12,7 @@ const TELEGRAM_KEY = 'telegram';
 /** Per-feature on/off flags; only shipped Telegram features appear here. */
 export interface TelegramFeatures {
   lowStockDigest: boolean;
+  ownerSnapshot: boolean;
 }
 
 /** The 'telegram' Setting row value. The token is stored encrypted and never leaves the server. */
@@ -106,7 +107,10 @@ export class TelegramConfigService {
       backupChatId: dto.backupChatId ?? before.backupChatId,
       alertChatId: dto.alertChatId ?? before.alertChatId,
       enabled: dto.enabled ?? before.enabled,
-      features: { lowStockDigest: dto.features?.lowStockDigest ?? before.features.lowStockDigest },
+      features: {
+        lowStockDigest: dto.features?.lowStockDigest ?? before.features.lowStockDigest,
+        ownerSnapshot: dto.features?.ownerSnapshot ?? before.features.ownerSnapshot,
+      },
     };
     await this.persist(next, before, actorId);
     return this.toStatus(next);
@@ -126,7 +130,10 @@ export class TelegramConfigService {
       backupChatId: dto.backupChatId ?? before.backupChatId,
       alertChatId: dto.alertChatId ?? before.alertChatId,
       enabled: dto.enabled ?? before.enabled,
-      features: { lowStockDigest: dto.features?.lowStockDigest ?? before.features.lowStockDigest },
+      features: {
+        lowStockDigest: dto.features?.lowStockDigest ?? before.features.lowStockDigest,
+        ownerSnapshot: dto.features?.ownerSnapshot ?? before.features.ownerSnapshot,
+      },
     };
     await this.persist(next, before, actorId);
     return this.toStatus(next);
@@ -177,7 +184,10 @@ export class TelegramConfigService {
       backupChatId: s.backupChatId ?? '',
       alertChatId: s.alertChatId ?? '',
       enabled: s.enabled ?? true,
-      features: { lowStockDigest: s.features?.lowStockDigest ?? true },
+      features: {
+        lowStockDigest: s.features?.lowStockDigest ?? true,
+        ownerSnapshot: s.features?.ownerSnapshot ?? true, // missing flag = on, same as lowStockDigest
+      },
     };
   }
 

@@ -14,6 +14,11 @@ export class TelegramFeaturesDto {
   @IsOptional()
   @IsBoolean()
   lowStockDigest?: boolean;
+
+  // Daily owner business snapshot cron (Telegram roadmap #1).
+  @IsOptional()
+  @IsBoolean()
+  ownerSnapshot?: boolean;
 }
 
 /** Everyday Telegram settings (no token): toggles + chat ids. Needs a bot already configured. */
