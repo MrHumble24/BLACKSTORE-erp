@@ -1167,7 +1167,18 @@
     "backupChatId": "Zaxira chati",
     "alertChatId": "Ogohlantirishlar chati",
     "chatIdPlaceholder": "Chatni tanlang",
-    "chatIdHint": "Chatlar topilmadi. Botga yozing va chat ID'sini kiriting.",
+    "chatIdHint": "Hozircha chatlar yo'q. Shaxsiy chat uchun botga /start yuboring; guruh uchun botni guruhga qo'shing; kanal uchun botni admin qiling. Chat bir necha soniyada shu yerda ko'rinadi.",
+    "chatPickerHint": "Kerakli chat yo'qmi? Botni o'sha guruhga qo'shing yoki unga /start yuboring — chat shu yerda ko'rinadi.",
+    "chatPickerDisabled": "Chatlarni topish uchun Telegramni yoqing.",
+    "chatIdManual": "Chat id sini qo'lda kiritish…",
+    "chatIdBackToList": "Ro'yxatga qaytish",
+    "openBot": "Botni ochish",
+    "chatType": {
+      "private": "Shaxsiy chat",
+      "group": "Guruh",
+      "supergroup": "Superguruh",
+      "channel": "Kanal"
+    },
     "enabled": "Yoqilgan",
     "enabledHint": "Barcha Telegram xabarlari uchun asosiy tugma.",
     "features": {

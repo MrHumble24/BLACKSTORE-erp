@@ -1,27 +1,97 @@
 import { errorMessage, getBotUpdates, safeSend } from './telegram';
 
-/** getBotUpdates: maps raw Telegram updates, drops non-text ones, and never throws. */
+/** getBotUpdates: maps every chat-carrying update; only message text is a command; never throws. */
 describe('getBotUpdates', () => {
   const mockFetch = (body: unknown) => {
     global.fetch = jest.fn().mockResolvedValue({ json: async () => body }) as unknown as typeof fetch;
   };
+  const chat = (id: number, extra: Record<string, string> = {}) => ({ id, type: 'group', ...extra });
 
   afterEach(() => jest.restoreAllMocks());
 
-  it('maps update_id / chat.id / text and skips updates without a text message', async () => {
+  it('keeps text messages, text-less messages and channel posts; only message text is routed', async () => {
     mockFetch({
       ok: true,
       result: [
-        { update_id: 10, message: { chat: { id: 111 }, text: '/status' } },
-        { update_id: 11, message: { chat: { id: 222 } } }, // no text → skipped
-        { update_id: 12, channel_post: { chat: { id: 333 } } }, // not a message → skipped
+        { update_id: 10, message: { chat: chat(111, { title: 'Shop' }), text: '/status' } },
+        { update_id: 11, message: { chat: chat(222, { title: 'G' }), new_chat_members: [] } },
+        {
+          update_id: 12,
+          channel_post: { chat: { id: -333, type: 'channel', title: 'C' }, text: '/start x' },
+        },
+        { update_id: 13, edited_message: { chat: chat(444) } }, // no tracked chat → dropped
       ],
     });
 
     const updates = await getBotUpdates('t', 5);
 
-    expect(updates).toEqual([{ updateId: 10, chatId: '111', text: '/status' }]);
+    expect(updates).toEqual([
+      {
+        updateId: 10,
+        chatId: '111',
+        text: '/status',
+        chat: { id: '111', title: 'Shop', type: 'group' },
+        removed: false,
+      },
+      {
+        updateId: 11,
+        chatId: '222',
+        text: '',
+        chat: { id: '222', title: 'G', type: 'group' },
+        removed: false,
+      },
+      {
+        updateId: 12,
+        chatId: '-333',
+        text: '',
+        chat: { id: '-333', title: 'C', type: 'channel' },
+        removed: false,
+      },
+    ]);
     expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('offset=5'));
+  });
+
+  it('flags my_chat_member left/kicked as removed, and a member join as not removed', async () => {
+    const member = (id: number, status: string) => ({
+      update_id: id,
+      my_chat_member: { chat: chat(id), new_chat_member: { status } },
+    });
+    mockFetch({ ok: true, result: [member(1, 'left'), member(2, 'kicked'), member(3, 'member')] });
+
+    const updates = await getBotUpdates('t');
+
+    expect(updates.map((u) => [u.removed, u.text])).toEqual([
+      [true, ''],
+      [true, ''],
+      [false, ''],
+    ]);
+  });
+
+  it('reads migrate_to_chat_id as migratedTo', async () => {
+    mockFetch({
+      ok: true,
+      result: [{ update_id: 1, message: { chat: chat(-5), migrate_to_chat_id: -1009 } }],
+    });
+    const [u] = await getBotUpdates('t');
+    expect(u.migratedTo).toBe('-1009');
+  });
+
+  it('falls back title → username → first_name → empty string', async () => {
+    const msg = (id: number, extra: Record<string, string>) => ({
+      update_id: id,
+      message: { chat: { id, type: 'private', ...extra } },
+    });
+    mockFetch({
+      ok: true,
+      result: [
+        msg(1, { title: 'T', username: 'u', first_name: 'F' }),
+        msg(2, { username: 'u', first_name: 'F' }),
+        msg(3, { first_name: 'F' }),
+        msg(4, {}),
+      ],
+    });
+    const titles = (await getBotUpdates('t')).map((u) => u.chat.title);
+    expect(titles).toEqual(['T', 'u', 'F', '']);
   });
 
   it('returns [] when the API responds not-ok', async () => {

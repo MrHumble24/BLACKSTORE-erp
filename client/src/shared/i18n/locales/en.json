@@ -1167,7 +1167,18 @@
     "backupChatId": "Backup chat",
     "alertChatId": "Alerts chat",
     "chatIdPlaceholder": "Select a chat",
-    "chatIdHint": "No chats found. Message the bot, then enter the chat id.",
+    "chatIdHint": "No chats yet. For a private chat send /start to the bot; for a group add the bot to it; for a channel make it an admin. It appears here within a few seconds.",
+    "chatPickerHint": "Not listed? Add the bot to that group or send it /start, and it appears here.",
+    "chatPickerDisabled": "Turn Telegram on to discover chats.",
+    "chatIdManual": "Enter chat id manually…",
+    "chatIdBackToList": "Back to list",
+    "openBot": "Open bot",
+    "chatType": {
+      "private": "Private chat",
+      "group": "Group",
+      "supergroup": "Supergroup",
+      "channel": "Channel"
+    },
     "enabled": "Enabled",
     "enabledHint": "Master switch for all Telegram messages.",
     "features": {

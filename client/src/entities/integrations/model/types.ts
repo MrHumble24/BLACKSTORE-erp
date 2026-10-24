@@ -33,9 +33,9 @@ export interface TelegramBot {
   name: string;
 }
 
-/** A chat the bot can post to (GET /chats); the list may be empty. */
+/** A chat the bot has seen (GET /chats), newest first. Id is a string: Int64 ids overflow JS numbers. */
 export interface TelegramChat {
-  id: string | number;
+  id: string;
   title: string;
   type: string;
 }

@@ -4,13 +4,14 @@ import { getBotUpdates } from '../common/telegram';
 import { DashboardService } from '../dashboard/dashboard.service';
 import { TelegramConfigService } from '../integrations/telegram-config.service';
 import { routeUpdate } from './commands';
+import { KnownChatService } from './known-chat.service';
 import { LinkTokenService } from './link-token.service';
 
 /** How often to long-poll Telegram for new commands. Named so it is easy to find/tune. */
 const POLL_INTERVAL_MS = 5000;
 
 /**
- * Inbound Telegram poller (F15): long-polls `getUpdates` and routes commands (today only `/status`).
+ * Inbound Telegram poller (F15/F21): long-polls `getUpdates`, remembers each chat, routes commands.
  * Gated on the SAME `ownerSnapshot` flag as the 21:00 push, so one toggle silences both. Never
  * overlaps itself and never throws out of the scheduler.
  */
@@ -19,11 +20,13 @@ export class TelegramBotService {
   private readonly logger = new Logger(TelegramBotService.name);
   private inFlight = false; // prevents overlapping cycles if one poll runs long
   private offset: number | undefined; // in-memory ack cursor; a restart re-syncs (no DB column, YAGNI)
+  private offsetToken = ''; // the token `offset` belongs to
 
   constructor(
     private readonly dashboard: DashboardService,
     private readonly telegram: TelegramConfigService,
     private readonly linkToken: LinkTokenService,
+    private readonly knownChats: KnownChatService,
   ) {}
 
   /** Poll on a fixed interval; the whole cycle is guarded so a failure is logged, never thrown. */
@@ -38,6 +41,11 @@ export class TelegramBotService {
       // while `/start` (any user) keeps working.
       const { enabled, token, alertChatId, ownerSnapshotEnabled } = await this.telegram.getRuntime();
       if (!enabled) return; // master switch off or not configured → nothing to poll
+      // Update ids are per bot: after "Change bot" the old offset may sit above every new update id.
+      if (token !== this.offsetToken) {
+        this.offset = undefined;
+        this.offsetToken = token;
+      }
 
       const updates = await getBotUpdates(token, this.offset);
 
@@ -48,6 +56,8 @@ export class TelegramBotService {
       // never re-runs an already-handled command. Batches are tiny (poll every 5s).
       for (const update of updates) {
         this.offset = update.updateId + 1; // ack this one even if routing is a no-op
+        // eslint-disable-next-line no-await-in-loop
+        await this.knownChats.track(update); // never throws, so routing always runs
         // eslint-disable-next-line no-await-in-loop
         await routeUpdate(update, {
           dashboard: this.dashboard,

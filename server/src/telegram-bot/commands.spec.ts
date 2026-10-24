@@ -10,7 +10,13 @@ import { sendMessage } from '../common/telegram';
 import { buildOwnerSnapshot } from '../dashboard/owner-snapshot';
 
 const OWNER = '111';
-const update = (text: string, chatId = OWNER): BotUpdate => ({ updateId: 1, chatId, text });
+const update = (text: string, chatId = OWNER): BotUpdate => ({
+  updateId: 1,
+  chatId,
+  text,
+  chat: { id: chatId, title: '', type: 'private' },
+  removed: false,
+});
 
 describe('parseCommand', () => {
   it('lowercases, trims and strips a trailing @botname', () => {

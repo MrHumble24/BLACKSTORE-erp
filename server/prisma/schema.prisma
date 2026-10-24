@@ -670,3 +670,14 @@ model TelegramLinkToken {
 
   @@index([kind, refId]) // reuse lookup: newest live token for a (kind, refId)
 }
+
+/// Chats that have ever sent the bot an update (F21). Written by the telegram-bot module (owner),
+/// read and cleared by integrations. Not a customer/investor link (that is TelegramLinkToken).
+// ponytail: table grows by one row per Telegram user who ever messages the bot; only the newest 50
+// are listed. Add pruning by lastSeenAt if a shop's customer /start traffic pushes its groups off the list.
+model TelegramKnownChat {
+  chatId     String   @id // Telegram chat id as a string (Int64; groups are negative)
+  title      String // group/channel title, or the person's name/username
+  type       String // private | group | supergroup | channel
+  lastSeenAt DateTime @updatedAt
+}

@@ -4,10 +4,12 @@ import { Prisma } from '@prisma/client';
 import { AuditService } from '../audit/audit.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { EncryptedBlob, decrypt, encrypt, parseEncKey } from '../common/crypto';
-import { TelegramBot, TelegramChat, getMe, getUpdates } from '../common/telegram';
+import { TelegramBot, TelegramChat, getMe } from '../common/telegram';
 import { SaveTelegramDto, UpdateTelegramSettingsDto } from './dto/save-telegram.dto';
 
 const TELEGRAM_KEY = 'telegram';
+/** The chat picker lists only the most recently seen chats. */
+const CHAT_LIST_LIMIT = 50;
 
 /** Per-feature on/off flags; only shipped Telegram features appear here. */
 export interface TelegramFeatures {
@@ -147,7 +149,10 @@ export class TelegramConfigService {
         investorReports: dto.features?.investorReports ?? before.features.investorReports,
       },
     };
-    await this.persist(next, before, actorId);
+    // A different bot sees different chats: forget the old bot's chats in the same transaction.
+    // Compare against the token in use (stored, else env) so re-saving the env bot keeps its chats.
+    const tokenChanged = (this.decryptToken(before) || this.env('TELEGRAM_BOT_TOKEN')) !== dto.token;
+    await this.persist(next, before, actorId, tokenChanged);
     return this.toStatus(next);
   }
 
@@ -178,9 +183,18 @@ export class TelegramConfigService {
     return this.toStatus(next);
   }
 
-  /** Upserts the 'telegram' row and audits the change (status snapshots only — never the token). */
-  private async persist(next: TelegramConfig, before: TelegramConfig, actorId: number): Promise<void> {
+  /**
+   * Upserts the 'telegram' row and audits the change (status snapshots only — never the token).
+   * `clearChats` empties TelegramKnownChat in the same transaction (the bot changed).
+   */
+  private async persist(
+    next: TelegramConfig,
+    before: TelegramConfig,
+    actorId: number,
+    clearChats = false,
+  ): Promise<void> {
     await this.prisma.$transaction(async (tx) => {
+      if (clearChats) await tx.telegramKnownChat.deleteMany({});
       await tx.setting.upsert({
         where: { key: TELEGRAM_KEY },
         create: { key: TELEGRAM_KEY, value: next as unknown as Prisma.InputJsonObject },
@@ -193,11 +207,15 @@ export class TelegramConfigService {
     });
   }
 
-  /** Clears the stored config (back to env fallback); audited. */
+  /**
+   * Clears the stored config (back to env fallback) and the known chats; audited. Known race,
+   * acceptable: a poll already in flight may write one old chat back; the next bot change clears it.
+   */
   async clear(actorId: number): Promise<void> {
     const before = await this.read();
     await this.prisma.$transaction(async (tx) => {
       await tx.setting.deleteMany({ where: { key: TELEGRAM_KEY } });
+      await tx.telegramKnownChat.deleteMany({});
       await this.audit.log(
         { userId: actorId, action: 'delete', entity: 'Setting', entityId: 0, before: this.toStatus(before), after: null },
         tx,
@@ -205,11 +223,19 @@ export class TelegramConfigService {
     });
   }
 
-  /** Recent distinct chats the bot can see, for the UI picker; empty when none/unconfigured. */
+  /**
+   * Chats the poller has seen (F21), newest first, for the UI picker. Empty without a bot on purpose:
+   * leftover rows must not show when no bot is set.
+   */
   async getChats(): Promise<TelegramChat[]> {
     const { token } = await this.getCredentials();
     if (!token) return [];
-    return getUpdates(token);
+    const rows = await this.prisma.telegramKnownChat.findMany({
+      select: { chatId: true, title: true, type: true },
+      orderBy: { lastSeenAt: 'desc' },
+      take: CHAT_LIST_LIMIT,
+    });
+    return rows.map((r) => ({ id: r.chatId, title: r.title, type: r.type }));
   }
 
   /** Reads the row and fills defaults (enabled + every flag default on, preserving old behaviour). */

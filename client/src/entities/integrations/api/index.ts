@@ -67,7 +67,11 @@ export function useUpdateTelegramSettings() {
   });
 }
 
-/** Chats the bot can post to, for the picker (may be empty). Lazy: pass `enabled`. */
+/**
+ * Chats the bot has seen, for the picker (may be empty). Always fetched once so a saved id
+ * still lists; polls every 5 s only while the SAVED Telegram switch is on (`enabled`), since
+ * the server discovers new chats only then.
+ */
 export function useTelegramChats(enabled: boolean) {
   return useQuery({
     queryKey: telegramKeys.chats(),
@@ -75,7 +79,7 @@ export function useTelegramChats(enabled: boolean) {
       const { data } = await api.get<TelegramChat[]>(`${BASE}/chats`);
       return data;
     },
-    enabled,
+    refetchInterval: enabled ? 5000 : false,
   });
 }
 

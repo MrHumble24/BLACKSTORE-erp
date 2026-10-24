@@ -1,16 +1,28 @@
 import type { DashboardService } from '../dashboard/dashboard.service';
 import type { TelegramConfigService } from '../integrations/telegram-config.service';
 import type { LinkTokenService } from './link-token.service';
+import type { PrismaService } from '../prisma/prisma.service';
+import { KnownChatService } from './known-chat.service';
 import type { BotUpdate } from '../common/telegram';
 import { TelegramBotService } from './telegram-bot.service';
 
 // Mock the network edges; routeUpdate runs for real against them (covers the wiring too).
-jest.mock('../common/telegram', () => ({ getBotUpdates: jest.fn(), sendMessage: jest.fn() }));
+jest.mock('../common/telegram', () => ({
+  getBotUpdates: jest.fn(),
+  sendMessage: jest.fn(),
+  errorMessage: (e: unknown) => String(e),
+}));
 jest.mock('../dashboard/owner-snapshot', () => ({ buildOwnerSnapshot: jest.fn(() => 'SNAPSHOT') }));
 import { getBotUpdates, sendMessage } from '../common/telegram';
 
 const OWNER = '111';
-const statusUpdate: BotUpdate = { updateId: 7, chatId: OWNER, text: '/status' };
+const statusUpdate: BotUpdate = {
+  updateId: 7,
+  chatId: OWNER,
+  text: '/status',
+  chat: { id: OWNER, title: 'Owner', type: 'private' },
+  removed: false,
+};
 
 const makeService = () => {
   const ownerSnapshot = jest.fn().mockResolvedValue({ any: 'data' });
@@ -24,7 +36,10 @@ const makeService = () => {
     }),
   } as unknown as TelegramConfigService;
   const linkToken = { linkChat: jest.fn() } as unknown as LinkTokenService;
-  return { service: new TelegramBotService(dashboard, telegram, linkToken), ownerSnapshot, telegram };
+  const track = jest.fn().mockResolvedValue(undefined);
+  const knownChats = { track } as unknown as KnownChatService;
+  const service = new TelegramBotService(dashboard, telegram, linkToken, knownChats);
+  return { service, ownerSnapshot, telegram, track };
 };
 
 describe('TelegramBotService.poll', () => {
@@ -97,5 +112,51 @@ describe('TelegramBotService.poll', () => {
     const { service } = makeService();
     (getBotUpdates as jest.Mock).mockRejectedValueOnce(new Error('boom'));
     await expect(service.poll()).resolves.toBeUndefined();
+  });
+
+  it('tracks each chat before routing it', async () => {
+    const { service, track } = makeService();
+    const order: string[] = [];
+    track.mockImplementation(async () => void order.push('track'));
+    (sendMessage as jest.Mock).mockImplementation(async () => (order.push('route'), true));
+    (getBotUpdates as jest.Mock).mockResolvedValueOnce([statusUpdate]);
+
+    await service.poll();
+
+    expect(track).toHaveBeenCalledWith(statusUpdate);
+    expect(order).toEqual(['track', 'route']);
+  });
+
+  it('still routes when tracking fails (real KnownChatService over a failing DB)', async () => {
+    const { telegram } = makeService();
+    const prisma = { telegramKnownChat: { upsert: jest.fn().mockRejectedValue(new Error('db down')) } };
+    const knownChats = new KnownChatService(prisma as unknown as PrismaService);
+    jest.spyOn(knownChats['logger'], 'warn').mockImplementation();
+    const dashboard = { ownerSnapshot: jest.fn().mockResolvedValue({}) } as unknown as DashboardService;
+    const linkToken = {} as LinkTokenService;
+    const service = new TelegramBotService(dashboard, telegram, linkToken, knownChats);
+    (getBotUpdates as jest.Mock).mockResolvedValueOnce([statusUpdate]);
+
+    await service.poll();
+
+    expect(sendMessage).toHaveBeenCalledWith('t', OWNER, 'SNAPSHOT');
+  });
+
+  it('resets the offset when the bot token changes', async () => {
+    const { service, telegram } = makeService();
+    (getBotUpdates as jest.Mock).mockResolvedValueOnce([statusUpdate]).mockResolvedValue([]);
+
+    await service.poll(); // token 't' → offset becomes 8
+    await service.poll();
+    expect(getBotUpdates).toHaveBeenLastCalledWith('t', 8);
+
+    (telegram.getRuntime as jest.Mock).mockResolvedValue({
+      enabled: true,
+      token: 'new',
+      alertChatId: OWNER,
+      ownerSnapshotEnabled: true,
+    });
+    await service.poll();
+    expect(getBotUpdates).toHaveBeenLastCalledWith('new', undefined);
   });
 });

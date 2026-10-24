@@ -73,9 +73,9 @@ export interface TelegramBot {
   name: string;
 }
 
-/** A chat the bot has seen (F12 chat picker). */
+/** A chat the bot has seen (F12 chat picker). `id` is a string: Int64 ids lose precision as numbers. */
 export interface TelegramChat {
-  id: number;
+  id: string;
   title: string;
   type: string;
 }
@@ -84,22 +84,6 @@ interface GetMeResponse {
   ok: boolean;
   description?: string;
   result?: { id: number; username?: string; first_name?: string };
-}
-
-interface GetUpdatesResponse {
-  ok: boolean;
-  result?: Array<{
-    message?: { chat: RawChat };
-    channel_post?: { chat: RawChat };
-  }>;
-}
-
-interface RawChat {
-  id: number;
-  type: string;
-  title?: string;
-  username?: string;
-  first_name?: string;
 }
 
 /** Calls `getMe` to confirm a token and read the bot's identity; throws with a clear message on failure. */
@@ -118,25 +102,59 @@ export async function getMe(token: string): Promise<TelegramBot> {
   return { id: r.id, username: r.username ?? '', name: r.first_name ?? '' };
 }
 
-/** One inbound text update the poller cares about (text messages only; everything else is dropped). */
+/**
+ * One inbound update that carries a chat (F15 router + F21 chat discovery). Only a `message` with
+ * text sets `text`; channel posts and membership changes get '' so they are never routed as commands.
+ */
 export interface BotUpdate {
   updateId: number;
   chatId: string;
   text: string;
+  chat: TelegramChat; // where it came from
+  removed: boolean; // my_chat_member: the bot was removed (left | kicked)
+  migratedTo?: string; // message.migrate_to_chat_id: group became a supergroup, old id is dead
+}
+
+interface RawChat {
+  id: number;
+  type: string;
+  title?: string;
+  username?: string;
+  first_name?: string;
+}
+
+interface RawUpdate {
+  update_id: number;
+  message?: { chat: RawChat; text?: string; migrate_to_chat_id?: number };
+  channel_post?: { chat: RawChat };
+  my_chat_member?: { chat: RawChat; new_chat_member: { status: string } };
 }
 
 interface GetBotUpdatesResponse {
   ok: boolean;
-  result?: Array<{
-    update_id: number;
-    message?: { chat: { id: number }; text?: string };
-  }>;
+  result?: RawUpdate[];
+}
+
+/** Maps one raw update to a BotUpdate, or null when it carries no chat we track. */
+function toBotUpdate(u: RawUpdate): BotUpdate | null {
+  const raw = u.message?.chat ?? u.channel_post?.chat ?? u.my_chat_member?.chat;
+  if (!raw) return null;
+  const status = u.my_chat_member?.new_chat_member.status;
+  const migrateTo = u.message?.migrate_to_chat_id;
+  return {
+    updateId: u.update_id,
+    chatId: String(raw.id),
+    text: u.message?.text ?? '', // only message text is a command
+    chat: { id: String(raw.id), title: raw.title ?? raw.username ?? raw.first_name ?? '', type: raw.type },
+    removed: status === 'left' || status === 'kicked',
+    ...(migrateTo === undefined ? {} : { migratedTo: String(migrateTo) }),
+  };
 }
 
 /**
- * Long-poll `getUpdates` for the inbound command router (F15): returns text messages as
- * {updateId, chatId, text}. `offset` acks confirmed updates so they are not re-fetched. Skips
- * updates without a text message; returns [] on any error (the poller retries next cycle, never throws).
+ * Long-poll `getUpdates` for the inbound poller (F15/F21): returns every update that carries a chat
+ * (message, channel_post, my_chat_member). The poller is the ONLY reader of the queue, because
+ * `offset` acks updates and Telegram then drops them. Returns [] on any error (never throws).
  */
 export async function getBotUpdates(token: string, offset?: number): Promise<BotUpdate[]> {
   let json: GetBotUpdatesResponse;
@@ -148,35 +166,5 @@ export async function getBotUpdates(token: string, offset?: number): Promise<Bot
     return [];
   }
   if (!json.ok || !Array.isArray(json.result)) return [];
-  const updates: BotUpdate[] = [];
-  for (const u of json.result) {
-    const message = u.message;
-    if (!message?.text) continue; // only text messages carry commands
-    updates.push({ updateId: u.update_id, chatId: String(message.chat.id), text: message.text });
-  }
-  return updates;
-}
-
-/** Calls `getUpdates` and returns the distinct recent chats; empty on any error (UI falls back to manual entry). */
-export async function getUpdates(token: string): Promise<TelegramChat[]> {
-  let json: GetUpdatesResponse;
-  try {
-    const res = await fetch(`https://api.telegram.org/bot${token}/getUpdates`);
-    json = (await res.json()) as GetUpdatesResponse;
-  } catch {
-    return [];
-  }
-  if (!json.ok || !Array.isArray(json.result)) return [];
-  const chats = new Map<number, TelegramChat>();
-  for (const u of json.result) {
-    const chat = u.message?.chat ?? u.channel_post?.chat;
-    if (chat) {
-      chats.set(chat.id, {
-        id: chat.id,
-        title: chat.title ?? chat.username ?? chat.first_name ?? '',
-        type: chat.type,
-      });
-    }
-  }
-  return [...chats.values()];
+  return json.result.map(toBotUpdate).filter((u): u is BotUpdate => u !== null);
 }
