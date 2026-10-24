@@ -19,6 +19,7 @@ import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { UpdateInvestorDto } from './dto/update-investor.dto';
 import { InvestorTransactionsService } from './investor-transactions.service';
 import { InvestorsService } from './investors.service';
+import { SupplierPaymentsService } from '../suppliers/supplier-payments.service';
 
 /** Investor summary list (any user) and full management (manage_investors). */
 @Controller('investors')
@@ -26,6 +27,7 @@ export class InvestorsController {
   constructor(
     private readonly investors: InvestorsService,
     private readonly transactions: InvestorTransactionsService,
+    private readonly supplierPayments: SupplierPaymentsService,
   ) {}
 
   @Get()
@@ -35,14 +37,14 @@ export class InvestorsController {
 
   @Get(':id')
   @Permissions('manage_investors')
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.investors.findOne(id);
+  findOne(@Param('id', ParseIntPipe) id: number, @CurrentUser() actor: PublicUser) {
+    return this.investors.findOne(id, actor);
   }
 
   @Post()
   @Permissions('manage_investors')
   create(@Body() dto: CreateInvestorDto, @CurrentUser() actor: PublicUser) {
-    return this.investors.create(dto, actor.id);
+    return this.investors.create(dto, actor);
   }
 
   @Patch(':id')
@@ -52,7 +54,7 @@ export class InvestorsController {
     @Body() dto: UpdateInvestorDto,
     @CurrentUser() actor: PublicUser,
   ) {
-    return this.investors.update(id, dto, actor.id);
+    return this.investors.update(id, dto, actor);
   }
 
   @Get(':id/transactions')
@@ -62,6 +64,16 @@ export class InvestorsController {
     @Query() query: PaginationQueryDto,
   ) {
     return this.transactions.findAll(id, query);
+  }
+
+  /**
+   * Payments sent to suppliers with this investor's money (F25). manage_investors only, unlike the
+   * supplier route's manage_suppliers: the rows are money sent, not cost, and Admin holds both anyway.
+   */
+  @Get(':id/supplier-payments')
+  @Permissions('manage_investors')
+  findSupplierPayments(@Param('id', ParseIntPipe) id: number, @Query() query: PaginationQueryDto) {
+    return this.supplierPayments.findAllForInvestor(id, query);
   }
 
   @Post(':id/transactions')

@@ -137,7 +137,19 @@
     "allClear": "Всё в порядке — ничего не требует внимания",
     "debtorsToChase": "{{count}} клиентов должны вам",
     "overdueItems": "{{count}} товаров просрочено у партнёров",
-    "lowStockAccessories": "{{count}} аксессуаров заканчивается"
+    "lowStockAccessories": "{{count}} аксессуаров заканчивается",
+    "stockValuation": {
+      "title": "Остатки на складе и оценка",
+      "subtitle": "Текущие остатки товаров и их стоимость",
+      "inStockDevices": "Устройства в наличии",
+      "atPartnerDevices": "На консигнации",
+      "accessories": "Остаток аксессуаров",
+      "totalValuation": "Общая стоимость остатков",
+      "retailValue": "В ценах продажи",
+      "costValue": "Себестоимость",
+      "devicesCount": "{{count}} устр.",
+      "itemsCount": "{{count}} шт."
+    }
   },
   "scan": {
     "placeholder": "IMEI или серийный номер...",
@@ -161,10 +173,33 @@
     "noItems": "Устройства не найдены",
     "searchPlaceholder": "Поиск (IMEI, модель)...",
     "allStatuses": "Все статусы",
+    "allConditions": "Все состояния",
     "allCategories": "Все категории",
     "allLocations": "Все локации",
     "allOwners": "Все владельцы",
+    "unpricedOnly": "Без цены",
+    "unpricedBadge": "Без цены",
+    "sortBy": "Сортировка",
+    "pageSize": "На странице",
+    "sort": {
+      "default": "По умолчанию (Новые)",
+      "newest": "Дата: Сначала новые",
+      "oldest": "Дата: Сначала старые",
+      "priceDesc": "Цена: По убыванию",
+      "priceAsc": "Цена: По возрастанию",
+      "modelAsc": "Модель: А-Я",
+      "modelDesc": "Модель: Я-А"
+    },
+    "stats": {
+      "inStock": "Устройства в наличии",
+      "atPartner": "На консигнации",
+      "sold": "Продано сегодня",
+      "totalItems": "Всего в каталоге",
+      "retailValuation": "В ценах продажи",
+      "costValuation": "Себестоимость"
+    },
     "model": "Модель",
+    "specs": "Характеристики",
     "category": "Категория",
     "selectCategory": "Выберите категорию",
     "selectModel": "Выберите модель",
@@ -402,7 +437,21 @@
       "sharePercentRange": "Процент должен быть от 0 до 100",
       "shareFixedMin": "Значение не может быть отрицательным",
       "transactionTypeRequired": "Выберите тип операции"
-    }
+    },
+    "money": {
+      "deposits": "Внесено",
+      "payouts": "Выплачено",
+      "sentToSuppliers": "Отправлено поставщикам",
+      "feesCharged": "Удержано комиссий",
+      "unsentDeposits": "Ещё не отправлено",
+      "unsoldStock": "Непроданный товар",
+      "unsoldValue": "{{count}} устройств · {{cost}}",
+      "defective": "Брак",
+      "defectiveCount": "{{count}} устройств"
+    },
+    "supplierPaymentsTitle": "Отправлено поставщикам",
+    "noSupplierPayments": "Платежей поставщикам пока нет",
+    "supplier": "Поставщик"
   },
   "validation": {
     "nameRequired": "Имя обязательно для заполнения",
@@ -443,8 +492,16 @@
       "amountRequired": "Введите сумму",
       "amountInvalid": "Неверный формат суммы",
       "amountNotZero": "Сумма не должна быть нулём",
-      "feeInvalid": "Неверный формат комиссии"
-    }
+      "feeInvalid": "Неверный формат комиссии",
+      "feeNegativeOnlyOnCorrection": "Отрицательная комиссия допускается только в корректировке (при отрицательной сумме)"
+    },
+    "paymentInvestor": "Чьи деньги",
+    "paymentInvestorBusiness": "Бизнес (собственные средства)",
+    "feePaidBy": "Кто платит комиссию",
+    "feePaidByBusiness": "Бизнес",
+    "feePaidByInvestor": "Инвестор",
+    "feePaidByInvestorShort": "инв.",
+    "feePaidByHint": "Не добавляйте комиссию за перевод ещё и в дополнительные расходы партии, иначе инвестор заплатит её дважды."
   },
   "batches": {
     "title": "Партии",

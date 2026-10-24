@@ -137,7 +137,19 @@
     "allClear": "Hammasi joyida — e'tibor talab qiladigan narsa yo'q",
     "debtorsToChase": "{{count}} ta mijoz sizdan qarzdor",
     "overdueItems": "{{count}} ta mahsulot hamkorlarda muddati o'tgan",
-    "lowStockAccessories": "{{count}} ta aksessuar kam qolgan"
+    "lowStockAccessories": "{{count}} ta aksessuar kam qolgan",
+    "stockValuation": {
+      "title": "Ombor qoldiqlari qiymati",
+      "subtitle": "Hozirgi tovar qoldiqlari va ularning summasi",
+      "inStockDevices": "Ombordagi qurilmalar",
+      "atPartnerDevices": "Konsignatsiyadagi tovarlar",
+      "accessories": "Aksessuarlar qoldig'i",
+      "totalValuation": "Jami tovar qiymati",
+      "retailValue": "Sotuv bahosi",
+      "costValue": "Tan narxi",
+      "devicesCount": "{{count}} ta qurilma",
+      "itemsCount": "{{count}} ta"
+    }
   },
   "scan": {
     "placeholder": "IMEI yoki seriya raqami...",
@@ -161,10 +173,33 @@
     "noItems": "Qurilmalar topilmadi",
     "searchPlaceholder": "Qidiruv (IMEI, model bo'yicha)...",
     "allStatuses": "Barcha holatlar",
+    "allConditions": "Barcha holatlar (yangi/ishlatilgan)",
     "allCategories": "Barcha kategoriyalar",
     "allLocations": "Barcha filial va omborlar",
     "allOwners": "Barcha mulkdorlar (investorlar)",
+    "unpricedOnly": "Narxi belgilanmagan",
+    "unpricedBadge": "Narxsiz",
+    "sortBy": "Saralash",
+    "pageSize": "Sahifada",
+    "sort": {
+      "default": "Odatiy (Eng yangi)",
+      "newest": "Sana: Yangilar",
+      "oldest": "Sana: Eskilar",
+      "priceDesc": "Narx: Qimmatdan",
+      "priceAsc": "Narx: Arzondan",
+      "modelAsc": "Model: A-Z",
+      "modelDesc": "Model: Z-A"
+    },
+    "stats": {
+      "inStock": "Ombordagi qurilmalar",
+      "atPartner": "Konsignatsiyadagi",
+      "sold": "Bugun sotilgan",
+      "totalItems": "Katalogda jami",
+      "retailValuation": "Sotuv bahosi",
+      "costValuation": "Tan narxi"
+    },
     "model": "Model",
+    "specs": "Xususiyatlar",
     "category": "Kategoriya",
     "selectCategory": "Kategoriyani tanlang",
     "selectModel": "Modelni tanlang",
@@ -402,7 +437,21 @@
       "sharePercentRange": "Foiz 0 dan 100 gacha bo'lishi kerak",
       "shareFixedMin": "Qiymat manfiy bo'lishi mumkin emas",
       "transactionTypeRequired": "Amaliyot turini tanlang"
-    }
+    },
+    "money": {
+      "deposits": "Kiritilgan",
+      "payouts": "To'langan",
+      "sentToSuppliers": "Yetkazib beruvchilarga yuborilgan",
+      "feesCharged": "Ushlangan komissiyalar",
+      "unsentDeposits": "Hali yuborilmagan",
+      "unsoldStock": "Sotilmagan tovar",
+      "unsoldValue": "{{count}} ta qurilma · {{cost}}",
+      "defective": "Nuqsonli",
+      "defectiveCount": "{{count}} ta qurilma"
+    },
+    "supplierPaymentsTitle": "Yetkazib beruvchilarga yuborilgan",
+    "noSupplierPayments": "Yetkazib beruvchilarga to'lovlar hali yo'q",
+    "supplier": "Yetkazib beruvchi"
   },
   "validation": {
     "nameRequired": "Ismni kiriting",
@@ -443,8 +492,16 @@
       "amountRequired": "Summani kiriting",
       "amountInvalid": "Summa formati noto'g'ri",
       "amountNotZero": "Summa 0 ga teng bo'lishi mumkin emas",
-      "feeInvalid": "Komissiya formati noto'g'ri"
-    }
+      "feeInvalid": "Komissiya formati noto'g'ri",
+      "feeNegativeOnlyOnCorrection": "Manfiy komissiya faqat tuzatish yozuvida (manfiy summa bilan) kiritiladi"
+    },
+    "paymentInvestor": "Kimning puli",
+    "paymentInvestorBusiness": "Biznes (do'kon o'z mablag'i)",
+    "feePaidBy": "Komissiyani kim to'laydi",
+    "feePaidByBusiness": "Biznes",
+    "feePaidByInvestor": "Investor",
+    "feePaidByInvestorShort": "inv.",
+    "feePaidByHint": "O'tkazma komissiyasini partiyaning qo'shimcha xarajatlariga ham qo'shmang, aks holda investor uni ikki marta to'laydi."
   },
   "batches": {
     "title": "Partiyalar",

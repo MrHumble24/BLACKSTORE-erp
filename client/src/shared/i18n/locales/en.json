@@ -137,7 +137,19 @@
     "allClear": "All clear — nothing needs your attention",
     "debtorsToChase": "{{count}} customers owe you",
     "overdueItems": "{{count}} items overdue at partners",
-    "lowStockAccessories": "{{count}} accessories low on stock"
+    "lowStockAccessories": "{{count}} accessories low on stock",
+    "stockValuation": {
+      "title": "Stock valuation",
+      "subtitle": "Current inventory balance and valuation",
+      "inStockDevices": "In-stock devices",
+      "atPartnerDevices": "On consignment",
+      "accessories": "Accessories stock",
+      "totalValuation": "Total stock value",
+      "retailValue": "Retail value",
+      "costValue": "Cost value",
+      "devicesCount": "{{count}} devices",
+      "itemsCount": "{{count}} pcs"
+    }
   },
   "scan": {
     "placeholder": "IMEI or serial number...",
@@ -161,10 +173,33 @@
     "noItems": "No devices found",
     "searchPlaceholder": "Search (IMEI, model)...",
     "allStatuses": "All statuses",
+    "allConditions": "All conditions",
     "allCategories": "All categories",
     "allLocations": "All locations",
     "allOwners": "All owners",
+    "unpricedOnly": "Unpriced only",
+    "unpricedBadge": "Unpriced",
+    "sortBy": "Sort by",
+    "pageSize": "Per page",
+    "sort": {
+      "default": "Default (Newest)",
+      "newest": "Date: Newest",
+      "oldest": "Date: Oldest",
+      "priceDesc": "Price: High to Low",
+      "priceAsc": "Price: Low to High",
+      "modelAsc": "Model: A to Z",
+      "modelDesc": "Model: Z to A"
+    },
+    "stats": {
+      "inStock": "In-stock devices",
+      "atPartner": "On consignment",
+      "sold": "Today's sales",
+      "totalItems": "Total in catalog",
+      "retailValuation": "Retail value",
+      "costValuation": "Cost value"
+    },
     "model": "Model",
+    "specs": "Specifications",
     "category": "Category",
     "selectCategory": "Select a category",
     "selectModel": "Select a model",
@@ -402,7 +437,21 @@
       "sharePercentRange": "Percent must be between 0 and 100",
       "shareFixedMin": "Value cannot be negative",
       "transactionTypeRequired": "Select a transaction type"
-    }
+    },
+    "money": {
+      "deposits": "Deposits",
+      "payouts": "Paid out",
+      "sentToSuppliers": "Sent to suppliers",
+      "feesCharged": "Commissions charged",
+      "unsentDeposits": "Not yet sent",
+      "unsoldStock": "Unsold stock",
+      "unsoldValue": "{{count}} devices · {{cost}}",
+      "defective": "Defective",
+      "defectiveCount": "{{count}} devices"
+    },
+    "supplierPaymentsTitle": "Sent to suppliers",
+    "noSupplierPayments": "No supplier payments yet",
+    "supplier": "Supplier"
   },
   "validation": {
     "nameRequired": "Name is required",
@@ -443,8 +492,16 @@
       "amountRequired": "Amount is required",
       "amountInvalid": "Invalid amount format",
       "amountNotZero": "Amount must not be zero",
-      "feeInvalid": "Invalid commission format"
-    }
+      "feeInvalid": "Invalid commission format",
+      "feeNegativeOnlyOnCorrection": "A negative commission is only allowed on a correcting entry (negative amount)"
+    },
+    "paymentInvestor": "Whose money",
+    "paymentInvestorBusiness": "Business (own money)",
+    "feePaidBy": "Commission paid by",
+    "feePaidByBusiness": "Business",
+    "feePaidByInvestor": "Investor",
+    "feePaidByInvestorShort": "inv.",
+    "feePaidByHint": "Do not add the transfer fee to the batch's extra costs as well, or the investor pays it twice."
   },
   "batches": {
     "title": "Batches",

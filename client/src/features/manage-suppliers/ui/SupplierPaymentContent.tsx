@@ -11,6 +11,7 @@ import {
   type SupplierPaymentFormValues,
 } from '../model/supplier.schema';
 import { SupplierPaymentFields } from './SupplierFormFields';
+import { SupplierPaymentOwnerFields } from './SupplierPaymentOwnerFields';
 
 interface SupplierPaymentContentProps {
   supplierId: number;
@@ -36,15 +37,20 @@ export function SupplierPaymentContent({ supplierId, onClose }: SupplierPaymentC
 
   const form = useForm<SupplierPaymentFormValues>({
     resolver: zodResolver(createSupplierPaymentSchema(t)),
-    defaultValues: { amount: '', fee: '', date: todayIso, note: '' },
+    defaultValues: {
+      amount: '', fee: '', date: todayIso, note: '', investorId: '', feePaidBy: 'BUSINESS',
+    },
   });
 
   const onSubmit = form.handleSubmit((values) => {
+    // '' = the business's own money: no investor and no fee payer are sent.
+    const investorId = values.investorId ? Number(values.investorId) : undefined;
     submit({
       amount: normalizeMoney(values.amount),
       ...(values.fee.trim() ? { fee: normalizeMoney(values.fee) } : {}),
       ...(values.date?.trim() ? { date: values.date.trim() } : {}),
       ...(values.note.trim() ? { note: values.note.trim() } : {}),
+      ...(investorId ? { investorId, feePaidBy: values.feePaidBy } : {}),
     });
   });
 
@@ -55,6 +61,11 @@ export function SupplierPaymentContent({ supplierId, onClose }: SupplierPaymentC
         <SupplierPaymentFields
           register={form.register}
           errors={form.formState.errors}
+          disabled={isPending}
+        />
+        <SupplierPaymentOwnerFields
+          control={form.control}
+          setValue={form.setValue}
           disabled={isPending}
         />
         <DialogFormFooter onClose={onClose} isPending={isPending} />

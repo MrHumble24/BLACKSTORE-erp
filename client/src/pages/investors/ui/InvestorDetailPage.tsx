@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Pencil, Plus } from 'lucide-react';
-import { Badge, Button, Card, TablePagination, BackLink } from '@/shared/ui';
+import { Badge, Button, TablePagination, BackLink } from '@/shared/ui';
 import { formatMoney } from '@/shared/lib';
 import {
   useInvestor,
@@ -15,6 +15,9 @@ import {
 import { InvestorFormDialog, InvestorTransactionDialog } from '@/features/manage-investors';
 import { TelegramInviteButton, TelegramLinkStatus } from '@/features/telegram-invite';
 import { InvestorTransactionsTable } from './InvestorTransactionsTable';
+import { InvestorMoneyCards } from './InvestorMoneyCards';
+import { InvestorSupplierPaymentsTable } from './InvestorSupplierPaymentsTable';
+import { InfoCard } from './InfoCard';
 
 const TRANSACTIONS_PAGE_SIZE = 20;
 
@@ -99,16 +102,6 @@ function InvestorDetailHeader({ investor, onEdit, onAddTx, onRefresh }: {
   );
 }
 
-/** Small labelled stat card. */
-function InfoCard({ label, value }: { label: string; value: string }) {
-  return (
-    <Card className="p-5">
-      <p className="text-[11px] text-slate tracking-[-0.01em]">{label}</p>
-      <p className="mt-1 text-lg font-semibold font-sf-pro-display text-ink tracking-tight">{value}</p>
-    </Card>
-  );
-}
-
 /** Translated share-type label for the read-only settings card. */
 function shareTypeLabel(shareType: ShareType | undefined, t: (k: string) => string): string {
   if (shareType === 'PERCENT') return t('investors.sharePercent');
@@ -174,6 +167,7 @@ function InvestorDetailBody({
         total={txPage?.total ?? 0}
         onPageChange={setPage}
       />
+      <InvestorSupplierPaymentsTable investorId={investor.id} />
 
       <InvestorFormDialog open={editOpen} onOpenChange={onEditOpenChange} investor={investor} />
       <InvestorTransactionDialog
@@ -224,6 +218,7 @@ export function InvestorDetailPage() {
       />
 
       <InvestorCards investor={investor} />
+      {investor.money && <InvestorMoneyCards money={investor.money} />}
       <InvestorDetailBody
         investor={investor}
         txOpen={txOpen}

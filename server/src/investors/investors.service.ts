@@ -3,8 +3,10 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { InvestorTxType, Prisma, ShareType, TelegramLinkKind } from '@prisma/client';
+import { FeePayer, InvestorTxType, ItemStatus, Prisma, ShareType, TelegramLinkKind } from '@prisma/client';
 import { AuditService } from '../audit/audit.service';
+import type { PublicUser } from '../common/auth-user';
+import { hasPermission } from '../common/permissions';
 import { PrismaService } from '../prisma/prisma.service';
 import { LinkTokenService, TelegramLinkResult } from '../telegram-bot/link-token.service';
 import { CreateInvestorDto } from './dto/create-investor.dto';
@@ -26,6 +28,8 @@ const fullSelect = {
 } satisfies Prisma.InvestorSelect;
 
 type FullInvestor = Prisma.InvestorGetPayload<{ select: typeof fullSelect }>;
+
+const ZERO = new Prisma.Decimal(0);
 
 /** Investors and their profit-share settings (PRD FR-9, FR-10). Balances are computed, never stored (BR-8). */
 @Injectable()
@@ -49,9 +53,9 @@ export class InvestorsService {
 
   /**
    * Full investor with the computed balance and Telegram link state (`telegramLinked`, when, and the
-   * NAME of who issued the link); 404 if missing.
+   * NAME of who issued the link); 404 if missing. The `money` block needs view_cost (see withMoney).
    */
-  async findOne(id: number) {
+  async findOne(id: number, actor: PublicUser) {
     const row = await this.prisma.investor.findUnique({
       where: { id },
       select: {
@@ -62,10 +66,10 @@ export class InvestorsService {
       },
     });
     if (!row) throw new NotFoundException('Investor not found');
-    // Drop the link fields before withBalance spreads the row: the chat id and user ids never leave the server.
+    // Drop the link fields before withMoney spreads the row: the chat id and user ids never leave the server.
     const { telegramChatId, telegramLinkedAt, telegramLinkedBy, ...investor } = row;
     return {
-      ...(await this.withBalance(investor)),
+      ...(await this.withMoney(investor, actor)),
       telegramLinked: telegramChatId !== null,
       telegramLinkedAt: telegramLinkedAt?.toISOString() ?? null,
       telegramLinkedBy: telegramLinkedBy?.name ?? null,
@@ -98,7 +102,7 @@ export class InvestorsService {
   }
 
   /** Creates an investor. isOwn stays null (only the seeded OWN row is true). Duplicate code → 409. */
-  async create(dto: CreateInvestorDto, actorId: number) {
+  async create(dto: CreateInvestorDto, actor: PublicUser) {
     const shareValue = resolveShareValue(dto.shareType, dto.shareValue);
     const created = await this.prisma.$transaction(async (tx) => {
       const investor = await tx.investor.create({
@@ -106,16 +110,16 @@ export class InvestorsService {
         select: fullSelect,
       });
       await this.audit.log(
-        { userId: actorId, action: 'create', entity: 'Investor', entityId: investor.id, after: investor },
+        { userId: actor.id, action: 'create', entity: 'Investor', entityId: investor.id, after: investor },
         tx,
       );
       return investor;
     });
-    return this.withBalance(created);
+    return this.withMoney(created, actor);
   }
 
   /** Updates an investor; isOwn never changes and the OWN investor can't be deactivated. */
-  async update(id: number, dto: UpdateInvestorDto, actorId: number) {
+  async update(id: number, dto: UpdateInvestorDto, actor: PublicUser) {
     const before = await this.prisma.investor.findUnique({
       where: { id },
       select: fullSelect,
@@ -138,31 +142,77 @@ export class InvestorsService {
         select: fullSelect,
       });
       await this.audit.log(
-        { userId: actorId, action: 'update', entity: 'Investor', entityId: id, before, after: investor },
+        { userId: actor.id, action: 'update', entity: 'Investor', entityId: id, before, after: investor },
         tx,
       );
       return investor;
     });
-    return this.withBalance(updated);
+    return this.withMoney(updated, actor);
   }
 
-  /** Adds balance (sum deposits − sum payouts) and shapes money fields as decimal strings. */
-  private async withBalance(investor: FullInvestor) {
-    const groups = await this.prisma.investorTransaction.groupBy({
-      by: ['type'],
-      where: { investorId: investor.id },
-      _sum: { amount: true },
-    });
-    const sumOf = (type: InvestorTxType) => {
-      const { _sum } = groups.find((g) => g.type === type) ?? {};
-      return _sum?.amount ?? new Prisma.Decimal(0);
-    };
-    const balance = sumOf(InvestorTxType.DEPOSIT).minus(sumOf(InvestorTxType.PAYOUT));
+  /**
+   * Adds balance (deposits − payouts) and, with view_cost and never for the OWN investor, the F25
+   * `money` block. OWN is skipped because business payments carry investorId null while business
+   * items carry the OWN id, so its figures would not reconcile.
+   */
+  private async withMoney(investor: FullInvestor, actor: PublicUser) {
+    const showMoney = hasPermission(actor, 'view_cost') && investor.isOwn !== true;
+    const [deposits, payouts] = await this.depositsAndPayouts(investor.id);
     return {
       ...investor,
       isOwn: investor.isOwn ?? false,
       shareValue: investor.shareValue.toFixed(2),
-      balance: balance.toFixed(2),
+      balance: deposits.minus(payouts).toFixed(2),
+      ...(showMoney ? { money: await this.money(investor.id, deposits, payouts) } : {}),
+    };
+  }
+
+  /** Σ DEPOSIT and Σ PAYOUT of an investor's transactions. */
+  private async depositsAndPayouts(investorId: number) {
+    const groups = await this.prisma.investorTransaction.groupBy({
+      by: ['type'],
+      where: { investorId },
+      _sum: { amount: true },
+    });
+    const sumOf = (type: InvestorTxType) => {
+      const { _sum: sum } = groups.find((g) => g.type === type) ?? {};
+      return sum?.amount ?? ZERO;
+    };
+    return [sumOf(InvestorTxType.DEPOSIT), sumOf(InvestorTxType.PAYOUT)] as const;
+  }
+
+  /**
+   * Money sent abroad for the investor, fees charged to them, and their unsold stock at cost (F25).
+   * Supplier sums are signed, so correcting entries are included. Unsold = IN_STOCK | AT_PARTNER, valued
+   * at purchasePrice + extraCost like the profit report; DEFECTIVE is only counted, its cost was booked as
+   * a loss on return (BR-6).
+   */
+  private async money(investorId: number, deposits: Prisma.Decimal, payouts: Prisma.Decimal) {
+    const [{ _sum: sent }, { _sum: fees }, { _count: unsoldItems, _sum: unsold }, defectiveItems] = await Promise.all([
+      this.prisma.supplierPayment.aggregate({ where: { investorId }, _sum: { amount: true } }),
+      this.prisma.supplierPayment.aggregate({
+        where: { investorId, feePaidBy: FeePayer.INVESTOR },
+        _sum: { fee: true },
+      }),
+      this.prisma.item.aggregate({
+        where: { investorId, status: { in: [ItemStatus.IN_STOCK, ItemStatus.AT_PARTNER] } },
+        _count: true,
+        _sum: { purchasePrice: true, extraCost: true },
+      }),
+      this.prisma.item.count({ where: { investorId, status: ItemStatus.DEFECTIVE } }),
+    ]);
+    const sentToSuppliers = sent.amount ?? ZERO;
+    const feesCharged = fees.fee ?? ZERO;
+    const unsoldAtCost = (unsold.purchasePrice ?? ZERO).plus(unsold.extraCost ?? ZERO);
+    return {
+      deposits: deposits.toFixed(2),
+      payouts: payouts.toFixed(2),
+      sentToSuppliers: sentToSuppliers.toFixed(2),
+      feesCharged: feesCharged.toFixed(2),
+      unsentDeposits: deposits.minus(payouts).minus(sentToSuppliers).minus(feesCharged).toFixed(2),
+      unsoldItems,
+      unsoldAtCost: unsoldAtCost.toFixed(2),
+      defectiveItems,
     };
   }
 }

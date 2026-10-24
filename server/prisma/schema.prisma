@@ -66,6 +66,12 @@ enum ConsignmentItemStatus {
   RETURNED
 }
 
+// Who bears a supplier payment's transfer fee (F25).
+enum FeePayer {
+  BUSINESS
+  INVESTOR
+}
+
 enum InvestorTxType {
   DEPOSIT // money put in
   PAYOUT // money paid back
@@ -194,11 +200,12 @@ model Investor {
   telegramLinkedById Int? // issuer of the token that was consumed (F24)
   telegramLinkedBy   User?     @relation("InvestorTelegramLinkedBy", fields: [telegramLinkedById], references: [id])
 
-  items        Item[]
-  batches      Batch[]
-  transactions InvestorTransaction[]
-  saleItems    SaleItem[]
-  user         User?
+  items            Item[]
+  batches          Batch[]
+  transactions     InvestorTransaction[]
+  saleItems        SaleItem[]
+  user             User?
+  supplierPayments SupplierPayment[] // money sent abroad on this investor's behalf (F25)
 }
 
 model InvestorTransaction {
@@ -372,13 +379,18 @@ model PurchaseLine {
 
 // Balance owed to a supplier = sum(unitPrice × quantity of lines in their batches) − sum(amount)
 model SupplierPayment {
-  id         Int      @id @default(autoincrement())
+  id         Int       @id @default(autoincrement())
   supplierId Int
-  supplier   Supplier @relation(fields: [supplierId], references: [id])
-  amount     Decimal  @db.Decimal(12, 2) // amount that reached the supplier
-  fee        Decimal  @default(0) @db.Decimal(12, 2) // transfer fee paid on top
-  date       DateTime @default(now())
+  supplier   Supplier  @relation(fields: [supplierId], references: [id])
+  amount     Decimal   @db.Decimal(12, 2) // amount that reached the supplier
+  fee        Decimal   @default(0) @db.Decimal(12, 2) // transfer fee paid on top
+  date       DateTime  @default(now())
   note       String?
+  investorId Int? // whose money was sent (F25); null = the business's own money
+  investor   Investor? @relation(fields: [investorId], references: [id])
+  feePaidBy  FeePayer  @default(BUSINESS) // who bears `fee`; INVESTOR only allowed when investorId is set
+
+  @@index([investorId])
 }
 
 model WalkInSeller {

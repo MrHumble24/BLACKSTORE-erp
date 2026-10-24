@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { SIGNED_MONEY_PATTERN, isNonZeroMoney, isPositiveMoney } from '@/shared/lib';
+import { SIGNED_MONEY_PATTERN, isNonZeroMoney, normalizeMoney } from '@/shared/lib';
 
 type TFn = (k: string) => string;
 
@@ -27,22 +27,35 @@ export interface SupplierPaymentFormValues {
   fee: string;
   date: string;
   note: string;
+  /** Investor id as string; '' = the business's own money. */
+  investorId: string;
+  feePaidBy: 'BUSINESS' | 'INVESTOR';
 }
 
-/** Localized Zod schema for a supplier payment: amount ≠ 0, fee ≥ 0. */
+/**
+ * Localized Zod schema for a supplier payment: amount ≠ 0; fee is signed but may be negative only
+ * on a correcting entry (negative amount), the same rule the server enforces.
+ */
 export function createSupplierPaymentSchema(t: TFn) {
-  return z.object({
-    amount: z
-      .string()
-      .min(1, { message: t('suppliers.validation.amountRequired') })
-      .regex(SIGNED_MONEY_PATTERN, { message: t('suppliers.validation.amountInvalid') })
-      .refine((v) => isNonZeroMoney(v), { message: t('suppliers.validation.amountNotZero') }),
-    fee: z
-      .string()
-      .refine((v) => v.trim() === '' || isPositiveMoney(v), {
-        message: t('suppliers.validation.feeInvalid'),
-      }),
-    date: z.string(),
-    note: z.string(),
-  });
+  return z
+    .object({
+      amount: z
+        .string()
+        .min(1, { message: t('suppliers.validation.amountRequired') })
+        .regex(SIGNED_MONEY_PATTERN, { message: t('suppliers.validation.amountInvalid') })
+        .refine((v) => isNonZeroMoney(v), { message: t('suppliers.validation.amountNotZero') }),
+      fee: z
+        .string()
+        .refine((v) => v.trim() === '' || SIGNED_MONEY_PATTERN.test(v.trim()), {
+          message: t('suppliers.validation.feeInvalid'),
+        }),
+      date: z.string(),
+      note: z.string(),
+      investorId: z.string(),
+      feePaidBy: z.enum(['BUSINESS', 'INVESTOR']),
+    })
+    .refine((v) => Number(normalizeMoney(v.fee)) >= 0 || Number(normalizeMoney(v.amount)) < 0, {
+      message: t('suppliers.validation.feeNegativeOnlyOnCorrection'),
+      path: ['fee'],
+    });
 }

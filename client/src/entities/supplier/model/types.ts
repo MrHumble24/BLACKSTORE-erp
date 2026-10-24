@@ -14,13 +14,20 @@ export interface Supplier extends SupplierSummary {
   balance?: string;
 }
 
+/** Who bears the transfer fee: the business (default) or the investor whose money was sent. */
+export type FeePayer = 'BUSINESS' | 'INVESTOR';
+
 /** One payment (or negative correction) recorded for a supplier. */
 export interface SupplierPayment {
   id: number;
   amount: string;
+  /** Signed: negative only on a correcting entry. */
   fee: string;
+  feePaidBy: FeePayer;
   date: string;
   note: string | null;
+  /** Whose money was sent; null = the business's own money. */
+  investor: { id: number; name: string } | null;
 }
 
 export interface CreateSupplierPayload {
@@ -44,4 +51,7 @@ export interface CreateSupplierPaymentPayload {
   fee?: string;
   date?: string;
   note?: string;
+  investorId?: number;
+  /** INVESTOR only together with investorId. */
+  feePaidBy?: FeePayer;
 }

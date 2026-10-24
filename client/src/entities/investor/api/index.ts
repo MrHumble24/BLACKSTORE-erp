@@ -4,6 +4,7 @@ import type { Page, TelegramLinkResult } from '@/shared/types';
 import type {
   Investor,
   InvestorTransaction,
+  InvestorSupplierPayment,
   CreateInvestorPayload,
   UpdateInvestorPayload,
   CreateInvestorTransactionPayload,
@@ -15,6 +16,8 @@ export const investorKeys = {
   detail: (id: number) => [...investorKeys.all, 'detail', { id }] as const,
   transactions: (id: number, page: number, pageSize: number) =>
     [...investorKeys.all, 'transactions', { id, page, pageSize }] as const,
+  supplierPayments: (id: number, page: number, pageSize: number) =>
+    [...investorKeys.all, 'supplier-payments', { id, page, pageSize }] as const,
 };
 
 /**
@@ -52,6 +55,21 @@ export function useInvestorTransactions(id: number | undefined, page = 1, pageSi
     queryFn: async () => {
       const { data } = await api.get<Page<InvestorTransaction>>(
         `/investors/${id}/transactions`,
+        { params: { page: String(page), pageSize: String(pageSize) } },
+      );
+      return data;
+    },
+  });
+}
+
+/** Fetches the paginated supplier payments made with this investor's money, newest first. */
+export function useInvestorSupplierPayments(id: number | undefined, page = 1, pageSize = 20) {
+  return useQuery({
+    queryKey: investorKeys.supplierPayments(id ?? 0, page, pageSize),
+    enabled: id !== undefined,
+    queryFn: async () => {
+      const { data } = await api.get<Page<InvestorSupplierPayment>>(
+        `/investors/${id}/supplier-payments`,
         { params: { page: String(page), pageSize: String(pageSize) } },
       );
       return data;
