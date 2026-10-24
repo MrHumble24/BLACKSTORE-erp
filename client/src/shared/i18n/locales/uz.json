@@ -1222,6 +1222,8 @@
     },
     "scanPlaceholder": "Skanerlang yoki kiriting",
     "scanHelp": "USB skaner yoki kameradan foydalaning",
+    "scanPanelTitle": "Qurilmalarni skanerlash",
+    "scanInputLabel": "Skaner kodi",
     "cancelDevice": "Qurilmani bekor qilish",
     "resetSettings": "Sozlamalarni tiklash",
     "added": "{{code}} qo'shildi",

@@ -24,7 +24,7 @@ export interface BulkAddConfig {
 }
 
 interface BulkAddState extends BulkAddConfig {
-  setField: (key: keyof BulkAddConfig, value: BulkAddConfig[keyof BulkAddConfig]) => void;
+  setField: <K extends keyof BulkAddConfig>(key: K, value: BulkAddConfig[K]) => void;
   setCategory: (id: number) => void;
   setCodes: (partial: Partial<BulkAddCodes>) => void;
   reset: (userId?: number | null) => void;
@@ -50,7 +50,7 @@ export const useBulkAddStore = create<BulkAddState>()(
   persist(
     (set) => ({
       ...DEFAULT_CONFIG,
-      setField: (key, value) => set({ [key]: value } as Partial<BulkAddState>),
+      setField: (key, value) => set({ [key]: value }),
       setCategory: (id) =>
         set({
           categoryId: id,
@@ -75,3 +75,18 @@ export const useBulkAddStore = create<BulkAddState>()(
     },
   ),
 );
+
+/** Config fields only (no actions); use with `useShallow` so unrelated store changes do not re-render. */
+export const selectConfig = (s: BulkAddState): BulkAddConfig => ({
+  categoryId: s.categoryId,
+  productModelId: s.productModelId,
+  investorId: s.investorId,
+  locationId: s.locationId,
+  condition: s.condition,
+  attributes: s.attributes,
+  purchasePrice: s.purchasePrice,
+  salePrice: s.salePrice,
+  minSalePrice: s.minSalePrice,
+  codes: s.codes,
+  userId: s.userId,
+});

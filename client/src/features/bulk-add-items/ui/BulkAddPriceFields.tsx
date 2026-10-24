@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { useShallow } from 'zustand/react/shallow';
 import { TextField } from '@/shared/ui';
 import { useAuthStore } from '@/entities/session';
 import { useBulkAddStore } from '../model/bulkAdd.store';
@@ -15,11 +16,16 @@ const PRICE_FIELDS: Array<{ key: PriceKey; id: string; label: string; costOnly: 
 /** The three price inputs; the purchase price is additionally hidden without view_cost. */
 export function BulkAddPriceFields({ scan }: { scan: BulkScanState }) {
   const { t } = useTranslation();
-  const store = useBulkAddStore();
+  const prices = useBulkAddStore(
+    useShallow((s) => ({
+      purchasePrice: s.purchasePrice, salePrice: s.salePrice, minSalePrice: s.minSalePrice,
+    })),
+  );
+  const setField = useBulkAddStore((s) => s.setField);
   const canViewCost = useAuthStore((state) => state.hasPermission('view_cost'));
 
   const setPrice = (key: PriceKey, value: string) => {
-    store.setField(key, value);
+    setField(key, value);
     scan.clearConfigError(key);
   };
 
@@ -36,7 +42,7 @@ export function BulkAddPriceFields({ scan }: { scan: BulkScanState }) {
             label={t(price.label)}
             inputMode="decimal"
             placeholder="0.00"
-            value={store[price.key]}
+            value={prices[price.key]}
             error={scan.configErrors[price.key]}
             disabled={scan.isCreating}
             onChange={(e) => setPrice(price.key, e.target.value)}

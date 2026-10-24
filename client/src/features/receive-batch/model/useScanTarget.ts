@@ -17,9 +17,6 @@ export interface ScanTarget {
   code: string;
 }
 
-// Re-export moved from entities/item for backward compatibility.
-export { useScanErrorToast };
-
 interface UseScanTargetOptions {
   batchId: number;
   /** Runs after a successful scan or added code (clears and refocuses the input). */

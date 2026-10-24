@@ -1,5 +1,5 @@
-import { useEffect } from 'react';
 import { type FieldErrors } from 'react-hook-form';
+import { useShallow } from 'zustand/react/shallow';
 import {
   ItemCategoryModelSelects,
   ItemOwnerLocationSelects,
@@ -12,45 +12,110 @@ import { useProductModels } from '@/entities/product-model';
 import { useInvestors } from '@/entities/investor';
 import { useLocations } from '@/entities/location';
 import { useBulkAddStore } from '../model/bulkAdd.store';
+import { useResetMissingId } from '../model/useResetMissingId';
 import type { BulkScanState } from '../model/useBulkScan';
 
-/** Owner (investor), location and condition selects bound to the persisted store. */
-function OwnerLocationBlock({ scan }: { scan: BulkScanState }) {
-  const store = useBulkAddStore();
+type Props = { scan: BulkScanState };
+
+/** Serialized categories only (bulk add is for devices with codes); undefined until loaded. */
+function useSerializedCategories() {
+  const { data } = useCategories();
+  return data?.filter((c) => c.isSerialized);
+}
+
+/** Category and model selects; stale persisted ids are dropped once their list loads without them. */
+function CategoryModelBlock({ scan }: Props) {
+  const { categoryId, productModelId } = useBulkAddStore(
+    useShallow((s) => ({ categoryId: s.categoryId, productModelId: s.productModelId })),
+  );
+  const setField = useBulkAddStore((s) => s.setField);
+  const setCategory = useBulkAddStore((s) => s.setCategory);
   const onClearError = scan.clearConfigError;
-  const { data: investors = [] } = useInvestors();
-  const { data: locations = [] } = useLocations();
+  const categories = useSerializedCategories();
+  const { data: models } = useProductModels(categoryId || undefined);
 
-  useEffect(() => {
-    if (investors.length > 0 && store.investorId > 0 && !investors.some((i) => i.id === store.investorId)) {
-      store.setField('investorId', 0);
-    }
-  }, [investors, store]);
+  // An empty model list (every model of the category deactivated) also resets, else the server 400s.
+  useResetMissingId(categories, categoryId, () => setCategory(0));
+  useResetMissingId(models, productModelId, () => setField('productModelId', 0));
 
-  useEffect(() => {
-    if (locations.length > 0 && store.locationId > 0 && !locations.some((l) => l.id === store.locationId)) {
-      store.setField('locationId', 0);
-    }
-  }, [locations, store]);
+  return (
+    <ItemCategoryModelSelects
+      categoryId={categoryId}
+      onCategoryChange={(id) => {
+        setCategory(id);
+        onClearError('categoryId');
+        onClearError('productModelId');
+      }}
+      categoryError={scan.configErrors.categoryId}
+      categories={categories ?? []}
+      productModelId={productModelId}
+      onModelChange={(id) => {
+        setField('productModelId', id);
+        onClearError('productModelId');
+      }}
+      modelError={scan.configErrors.productModelId}
+      models={models ?? []}
+      disabled={scan.isCreating}
+    />
+  );
+}
+
+/** Owner (investor), location and condition selects bound to the persisted store. */
+function OwnerLocationBlock({ scan }: Props) {
+  const { investorId, locationId, condition } = useBulkAddStore(
+    useShallow((s) => ({ investorId: s.investorId, locationId: s.locationId, condition: s.condition })),
+  );
+  const setField = useBulkAddStore((s) => s.setField);
+  const onClearError = scan.clearConfigError;
+  const { data: investors } = useInvestors();
+  const { data: locations } = useLocations();
+
+  useResetMissingId(investors, investorId, () => setField('investorId', 0));
+  useResetMissingId(locations, locationId, () => setField('locationId', 0));
 
   return (
     <ItemOwnerLocationSelects
-      investorId={store.investorId}
+      investorId={investorId}
       onInvestorChange={(id) => {
-        store.setField('investorId', id);
+        setField('investorId', id);
         onClearError('investorId');
       }}
       investorError={scan.configErrors.investorId}
-      investors={investors}
-      locationId={store.locationId}
+      investors={investors ?? []}
+      locationId={locationId}
       onLocationChange={(id) => {
-        store.setField('locationId', id);
+        setField('locationId', id);
         onClearError('locationId');
       }}
       locationError={scan.configErrors.locationId}
-      locations={locations}
-      condition={store.condition}
-      onConditionChange={(condition: ItemCondition) => store.setField('condition', condition)}
+      locations={locations ?? []}
+      condition={condition}
+      onConditionChange={(value: ItemCondition) => setField('condition', value)}
+      disabled={scan.isCreating}
+    />
+  );
+}
+
+/** Dynamic attribute inputs of the selected category (nothing while no category is chosen). */
+function AttributesBlock({ scan }: Props) {
+  const { categoryId, attributes } = useBulkAddStore(
+    useShallow((s) => ({ categoryId: s.categoryId, attributes: s.attributes })),
+  );
+  const setField = useBulkAddStore((s) => s.setField);
+  const selectedCategory = useSerializedCategories()?.find((c) => c.id === categoryId);
+  if (!selectedCategory) return null;
+
+  const setAttribute = (key: string, value: string) => {
+    setField('attributes', { ...attributes, [key]: value });
+    scan.clearConfigError(`attributes.${key}`);
+  };
+
+  return (
+    <ItemDynamicAttributes
+      attributes={selectedCategory.attributes}
+      values={attributes}
+      onChange={setAttribute}
+      errors={attributeFieldErrors(scan.configErrors)}
       disabled={scan.isCreating}
     />
   );
@@ -60,64 +125,12 @@ function OwnerLocationBlock({ scan }: { scan: BulkScanState }) {
  * Category / model / owner / location / condition dropdowns plus the dynamic attribute fields
  * of the selected category; the persisted bulk-add store is the single source of truth.
  */
-export function BulkAddSettingsFields({ scan }: { scan: BulkScanState }) {
-  const store = useBulkAddStore();
-  const onClearError = scan.clearConfigError;
-  const { configErrors: errors } = scan;
-
-  const { data: categoriesData = [] } = useCategories();
-  const categories = categoriesData.filter((c) => c.isSerialized);
-  const { data: models = [] } = useProductModels(store.categoryId || undefined);
-
-  useEffect(() => {
-    if (categories.length > 0 && store.categoryId > 0 && !categories.some((c) => c.id === store.categoryId)) {
-      store.setCategory(0);
-    }
-  }, [categories, store]);
-
-  useEffect(() => {
-    if (models.length > 0 && store.productModelId > 0 && !models.some((m) => m.id === store.productModelId)) {
-      store.setField('productModelId', 0);
-    }
-  }, [models, store]);
-
-  const selectedCategory = categories.find((c) => c.id === store.categoryId);
-
-  const setAttribute = (key: string, value: string) => {
-    store.setField('attributes', { ...store.attributes, [key]: value });
-    onClearError(`attributes.${key}`);
-  };
-
+export function BulkAddSettingsFields({ scan }: Props) {
   return (
     <div className="space-y-3">
-      <ItemCategoryModelSelects
-        categoryId={store.categoryId}
-        onCategoryChange={(id) => {
-          store.setCategory(id);
-          onClearError('categoryId');
-          onClearError('productModelId');
-        }}
-        categoryError={errors.categoryId}
-        categories={categories}
-        productModelId={store.productModelId}
-        onModelChange={(id) => {
-          store.setField('productModelId', id);
-          onClearError('productModelId');
-        }}
-        modelError={errors.productModelId}
-        models={models}
-        disabled={scan.isCreating}
-      />
+      <CategoryModelBlock scan={scan} />
       <OwnerLocationBlock scan={scan} />
-      {selectedCategory && (
-        <ItemDynamicAttributes
-          attributes={selectedCategory.attributes}
-          values={store.attributes}
-          onChange={setAttribute}
-          errors={attributeFieldErrors(errors)}
-          disabled={scan.isCreating}
-        />
-      )}
+      <AttributesBlock scan={scan} />
     </div>
   );
 }

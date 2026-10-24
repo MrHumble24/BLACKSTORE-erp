@@ -1222,6 +1222,8 @@
     },
     "scanPlaceholder": "Scan or enter",
     "scanHelp": "Use USB scanner or camera",
+    "scanPanelTitle": "Scan devices",
+    "scanInputLabel": "Scan code",
     "cancelDevice": "Cancel device",
     "resetSettings": "Reset settings",
     "added": "{{code}} added",

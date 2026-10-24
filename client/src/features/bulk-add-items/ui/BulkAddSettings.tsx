@@ -12,13 +12,15 @@ import type { BulkScanState } from '../model/useBulkScan';
  */
 export function BulkAddSettings({ scan }: { scan: BulkScanState }) {
   const { t } = useTranslation();
-  const user = useAuthStore((state) => state.user);
-  const store = useBulkAddStore();
+  const userId = useAuthStore((state) => state.user?.id ?? null);
   const canManagePrices = useAuthStore((state) => state.hasPermission('manage_prices'));
+  const resetStore = useBulkAddStore((s) => s.reset);
 
+  // Reset may change the enabled codes, so the half-scanned device is dropped (else its step is gone).
   const reset = () => {
-    store.reset(user?.id ?? null);
+    resetStore(userId);
     scan.clearAllConfigErrors();
+    scan.cancelDevice();
   };
 
   return (

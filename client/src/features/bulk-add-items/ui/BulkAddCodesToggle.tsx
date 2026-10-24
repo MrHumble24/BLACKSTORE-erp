@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { Switch } from '@/shared/ui';
-import { useBulkAddStore } from '../model/bulkAdd.store';
+import { useBulkAddStore, type BulkAddCodes } from '../model/bulkAdd.store';
 import type { BulkScanState } from '../model/useBulkScan';
 
 interface RowProps {
@@ -26,15 +26,15 @@ function CodeRow({ label, checked, disabled, onChange }: RowProps) {
  */
 export function BulkAddCodesToggle({ scan }: { scan: BulkScanState }) {
   const { t } = useTranslation();
-  const store = useBulkAddStore();
+  const codes = useBulkAddStore((s) => s.codes);
+  const setCodes = useBulkAddStore((s) => s.setCodes);
 
-  const changeWithCancel = (partial: Partial<typeof store.codes>) => {
-    store.setCodes(partial);
+  const changeWithCancel = (partial: Partial<BulkAddCodes>) => {
+    setCodes(partial);
     scan.cancelDevice();
   };
 
-  const { configErrors: errors } = scan;
-  const codesError = errors['codes.imei'] ?? errors['codes.imei2'];
+  const codesError = scan.configErrors['codes.imei'];
 
   return (
     <section className="rounded-[28px] border border-hairline-silver/70 bg-gallery-white p-6 space-y-4 shadow-none">
@@ -42,19 +42,19 @@ export function BulkAddCodesToggle({ scan }: { scan: BulkScanState }) {
       <div className="space-y-3">
         <CodeRow
           label={t('items.imei1')}
-          checked={store.codes.imei}
+          checked={codes.imei}
           disabled={scan.isCreating}
           onChange={(checked) => changeWithCancel({ imei: checked })}
         />
         <CodeRow
           label={t('items.imei2')}
-          checked={store.codes.imei2}
+          checked={codes.imei2}
           disabled={scan.isCreating}
           onChange={(checked) => changeWithCancel({ imei2: checked })}
         />
         <CodeRow
           label={t('items.serial')}
-          checked={store.codes.serial}
+          checked={codes.serial}
           disabled={scan.isCreating}
           onChange={(checked) => changeWithCancel({ serial: checked })}
         />
