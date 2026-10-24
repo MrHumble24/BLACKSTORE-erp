@@ -36,6 +36,14 @@ export interface TelegramCredentials {
   alertChatId: string;
 }
 
+/** Everything the inbound poll loop needs from a SINGLE row read per cycle (avoids triple-reading). */
+export interface TelegramRuntime {
+  enabled: boolean; // master switch: flag on AND a token resolves
+  token: string;
+  alertChatId: string;
+  ownerSnapshotEnabled: boolean; // enabled AND the ownerSnapshot feature flag
+}
+
 /**
  * Reads/writes the single 'telegram' Setting row (F12): verify a bot token, store it encrypted,
  * and hand resolved credentials (DB first, env fallback) to the backup and low-stock senders.
@@ -73,6 +81,23 @@ export class TelegramConfigService {
       token: this.env('TELEGRAM_BOT_TOKEN'),
       backupChatId: this.env('TELEGRAM_BACKUP_CHAT_ID'),
       alertChatId: this.env('TELEGRAM_ALERT_CHAT_ID'),
+    };
+  }
+
+  /**
+   * One-shot read for the inbound poll loop: resolves token + alert chat + both gates from a SINGLE
+   * row read, so a 5s cycle no longer reads the row three times (isEnabled + getCredentials +
+   * isFeatureEnabled). Same semantics as those methods, just folded into one read.
+   */
+  async getRuntime(): Promise<TelegramRuntime> {
+    const c = await this.read();
+    const token = this.decryptToken(c) || this.env('TELEGRAM_BOT_TOKEN');
+    const enabled = c.enabled && token !== '';
+    return {
+      enabled,
+      token,
+      alertChatId: c.alertChatId || this.env('TELEGRAM_ALERT_CHAT_ID'),
+      ownerSnapshotEnabled: enabled && (c.features.ownerSnapshot ?? true),
     };
   }
 
