@@ -25,7 +25,8 @@ export function TelegramLinkStatus({ id, linkedAt, linkedBy, canUnlink, unlink, 
   const [open, setOpen] = useState(false);
 
   const by = linkedBy ? t('telegramInvite.linkedBy', { name: linkedBy }) : '';
-  const caption = t('telegramInvite.linkedInfo', { date: formatDate(linkedAt), by });
+  // Records linked before F24 carry no date; fall back to a plain "Linked".
+  const caption = linkedAt ? t('telegramInvite.linkedInfo', { date: formatDate(linkedAt), by }) : t('telegramInvite.linked');
 
   const onConfirm = () =>
     unlink.mutate(id, {

@@ -124,11 +124,15 @@ export class LinkTokenService {
       if (claimed.issuedById !== null) {
         const entry = { userId: claimed.issuedById, entity: entityOf(ref.kind) };
         if (previousId !== null) {
-          const after = { telegramLinked: false, via: 'relink' };
-          await this.audit.log({ ...entry, action: 'telegram_unlink', entityId: previousId, before: { telegramLinked: true }, after }, tx);
+          await this.audit.log(
+            { ...entry, action: 'telegram_unlink', entityId: previousId, before: { telegramLinked: true }, after: { telegramLinked: false, via: 'relink' } },
+            tx,
+          );
         }
-        const after = { telegramLinked: true, via: 'invite' };
-        await this.audit.log({ ...entry, action: 'telegram_link', entityId: ref.refId, before: { telegramLinked: false }, after }, tx);
+        await this.audit.log(
+          { ...entry, action: 'telegram_link', entityId: ref.refId, before: { telegramLinked: false }, after: { telegramLinked: true, via: 'invite' } },
+          tx,
+        );
       }
       return ref;
     });

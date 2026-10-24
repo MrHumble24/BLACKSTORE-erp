@@ -124,7 +124,12 @@ describe('LinkTokenService', () => {
       prisma.telegramLinkToken.updateMany.mockResolvedValue({ count: 1 });
       mockTable(prisma.investor, null, 3);
       await service.linkChat('tok', '555');
-      expect(prisma.investor.update).toHaveBeenCalledWith({ where: { id: 3 }, data: cleared });
+      // Old holder cleared first, then the new chat set: keeps the unique telegramChatId from failing.
+      expect(prisma.investor.update).toHaveBeenNthCalledWith(1, { where: { id: 3 }, data: cleared });
+      expect(prisma.investor.update).toHaveBeenNthCalledWith(2, {
+        where: { id: 9 },
+        data: { telegramChatId: '555', telegramLinkedAt: expect.any(Date) as Date, telegramLinkedById: 7 },
+      });
       expect(audit.log).toHaveBeenCalledWith(
         {
           userId: 7, action: 'telegram_unlink', entity: 'Investor', entityId: 3,

@@ -42,7 +42,6 @@ function InvestorTelegramInvite({ investor, onRefresh }: { investor: Investor; o
   return (
     <TelegramInviteButton
       name={investor.name}
-      linked={false}
       request={() => telegramLink.mutateAsync(investor.id)}
       onClose={onRefresh}
     />

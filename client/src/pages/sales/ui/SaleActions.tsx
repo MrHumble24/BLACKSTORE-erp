@@ -19,7 +19,6 @@ export function SaleActions({ sale, onRefresh }: SaleActionsProps) {
       {link && customer && (
         <TelegramInviteButton
           name={customer.name}
-          linked={false}
           // The sale response already carries the link; no extra request needed.
           request={() => Promise.resolve({ link, linked: false })}
           onClose={onRefresh}
