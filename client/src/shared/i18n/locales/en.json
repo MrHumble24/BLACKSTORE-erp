@@ -50,7 +50,8 @@
     "importStock": "Stock import",
     "backups": "Backups",
     "telegram": "Telegram",
-    "closeDay": "Close day"
+    "closeDay": "Close day",
+    "hardDelete": "Danger zone"
   },
   "auth": {
     "title": "Sign in",
@@ -1100,6 +1101,42 @@
   "superAdmin": {
     "title": "Super admin",
     "subtitle": "Integrations and sensitive settings."
+  },
+  "hardDelete": {
+    "title": "Danger zone",
+    "subtitle": "Permanently delete a device, product model or category and everything under it.",
+    "pickTarget": "Choose what to delete",
+    "pickTargetHint": "Pick the type and enter its id, then preview what will be removed.",
+    "targetType": "Type",
+    "targetId": "Id",
+    "targetIdPlaceholder": "e.g. 42",
+    "type": {
+      "item": "Device",
+      "productModel": "Product model",
+      "category": "Category"
+    },
+    "preview": "Preview",
+    "irreversible": "This permanently deletes the records below. It cannot be undone.",
+    "counts": {
+      "productModels": "Product models",
+      "items": "Devices",
+      "accessoryStock": "Accessory stock rows",
+      "itemIdentifiers": "Identifiers"
+    },
+    "salesLine": "{{count}} sale(s) will vanish",
+    "paymentsLine": "{{count}} payment(s) removed, total {{sum}}",
+    "returnsLine": "{{count}} return(s) removed, refunds {{sum}}",
+    "customers": "Affected customers",
+    "investors": "Affected investors",
+    "none": "None",
+    "continueToDelete": "Continue to delete",
+    "confirmTitle": "Permanently delete?",
+    "confirmDescription": "This cannot be undone. Confirm to delete the previewed records forever.",
+    "typeToConfirm": "Type {{word}} to confirm",
+    "passwordLabel": "Your password",
+    "deleteForever": "Delete forever",
+    "success": "Permanently deleted",
+    "wrongPassword": "Wrong password"
   },
   "telegram": {
     "title": "Telegram bot",

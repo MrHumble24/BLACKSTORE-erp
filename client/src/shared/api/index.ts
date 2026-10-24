@@ -31,11 +31,17 @@ export const api = apiClient;
 export const API_BASE_URL = apiClient.defaults.baseURL ?? '/api';
 
 
+// Endpoints that re-authenticate the caller and return 401 on a wrong password;
+// their 401 is handled inline by the caller and must NOT trigger the global logout.
+const REAUTH_ENDPOINTS = ['/auth/login', '/super-admin/hard-delete'];
+
 apiClient.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
-    // Only redirect/clear on 401 if it is not the login endpoint itself failing
-    if (error.response?.status === 401 && !error.config?.url?.includes('/auth/login')) {
+    const url = error.config?.url ?? '';
+    const isReauth = REAUTH_ENDPOINTS.some((path) => url.endsWith(path));
+    // Only redirect/clear on 401 unless it is a re-auth endpoint handling its own 401.
+    if (error.response?.status === 401 && !isReauth) {
       if (onUnauthorizedCallback) {
         onUnauthorizedCallback();
       }

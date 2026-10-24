@@ -5,7 +5,7 @@ import {
   Home, Users, Smartphone, Headphones, MapPin, Shapes, Coins,
   Building2, Package, ShoppingCart, Receipt, Contact, Settings,
   ArrowLeftRight, ClipboardCheck, ScrollText, Handshake, BarChart3, Upload, DatabaseBackup, Send,
-  CalendarCheck,
+  CalendarCheck, Trash2,
 } from 'lucide-react';
 import { useAuthStore } from '@/entities/session';
 import { cn } from '@/shared/lib';
@@ -139,13 +139,19 @@ function AdminItems({ onNavigate }: { onNavigate?: () => void }) {
   );
 }
 
-/** Super-admin links (Telegram integration), gated on the super-admin-only permission. */
+/** Super-admin links (Telegram integration, danger zone), each gated on its own super-only power. */
 function SuperAdminItems({ onNavigate }: { onNavigate?: () => void }) {
   const { t } = useTranslation();
   const hasPermission = useAuthStore((state) => state.hasPermission);
-  if (!hasPermission('manage_integrations')) return null;
   return (
-    <SidebarItem to="/super-admin/telegram" onClick={onNavigate} icon={<Send className="h-4 w-4" />} label={t('nav.telegram')} />
+    <>
+      {hasPermission('manage_integrations') && (
+        <SidebarItem to="/super-admin/telegram" onClick={onNavigate} icon={<Send className="h-4 w-4" />} label={t('nav.telegram')} />
+      )}
+      {hasPermission('hard_delete') && (
+        <SidebarItem to="/super-admin/hard-delete" onClick={onNavigate} icon={<Trash2 className="h-4 w-4" />} label={t('nav.hardDelete')} />
+      )}
+    </>
   );
 }
 

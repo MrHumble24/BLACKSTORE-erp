@@ -92,6 +92,45 @@ export async function getMe(token: string): Promise<TelegramBot> {
   return { id: r.id, username: r.username ?? '', name: r.first_name ?? '' };
 }
 
+/** One inbound text update the poller cares about (text messages only; everything else is dropped). */
+export interface BotUpdate {
+  updateId: number;
+  chatId: string;
+  text: string;
+}
+
+interface GetBotUpdatesResponse {
+  ok: boolean;
+  result?: Array<{
+    update_id: number;
+    message?: { chat: { id: number }; text?: string };
+  }>;
+}
+
+/**
+ * Long-poll `getUpdates` for the inbound command router (F15): returns text messages as
+ * {updateId, chatId, text}. `offset` acks confirmed updates so they are not re-fetched. Skips
+ * updates without a text message; returns [] on any error (the poller retries next cycle, never throws).
+ */
+export async function getBotUpdates(token: string, offset?: number): Promise<BotUpdate[]> {
+  let json: GetBotUpdatesResponse;
+  try {
+    const qs = offset === undefined ? '' : `?offset=${offset}`;
+    const res = await fetch(`https://api.telegram.org/bot${token}/getUpdates${qs}`);
+    json = (await res.json()) as GetBotUpdatesResponse;
+  } catch {
+    return [];
+  }
+  if (!json.ok || !Array.isArray(json.result)) return [];
+  const updates: BotUpdate[] = [];
+  for (const u of json.result) {
+    const message = u.message;
+    if (!message?.text) continue; // only text messages carry commands
+    updates.push({ updateId: u.update_id, chatId: String(message.chat.id), text: message.text });
+  }
+  return updates;
+}
+
 /** Calls `getUpdates` and returns the distinct recent chats; empty on any error (UI falls back to manual entry). */
 export async function getUpdates(token: string): Promise<TelegramChat[]> {
   let json: GetUpdatesResponse;

@@ -27,7 +27,7 @@ export const ADMIN_ONLY_PERMISSIONS = [
 
 // Super-admin-only powers (F12). Admin never implicitly gets these; only the SuperAdmin role,
 // whose role.permissions explicitly lists them, does.
-export const SUPER_ONLY_PERMISSIONS = ['manage_integrations'] as const;
+export const SUPER_ONLY_PERMISSIONS = ['manage_integrations', 'hard_delete'] as const;
 
 export const ALL_PERMISSIONS = [
   ...STAFF_PERMISSIONS,

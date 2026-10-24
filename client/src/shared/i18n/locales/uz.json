@@ -50,7 +50,8 @@
     "importStock": "Mahsulot importi",
     "backups": "Zaxira nusxalari",
     "telegram": "Telegram",
-    "closeDay": "Kun yakuni"
+    "closeDay": "Kun yakuni",
+    "hardDelete": "Xavfli hudud"
   },
   "auth": {
     "title": "Tizimga kirish",
@@ -1100,6 +1101,42 @@
   "superAdmin": {
     "title": "Super admin",
     "subtitle": "Integratsiyalar va maxfiy sozlamalar."
+  },
+  "hardDelete": {
+    "title": "Xavfli hudud",
+    "subtitle": "Qurilma, mahsulot modeli yoki toifani va uning ichidagi hamma narsani butunlay o'chiradi.",
+    "pickTarget": "Nimani o'chirishni tanlang",
+    "pickTargetHint": "Turini tanlang va id kiriting, so'ng nima o'chishini ko'rib chiqing.",
+    "targetType": "Turi",
+    "targetId": "Id",
+    "targetIdPlaceholder": "masalan 42",
+    "type": {
+      "item": "Qurilma",
+      "productModel": "Mahsulot modeli",
+      "category": "Toifa"
+    },
+    "preview": "Ko'rib chiqish",
+    "irreversible": "Bu quyidagi yozuvlarni butunlay o'chiradi. Buni ortga qaytarib bo'lmaydi.",
+    "counts": {
+      "productModels": "Mahsulot modellari",
+      "items": "Qurilmalar",
+      "accessoryStock": "Aksessuar qoldiq satrlari",
+      "itemIdentifiers": "Identifikatorlar"
+    },
+    "salesLine": "{{count}} ta savdo o'chadi",
+    "paymentsLine": "{{count}} ta to'lov o'chdi, jami {{sum}}",
+    "returnsLine": "{{count}} ta qaytarish o'chdi, qaytarilgan {{sum}}",
+    "customers": "Ta'sirlangan mijozlar",
+    "investors": "Ta'sirlangan investorlar",
+    "none": "Yo'q",
+    "continueToDelete": "O'chirishga o'tish",
+    "confirmTitle": "Butunlay o'chirilsinmi?",
+    "confirmDescription": "Buni ortga qaytarib bo'lmaydi. Ko'rsatilgan yozuvlarni butunlay o'chirish uchun tasdiqlang.",
+    "typeToConfirm": "Tasdiqlash uchun {{word}} deb yozing",
+    "passwordLabel": "Parolingiz",
+    "deleteForever": "Butunlay o'chirish",
+    "success": "Butunlay o'chirildi",
+    "wrongPassword": "Parol noto'g'ri"
   },
   "telegram": {
     "title": "Telegram bot",

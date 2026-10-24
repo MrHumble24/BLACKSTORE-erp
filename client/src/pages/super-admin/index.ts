@@ -1,2 +1,3 @@
-/** Super-admin area (manage_integrations). A Danger zone / hard-delete page lands here later. */
+/** Super-admin area: Telegram integration (manage_integrations) + hard-delete danger zone. */
 export { TelegramPage } from './ui/TelegramPage';
+export { HardDeletePage } from './ui/HardDeletePage';
