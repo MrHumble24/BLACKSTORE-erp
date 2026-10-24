@@ -215,7 +215,8 @@
       "attributeRequired": "{{label}} to'ldirilishi shart",
       "valueRequired": "Qiymatni kiriting",
       "minPriceAboveSale": "Minimal narx sotish narxidan yuqori bo'lishi mumkin emas"
-    }
+    },
+    "openItem": "Qurilma kartasini ochish"
   },
   "accessories": {
     "title": "Aksessuarlar",
@@ -1206,5 +1207,31 @@
     "closedSuccess": "Kun yopildi",
     "methodCash": "Naqd",
     "methodCard": "Karta"
+  },
+  "bulkAdd": {
+    "title": "Ommaviy qo'shish",
+    "subtitle": "Bir marta sozlang, har bir qurilma uchun kodlarni skanerlang",
+    "button": "Ommaviy qo'shish",
+    "settings": "Sozlamalar",
+    "codes": "Har bir qurilmaga kodlar",
+    "codesHint": "Har bir qurilma uchun qaysi kodlarni skanerlashni tanlang",
+    "scanLabel": {
+      "imei": "IMEI 1 ni skanerlash",
+      "imei2": "IMEI 2 ni skanerlash",
+      "serial": "Seriya raqamini skanerlash"
+    },
+    "scanPlaceholder": "Skanerlang yoki kiriting",
+    "scanHelp": "USB skaner yoki kameradan foydalaning",
+    "cancelDevice": "Qurilmani bekor qilish",
+    "resetSettings": "Sozlamalarni tiklash",
+    "added": "{{code}} qo'shildi",
+    "busy": "Oldingi qurilma saqlanmoqda",
+    "addedList": "Ushbu sessiyada qo'shilgan",
+    "emptyList": "Hali hech qanday qurilma qo'shilmagan",
+    "validation": {
+      "codesRequired": "Kamida bitta kodni tanlang",
+      "sameImei": "IMEI 2 IMEI 1 dan farq qilishi kerak",
+      "priceInvalid": "Noto'g'ri narx"
+    }
   }
 }

@@ -6,7 +6,7 @@ import { LoginPage } from '@/pages/login';
 import { LabelPage, BatchLabelsPage } from '@/features/print-label';
 import { HomePage } from '@/pages/home';
 import { UsersPage } from '@/pages/users';
-import { ItemsPage, ItemDetailsPage } from '@/pages/items';
+import { ItemsPage, ItemDetailsPage, BulkAddPage } from '@/pages/items';
 import { AccessoriesPage } from '@/pages/accessories';
 import { LocationsPage } from '@/pages/locations';
 import { CategoriesPage, CategoryDetailPage } from '@/pages/categories';
@@ -74,6 +74,7 @@ const PROTECTED_ROUTES: RouteConfig[] = [
   { path: 'reports/profit', permission: 'view_profit', Component: ProfitReportPage },
   { path: 'reports/investors', permission: 'view_profit', Component: InvestorReportPage },
   { path: 'items/import', permission: 'manage_prices', Component: ImportPage },
+  { path: 'items/bulk-add', permission: 'receive_batch', Component: BulkAddPage },
   { path: 'backups', permission: 'manage_backups', Component: BackupsPage },
   { path: 'super-admin/telegram', permission: 'manage_integrations', Component: TelegramPage },
   { path: 'super-admin/hard-delete', permission: 'hard_delete', Component: HardDeletePage },

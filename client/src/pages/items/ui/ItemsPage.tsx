@@ -1,6 +1,7 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Plus } from 'lucide-react';
+import { Plus, ScanLine } from 'lucide-react';
 import { Button } from '@/shared/ui';
 import { useAuthStore } from '@/features/auth';
 import { useItems, type ItemFilters } from '@/entities/item';
@@ -10,10 +11,12 @@ import { ItemsTable } from './ItemsTable';
 
 function ItemsHeader({
   onAdd,
+  onBulkAdd,
   canReceiveBatch,
   total,
 }: {
   onAdd: () => void;
+  onBulkAdd: () => void;
   canReceiveBatch: boolean;
   total: number;
 }) {
@@ -35,13 +38,23 @@ function ItemsHeader({
         <p className="text-xs text-slate">{t('items.subtitle')}</p>
       </div>
       {canReceiveBatch && (
-        <Button
-          onClick={onAdd}
-          className="gap-2 bg-pricing-blue hover:bg-pricing-blue/90 text-white rounded-full text-xs font-medium px-5 h-9 shrink-0 shadow-none border-0 cursor-pointer"
-        >
-          <Plus className="h-3.5 w-3.5" />
-          <span>{t('items.addItem')}</span>
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            onClick={onBulkAdd}
+            className="gap-2 rounded-full text-xs font-medium px-5 h-9 shrink-0 border-hairline-silver bg-gallery-white text-ink hover:bg-studio-mist"
+          >
+            <ScanLine className="h-3.5 w-3.5" />
+            <span>{t('bulkAdd.button')}</span>
+          </Button>
+          <Button
+            onClick={onAdd}
+            className="gap-2 bg-pricing-blue hover:bg-pricing-blue/90 text-white rounded-full text-xs font-medium px-5 h-9 shrink-0 shadow-none border-0 cursor-pointer"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            <span>{t('items.addItem')}</span>
+          </Button>
+        </div>
       )}
     </div>
   );
@@ -51,6 +64,7 @@ function ItemsHeader({
  * Devices inventory page with filters, pagination, and device creation.
  */
 export function ItemsPage() {
+  const navigate = useNavigate();
   const canReceiveBatch = useAuthStore((state) => state.hasPermission('receive_batch'));
 
   const [filters, setFilters] = useState<ItemFilters>({});
@@ -71,7 +85,12 @@ export function ItemsPage() {
 
   return (
     <div className="space-y-5">
-      <ItemsHeader onAdd={() => setAddDialogOpen(true)} canReceiveBatch={canReceiveBatch} total={total} />
+      <ItemsHeader
+        onAdd={() => setAddDialogOpen(true)}
+        onBulkAdd={() => navigate('/items/bulk-add')}
+        canReceiveBatch={canReceiveBatch}
+        total={total}
+      />
       <ItemsFilters filters={filters} onChange={handleFilterChange} />
 
       <ItemsTable

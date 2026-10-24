@@ -215,7 +215,8 @@
       "attributeRequired": "{{label}} is required",
       "valueRequired": "Value is required",
       "minPriceAboveSale": "Minimum price cannot be higher than the sale price"
-    }
+    },
+    "openItem": "Open device"
   },
   "accessories": {
     "title": "Accessories",
@@ -1206,5 +1207,31 @@
     "closedSuccess": "Day closed",
     "methodCash": "Cash",
     "methodCard": "Card"
+  },
+  "bulkAdd": {
+    "title": "Bulk add devices",
+    "subtitle": "Configure once, scan codes for each device",
+    "button": "Bulk add",
+    "settings": "Settings",
+    "codes": "Codes per device",
+    "codesHint": "Choose which codes to scan for each device",
+    "scanLabel": {
+      "imei": "Scan IMEI 1",
+      "imei2": "Scan IMEI 2",
+      "serial": "Scan serial"
+    },
+    "scanPlaceholder": "Scan or enter",
+    "scanHelp": "Use USB scanner or camera",
+    "cancelDevice": "Cancel device",
+    "resetSettings": "Reset settings",
+    "added": "{{code}} added",
+    "busy": "Still saving the previous device",
+    "addedList": "Added this session",
+    "emptyList": "No devices added yet",
+    "validation": {
+      "codesRequired": "Select at least one code",
+      "sameImei": "IMEI 2 must differ from IMEI 1",
+      "priceInvalid": "Invalid price"
+    }
   }
 }

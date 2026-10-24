@@ -1,11 +1,10 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { getApiErrorMessage } from '@/shared/api';
 import {
   IMEI_REGEX,
   useAddIdentifier,
+  useScanErrorToast,
   type IdentifierType,
   type Item,
   type ItemIdentifier,
@@ -18,19 +17,8 @@ export interface ScanTarget {
   code: string;
 }
 
-/** Toast failure handler; when the API cites item #N, adds a link to that device. */
-export function useScanErrorToast(): FailHandler {
-  const { t } = useTranslation();
-  const navigate = useNavigate();
-  return (error) => {
-    const message = getApiErrorMessage(error) ?? t('common.error');
-    // 409 duplicates cite the owner, e.g. "already belongs to item #42": jump there.
-    const existing = message.match(/#(\d+)/);
-    toast.error(message, existing ? {
-      action: { label: t('batches.openItem'), onClick: () => navigate(`/items/${existing[1]}`) },
-    } : undefined);
-  };
-}
+// Re-export moved from entities/item for backward compatibility.
+export { useScanErrorToast };
 
 interface UseScanTargetOptions {
   batchId: number;
