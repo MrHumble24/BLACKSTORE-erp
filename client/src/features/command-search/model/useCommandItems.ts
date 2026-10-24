@@ -7,6 +7,7 @@ import {
   Building2, Package, ShoppingCart, Receipt, Contact, Settings,
   ArrowLeftRight, ClipboardCheck, ScrollText, Handshake, BarChart3,
   Upload, DatabaseBackup, Moon, Sun, Search, Barcode, CalendarCheck, Trash2,
+  HandCoins, Wallet,
 } from 'lucide-react';
 import { useAuthStore } from '@/entities/session';
 import { useItemByCode } from '@/entities/item';
@@ -71,13 +72,13 @@ function getManagementPages(args: ItemBuilderArgs): CommandItem[] {
     pages.push({ id: 'page-batches', title: t('nav.batches'), category: 'pages', icon: Package, keywords: ['partiya', 'qabul'], perform: () => { navigate('/batches'); close(); } });
   }
   if (hasPermission('buy_walk_in')) {
-    pages.push({ id: 'page-walk-in', title: t('nav.walkInPurchase'), category: 'pages', icon: ShoppingCart, keywords: ['qoldan', 'sotib'], perform: () => { navigate('/purchases/walk-in'); close(); } });
+    pages.push({ id: 'page-walk-in', title: t('nav.walkInPurchase'), category: 'pages', icon: HandCoins, keywords: ['qoldan', 'sotib'], perform: () => { navigate('/purchases/walk-in'); close(); } });
   }
   if (hasPermission('stock_count')) {
     pages.push({ id: 'page-stock-count', title: t('nav.stockCount'), category: 'pages', icon: ClipboardCheck, keywords: ['reviziya', 'sanash'], perform: () => { navigate('/stock-counts'); close(); } });
   }
   if (hasPermission('manage_expenses')) {
-    pages.push({ id: 'page-expenses', title: t('nav.expenses'), category: 'pages', icon: Receipt, keywords: ['xarajat', 'chiqim'], perform: () => { navigate('/expenses'); close(); } });
+    pages.push({ id: 'page-expenses', title: t('nav.expenses'), category: 'pages', icon: Wallet, keywords: ['xarajat', 'chiqim'], perform: () => { navigate('/expenses'); close(); } });
   }
   if (hasPermission('close_day')) {
     pages.push({ id: 'page-close-day', title: t('nav.closeDay'), category: 'pages', icon: CalendarCheck, keywords: ['kassa', 'yopish', 'hisob', 'close', 'reconcile'], perform: () => { navigate('/close-day'); close(); } });

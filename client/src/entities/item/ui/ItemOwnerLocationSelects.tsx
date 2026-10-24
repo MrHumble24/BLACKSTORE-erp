@@ -4,9 +4,13 @@ import type { Investor } from '@/entities/investor';
 import type { Location } from '@/entities/location';
 import type { ItemCondition } from '../model/types';
 
-/** Owner (investor) dropdown with business code appended. */
+/** Searchable owner (investor) dropdown with business code keyword and badge. */
 function InvestorSelect({
-  investorId, onInvestorChange, investorError, investors, disabled,
+  investorId,
+  onInvestorChange,
+  investorError,
+  investors,
+  disabled,
 }: {
   investorId: number;
   onInvestorChange: (id: number) => void;
@@ -18,6 +22,7 @@ function InvestorSelect({
 
   return (
     <SelectField
+      searchable
       label={t('items.owner')}
       required
       value={investorId ? String(investorId) : ''}
@@ -25,14 +30,23 @@ function InvestorSelect({
       disabled={disabled}
       placeholder={t('items.selectOwner')}
       error={investorError}
-      options={investors.map((i) => ({ value: String(i.id), label: `${i.name} (${i.code})` }))}
+      options={investors.map((i) => ({
+        value: String(i.id),
+        label: i.name,
+        badge: i.code,
+        keywords: [i.code],
+      }))}
     />
   );
 }
 
-/** Storage location dropdown. */
+/** Searchable storage location dropdown. */
 function LocationSelect({
-  locationId, onLocationChange, locationError, locations, disabled,
+  locationId,
+  onLocationChange,
+  locationError,
+  locations,
+  disabled,
 }: {
   locationId: number;
   onLocationChange: (id: number) => void;
@@ -44,6 +58,7 @@ function LocationSelect({
 
   return (
     <SelectField
+      searchable
       label={t('items.location')}
       required
       value={locationId ? String(locationId) : ''}
@@ -112,7 +127,7 @@ interface Props {
   disabled: boolean;
 }
 
-/** Dropdowns for selecting Owner (Investor), Location, and Condition. */
+/** Searchable dropdowns for selecting Owner (Investor), Location, and Condition. */
 export function ItemOwnerLocationSelects(props: Props) {
   const { t } = useTranslation();
   const { condition, onConditionChange, disabled } = props;

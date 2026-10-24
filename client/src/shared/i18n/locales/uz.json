@@ -24,9 +24,21 @@
     "phonePlaceholder": "+998 90 123 45 67",
     "lightTheme": "Yorug' mavzu",
     "darkTheme": "Qorong'i mavzu",
-    "toggleTheme": "Mavzuni almashtirish"
+    "toggleTheme": "Mavzuni almashtirish",
+    "search": "Qidiruv...",
+    "noResults": "Hech narsa topilmadi",
+    "select": "Tanlang"
   },
   "nav": {
+    "main": "Asosiy navigatsiya",
+    "groups": {
+      "sales": "Sotuv",
+      "stock": "Ombor",
+      "purchasing": "Xaridlar",
+      "finance": "Moliya",
+      "settings": "Sozlamalar",
+      "superAdmin": "Super admin"
+    },
     "home": "Bosh sahifa",
     "users": "Foydalanuvchilar",
     "items": "Qurilmalar",

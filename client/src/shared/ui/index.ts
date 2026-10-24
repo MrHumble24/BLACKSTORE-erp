@@ -22,3 +22,5 @@ export * from './CameraScanButton';
 export * from './ScanCodeInput';
 export * from './DateRangeInputs';
 export * from './sheet';
+export * from './popover';
+export * from './SearchableSelect';

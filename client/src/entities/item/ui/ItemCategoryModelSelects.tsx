@@ -15,7 +15,7 @@ interface Props {
   disabled: boolean;
 }
 
-/** Dropdowns for selecting item Category and Product Model. */
+/** Searchable dropdowns for selecting item Category and Product Model. */
 export function ItemCategoryModelSelects({
   categoryId,
   onCategoryChange,
@@ -32,6 +32,7 @@ export function ItemCategoryModelSelects({
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
       <SelectField
+        searchable
         label={t('items.category')}
         required
         value={categoryId ? String(categoryId) : ''}
@@ -45,6 +46,7 @@ export function ItemCategoryModelSelects({
         }))}
       />
       <SelectField
+        searchable
         label={t('items.model')}
         required
         value={productModelId ? String(productModelId) : ''}

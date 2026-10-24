@@ -24,9 +24,21 @@
     "phonePlaceholder": "+998 90 123 45 67",
     "lightTheme": "Светлая тема",
     "darkTheme": "Темная тема",
-    "toggleTheme": "Переключить тему"
+    "toggleTheme": "Переключить тему",
+    "search": "Поиск...",
+    "noResults": "Ничего не найдено",
+    "select": "Выбрать"
   },
   "nav": {
+    "main": "Основная навигация",
+    "groups": {
+      "sales": "Продажи",
+      "stock": "Склад",
+      "purchasing": "Закупки",
+      "finance": "Финансы",
+      "settings": "Настройки",
+      "superAdmin": "Супер-админ"
+    },
     "home": "Главная",
     "users": "Пользователи",
     "items": "Устройства",

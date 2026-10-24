@@ -24,9 +24,21 @@
     "phonePlaceholder": "+998 90 123 45 67",
     "lightTheme": "Light theme",
     "darkTheme": "Dark theme",
-    "toggleTheme": "Toggle theme"
+    "toggleTheme": "Toggle theme",
+    "search": "Search...",
+    "noResults": "No results found",
+    "select": "Select"
   },
   "nav": {
+    "main": "Main navigation",
+    "groups": {
+      "sales": "Sales",
+      "stock": "Stock",
+      "purchasing": "Purchasing",
+      "finance": "Finance",
+      "settings": "Settings",
+      "superAdmin": "Super admin"
+    },
     "home": "Home",
     "users": "Users",
     "items": "Devices",

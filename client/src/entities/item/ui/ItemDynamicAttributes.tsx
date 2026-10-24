@@ -4,6 +4,27 @@ import { Input, Label, SelectField } from '@/shared/ui';
 import type { CategoryAttribute } from '@/entities/category';
 import type { ItemFormValues } from '../model/item.schema';
 
+const COMMON_COLOR_OPTIONS = [
+  'Natural Titanium',
+  'Desert Titanium',
+  'Black Titanium',
+  'White Titanium',
+  'Space Black',
+  'Silver',
+  'Gold',
+  'Deep Purple',
+  'Midnight',
+  'Starlight',
+  'Blue',
+  'Black',
+  'White',
+  'Pink',
+  'Green',
+  'Yellow',
+  'Red',
+  'Purple',
+];
+
 interface FieldProps {
   attr: CategoryAttribute;
   val: string;
@@ -13,9 +34,13 @@ interface FieldProps {
 }
 
 function AttributeField({ attr, val, errorMsg, onChange, disabled }: FieldProps) {
-  if (attr.type === 'SELECT' && attr.options) {
+  // If predefined options exist, provide a searchable select with custom value fallback.
+  if (attr.options && attr.options.length > 0) {
     return (
       <SelectField
+        searchable
+        allowCustom
+        onCustomValue={(newVal) => onChange(attr.key, newVal)}
         label={attr.label}
         required={attr.required}
         value={val}
@@ -24,6 +49,25 @@ function AttributeField({ attr, val, errorMsg, onChange, disabled }: FieldProps)
         placeholder={attr.label}
         error={errorMsg}
         options={attr.options.map((opt) => ({ value: opt, label: opt }))}
+      />
+    );
+  }
+
+  // Common text attributes like Color get searchable quick-select suggestions.
+  if (attr.type === 'TEXT' && attr.key.toLowerCase().includes('color')) {
+    return (
+      <SelectField
+        searchable
+        allowCustom
+        onCustomValue={(newVal) => onChange(attr.key, newVal)}
+        label={attr.label}
+        required={attr.required}
+        value={val}
+        onValueChange={(newVal) => onChange(attr.key, newVal)}
+        disabled={disabled}
+        placeholder={attr.label}
+        error={errorMsg}
+        options={COMMON_COLOR_OPTIONS.map((c) => ({ value: c, label: c }))}
       />
     );
   }
@@ -55,7 +99,7 @@ interface ItemDynamicAttributesProps {
   disabled: boolean;
 }
 
-/** Dynamic form fields matching the selected category's attribute schema. */
+/** Dynamic form fields matching the selected category's attribute schema with searchable specs. */
 export function ItemDynamicAttributes({
   attributes,
   values,
