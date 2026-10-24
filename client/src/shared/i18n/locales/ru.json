@@ -49,7 +49,8 @@
     "reports": "Отчёты",
     "importStock": "Импорт товаров",
     "backups": "Резервные копии",
-    "telegram": "Telegram"
+    "telegram": "Telegram",
+    "closeDay": "Закрытие дня"
   },
   "auth": {
     "title": "Вход в систему",
@@ -633,7 +634,10 @@
       "amountRequired": "Сумма обязательна",
       "amountInvalid": "Неверный формат суммы",
       "amountPositive": "Сумма должна быть больше нуля"
-    }
+    },
+    "inCash": "Наличные (касса)",
+    "fromCash": "Из кассы (наличные)",
+    "fromBank": "С банка / карты"
   },
   "auditLog": {
     "title": "Журнал аудита",
@@ -1117,11 +1121,47 @@
     "enabled": "Включено",
     "enabledHint": "Главный переключатель для всех сообщений Telegram.",
     "features": {
-      "lowStockDigest": "Ежедневная сводка по остаткам"
+      "lowStockDigest": "Ежедневная сводка по остаткам",
+      "ownerSnapshot": "Ежедневная сводка владельцу"
     },
     "disconnect": "Отключить",
     "disconnectTitle": "Отключить Telegram?",
     "disconnectWarning": "Сохранённый бот и чаты будут удалены. Резервные копии и уведомления прекратятся до повторного подключения.",
     "disconnectSuccess": "Telegram отключён"
+  },
+  "closeDay": {
+    "title": "Закрытие дня",
+    "subtitle": "Пересчитайте кассу и подтвердите день",
+    "openedAt": "Открыт с {{time}}",
+    "loadError": "Не удалось загрузить данные за сегодня",
+    "expected": "Ожидается",
+    "counted": "Фактически",
+    "cashDrawer": "Касса (наличные)",
+    "cashHint": "Пересчитайте наличные в кассе",
+    "card": "Карта",
+    "cardHint": "Сумма по картам за сегодня",
+    "enterCount": "Введите сумму",
+    "matches": "Совпадает",
+    "short": "Недостача",
+    "over": "Излишек",
+    "sales": "Продажи",
+    "returns": "Возвраты",
+    "expenses": "Расходы",
+    "income": "Доходы",
+    "noneToday": "Сегодня нет",
+    "unknownSeller": "Неизвестно",
+    "cashBack": "Наличными",
+    "fromCash": "Наличные",
+    "fromBank": "Банк",
+    "flag": "Отметить как подозрительное",
+    "flagReason": "Что не так?",
+    "closeDay": "Закрыть день",
+    "confirmTitle": "Закрыть день?",
+    "confirmSubtitle": "Данные за день будут зафиксированы и начнётся новый день. Отменить нельзя.",
+    "flaggedCount": "Отмечено записей: {{n}}",
+    "note": "Заметка (необязательно)",
+    "notePlaceholder": "Что важно запомнить о сегодняшнем дне",
+    "confirmClose": "Подтвердить закрытие",
+    "closedSuccess": "День закрыт"
   }
 }

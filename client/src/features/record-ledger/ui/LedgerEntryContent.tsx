@@ -19,7 +19,7 @@ export function LedgerEntryContent({ onClose }: { onClose: () => void }) {
 
   const form = useForm<LedgerFormValues>({
     resolver: zodResolver(createLedgerSchema(t)),
-    defaultValues: { type: 'EXPENSE', category: '', amount: '', date: todayIso, note: '', countsInProfit: false },
+    defaultValues: { type: 'EXPENSE', category: '', amount: '', date: todayIso, note: '', countsInProfit: false, inCash: true },
   });
   const isIncome = useWatch({ control: form.control, name: 'type' }) === 'INCOME';
 
@@ -29,6 +29,7 @@ export function LedgerEntryContent({ onClose }: { onClose: () => void }) {
         type: values.type,
         category: values.category.trim(),
         amount: normalizeMoney(values.amount),
+        inCash: values.inCash,
         ...(values.date.trim() ? { date: values.date.trim() } : {}),
         ...(values.note.trim() ? { note: values.note.trim() } : {}),
         ...(values.type === 'INCOME' ? { countsInProfit: values.countsInProfit } : {}),

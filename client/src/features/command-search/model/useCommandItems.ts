@@ -6,7 +6,7 @@ import {
   Home, Users, Smartphone, Headphones, MapPin, Shapes, Coins,
   Building2, Package, ShoppingCart, Receipt, Contact, Settings,
   ArrowLeftRight, ClipboardCheck, ScrollText, Handshake, BarChart3,
-  Upload, DatabaseBackup, Moon, Sun, Search, Barcode,
+  Upload, DatabaseBackup, Moon, Sun, Search, Barcode, CalendarCheck,
 } from 'lucide-react';
 import { useAuthStore } from '@/entities/session';
 import { useItemByCode } from '@/entities/item';
@@ -78,6 +78,9 @@ function getManagementPages(args: ItemBuilderArgs): CommandItem[] {
   }
   if (hasPermission('manage_expenses')) {
     pages.push({ id: 'page-expenses', title: t('nav.expenses'), category: 'pages', icon: Receipt, keywords: ['xarajat', 'chiqim'], perform: () => { navigate('/expenses'); close(); } });
+  }
+  if (hasPermission('close_day')) {
+    pages.push({ id: 'page-close-day', title: t('nav.closeDay'), category: 'pages', icon: CalendarCheck, keywords: ['kassa', 'yopish', 'hisob', 'close', 'reconcile'], perform: () => { navigate('/close-day'); close(); } });
   }
   if (hasPermission('view_audit_log')) {
     pages.push({ id: 'page-audit-log', title: t('nav.auditLog'), category: 'pages', icon: ScrollText, keywords: ['tarix', 'amallar', 'log'], perform: () => { navigate('/audit-log'); close(); } });

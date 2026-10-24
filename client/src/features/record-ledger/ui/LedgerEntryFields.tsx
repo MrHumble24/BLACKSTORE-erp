@@ -66,6 +66,19 @@ export function LedgerEntryFields({ control, register, errors, categories, isInc
     <div className="space-y-3">
       <TypeAndCategory control={control} register={register} errors={errors} categories={categories} disabled={disabled} />
       <AmountDateNote register={register} errors={errors} disabled={disabled} />
+      <Controller
+        control={control}
+        name="inCash"
+        render={({ field }) => (
+          <div className="flex items-center justify-between rounded-2xl border border-hairline-silver/60 bg-studio-mist/40 px-3 py-2.5">
+            <div>
+              <Label htmlFor="ledger-in-cash" className="text-xs">{t('ledger.inCash')}</Label>
+              <p className="text-[11px] text-slate">{field.value ? t('ledger.fromCash') : t('ledger.fromBank')}</p>
+            </div>
+            <Switch id="ledger-in-cash" checked={field.value} onCheckedChange={field.onChange} disabled={disabled} />
+          </div>
+        )}
+      />
       {isIncome && (
         <Controller
           control={control}

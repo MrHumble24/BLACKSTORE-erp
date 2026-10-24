@@ -3,6 +3,8 @@
 /** Per-feature notification flags; grows as new Telegram-backed features ship. */
 export interface TelegramFeatures {
   lowStockDigest: boolean;
+  /** Daily owner business snapshot pushed to the owner's chat (F14). */
+  ownerSnapshot: boolean;
 }
 
 /** Saved Telegram state from GET /integrations/telegram (never includes a token). */

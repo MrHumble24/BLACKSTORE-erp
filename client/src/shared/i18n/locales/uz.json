@@ -49,7 +49,8 @@
     "reports": "Hisobotlar",
     "importStock": "Mahsulot importi",
     "backups": "Zaxira nusxalari",
-    "telegram": "Telegram"
+    "telegram": "Telegram",
+    "closeDay": "Kun yakuni"
   },
   "auth": {
     "title": "Tizimga kirish",
@@ -633,7 +634,10 @@
       "amountRequired": "Summani kiriting",
       "amountInvalid": "Summa formati noto'g'ri",
       "amountPositive": "Summa 0 dan katta bo'lishi kerak"
-    }
+    },
+    "inCash": "Naqd (kassa)",
+    "fromCash": "Kassadan (naqd)",
+    "fromBank": "Bank / kartadan"
   },
   "auditLog": {
     "title": "Audit jurnali",
@@ -1117,11 +1121,47 @@
     "enabled": "Yoqilgan",
     "enabledHint": "Barcha Telegram xabarlari uchun asosiy tugma.",
     "features": {
-      "lowStockDigest": "Kam qolgan tovarlar kunlik hisoboti"
+      "lowStockDigest": "Kam qolgan tovarlar kunlik hisoboti",
+      "ownerSnapshot": "Egaga kunlik hisobot"
     },
     "disconnect": "Uzish",
     "disconnectTitle": "Telegram uzilsinmi?",
     "disconnectWarning": "Saqlangan bot va chatlar o'chiriladi. Qayta ulamaguningizcha zaxira nusxalar va ogohlantirishlar to'xtaydi.",
     "disconnectSuccess": "Telegram uzildi"
+  },
+  "closeDay": {
+    "title": "Kun yakuni",
+    "subtitle": "Kassani sanang va kunni tasdiqlang",
+    "openedAt": "{{time}} dan ochiq",
+    "loadError": "Bugungi ma'lumotlarni yuklab bo'lmadi",
+    "expected": "Kutilgan",
+    "counted": "Sanaldi",
+    "cashDrawer": "Kassa (naqd)",
+    "cashHint": "Kassadagi naqd pulni sanang",
+    "card": "Karta",
+    "cardHint": "Bugun karta orqali olingan summa",
+    "enterCount": "Summani kiriting",
+    "matches": "Mos keladi",
+    "short": "Kam",
+    "over": "Ortiqcha",
+    "sales": "Sotuvlar",
+    "returns": "Qaytarishlar",
+    "expenses": "Xarajatlar",
+    "income": "Daromadlar",
+    "noneToday": "Bugun yo'q",
+    "unknownSeller": "Noma'lum",
+    "cashBack": "Naqd qaytarildi",
+    "fromCash": "Naqd",
+    "fromBank": "Bank",
+    "flag": "Shubhali deb belgilash",
+    "flagReason": "Nimasi noto'g'ri?",
+    "closeDay": "Kunni yopish",
+    "confirmTitle": "Kun yopilsinmi?",
+    "confirmSubtitle": "Bugungi hisob qotiriladi va yangi kun boshlanadi. Buni ortga qaytarib bo'lmaydi.",
+    "flaggedCount": "{{n}} ta yozuv belgilandi",
+    "note": "Izoh (ixtiyoriy)",
+    "notePlaceholder": "Bugun haqida eslab qolish kerak bo'lgan narsa",
+    "confirmClose": "Yopishni tasdiqlash",
+    "closedSuccess": "Kun yopildi"
   }
 }

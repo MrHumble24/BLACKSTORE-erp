@@ -7,6 +7,7 @@ import { hasPermission } from '../common/permissions';
 import { PrismaService } from '../prisma/prisma.service';
 import { ProfitReportService } from '../reports/profit-report.service';
 import { debtBalanceOf, debtSaleSelect } from '../sales/sale-totals';
+import type { OwnerSnapshotData } from './owner-snapshot';
 
 /** Lean select for a recent-sales row: only the fields the dashboard list renders. */
 const recentSaleSelect = {
@@ -29,9 +30,21 @@ export class DashboardService {
     private readonly profit: ProfitReportService,
   ) {}
 
-  /** Builds the role-masked summary; all reads run in parallel (no N+1). */
+  /** Builds the role-masked summary; profit is shown only to view_profit. */
   async summary(actor: PublicUser) {
-    const canViewProfit = hasPermission(actor, 'view_profit');
+    return this.collect(hasPermission(actor, 'view_profit'));
+  }
+
+  /**
+   * Owner Telegram snapshot (roadmap #1): the same figures as the dashboard but always
+   * profit-inclusive — it only ever goes to the owner's private chat (FR-29).
+   */
+  async ownerSnapshot(): Promise<OwnerSnapshotData> {
+    return this.collect(true);
+  }
+
+  /** One parallel batch of reads (no N+1, no writes); profit fields included only when allowed. */
+  private async collect(canViewProfit: boolean) {
     const today = startOfToday();
     const [todaySales, stock, lowStockCount, debts, overdueCount, recentSales, todayProfit, monthProfit] =
       await Promise.all([
