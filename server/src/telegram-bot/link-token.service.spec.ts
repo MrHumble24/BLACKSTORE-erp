@@ -14,7 +14,7 @@ const makePrisma = () => {
       updateMany: jest.fn(),
     },
     customer: { updateMany: jest.fn(), update: jest.fn() },
-    investor: { updateMany: jest.fn(), update: jest.fn() },
+    investor: { updateMany: jest.fn(), update: jest.fn(), findUnique: jest.fn() },
     $transaction: jest.fn(),
   };
   prisma.$transaction.mockImplementation((cb: (tx: typeof prisma) => unknown) => cb(prisma));
@@ -47,11 +47,18 @@ describe('LinkTokenService', () => {
     });
 
     it('mints a new token when none is live', async () => {
+      prisma.investor.findUnique.mockResolvedValue({ isOwn: null });
       prisma.telegramLinkToken.findFirst.mockResolvedValue(null);
       prisma.telegramLinkToken.create.mockResolvedValue({ token: 'fresh-token' });
       const token = await service.issueToken(TelegramLinkKind.INVESTOR, 9);
       expect(token).toBe('fresh-token');
       expect(prisma.telegramLinkToken.create).toHaveBeenCalled();
+    });
+
+    it('refuses to issue a token for the OWN/business investor (its row is whole-business figures)', async () => {
+      prisma.investor.findUnique.mockResolvedValue({ isOwn: true });
+      await expect(service.issueToken(TelegramLinkKind.INVESTOR, 1)).rejects.toThrow('cannot be linked');
+      expect(prisma.telegramLinkToken.create).not.toHaveBeenCalled();
     });
   });
 

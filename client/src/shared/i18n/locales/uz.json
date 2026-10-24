@@ -1162,7 +1162,8 @@
       "ownerSnapshot": "Egaga kunlik hisobot",
       "customerReceipts": "Mijozlarga cheklar",
       "debtReminders": "Qarz eslatmalari",
-      "warrantyReminders": "Kafolat eslatmalari"
+      "warrantyReminders": "Kafolat eslatmalari",
+      "investorReports": "Investor hisobotlari"
     },
     "disconnect": "Uzish",
     "disconnectTitle": "Telegram uzilsinmi?",
@@ -1202,6 +1203,8 @@
     "note": "Izoh (ixtiyoriy)",
     "notePlaceholder": "Bugun haqida eslab qolish kerak bo'lgan narsa",
     "confirmClose": "Yopishni tasdiqlash",
-    "closedSuccess": "Kun yopildi"
+    "closedSuccess": "Kun yopildi",
+    "methodCash": "Naqd",
+    "methodCard": "Karta"
   }
 }

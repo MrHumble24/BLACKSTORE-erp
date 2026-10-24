@@ -13,6 +13,7 @@ import { ConsignmentsModule } from './consignments/consignments.module';
 import { CustomerNotificationsModule } from './customer-notifications/customer-notifications.module';
 import { CustomersModule } from './customers/customers.module';
 import { DashboardModule } from './dashboard/dashboard.module';
+import { InvestorNotificationsModule } from './investor-notifications/investor-notifications.module';
 import { ItemsModule } from './items/items.module';
 import { PrismaExceptionFilter } from './common/prisma-exception.filter';
 import { validateEnv } from './config/env.validation';
@@ -59,6 +60,7 @@ import { WalkInPurchasesModule } from './walk-in-purchases/walk-in-purchases.mod
     CustomersModule,
     SalesModule,
     CustomerNotificationsModule,
+    InvestorNotificationsModule,
     PartnersModule,
     ConsignmentsModule,
     ReportsModule,

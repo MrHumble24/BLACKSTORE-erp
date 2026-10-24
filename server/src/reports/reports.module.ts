@@ -7,6 +7,6 @@ import { ReportsController } from './reports.controller';
 @Module({
   controllers: [ReportsController],
   providers: [ProfitReportService, InvestorReportService],
-  exports: [ProfitReportService],
+  exports: [ProfitReportService, InvestorReportService], // investor report cron (F18) reuses this
 })
 export class ReportsModule {}

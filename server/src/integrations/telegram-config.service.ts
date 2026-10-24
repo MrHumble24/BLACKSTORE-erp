@@ -17,6 +17,8 @@ export interface TelegramFeatures {
   customerReceipts: boolean;
   debtReminders: boolean;
   warrantyReminders: boolean;
+  // Monthly per-investor report cron (F18, roadmap #6). Default OFF — it messages external investors.
+  investorReports: boolean;
 }
 
 /** The 'telegram' Setting row value. The token is stored encrypted and never leaves the server. */
@@ -142,6 +144,7 @@ export class TelegramConfigService {
         customerReceipts: dto.features?.customerReceipts ?? before.features.customerReceipts,
         debtReminders: dto.features?.debtReminders ?? before.features.debtReminders,
         warrantyReminders: dto.features?.warrantyReminders ?? before.features.warrantyReminders,
+        investorReports: dto.features?.investorReports ?? before.features.investorReports,
       },
     };
     await this.persist(next, before, actorId);
@@ -168,6 +171,7 @@ export class TelegramConfigService {
         customerReceipts: dto.features?.customerReceipts ?? before.features.customerReceipts,
         debtReminders: dto.features?.debtReminders ?? before.features.debtReminders,
         warrantyReminders: dto.features?.warrantyReminders ?? before.features.warrantyReminders,
+        investorReports: dto.features?.investorReports ?? before.features.investorReports,
       },
     };
     await this.persist(next, before, actorId);
@@ -227,6 +231,9 @@ export class TelegramConfigService {
         customerReceipts: s.features?.customerReceipts ?? false,
         debtReminders: s.features?.debtReminders ?? false,
         warrantyReminders: s.features?.warrantyReminders ?? false,
+        // Investor reports message external investors → OFF until the owner opts in (same `?? false`
+        // reason as the customer flags above: isFeatureEnabled defaults a MISSING flag to on).
+        investorReports: s.features?.investorReports ?? false,
       },
     };
   }

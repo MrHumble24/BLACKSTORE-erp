@@ -1,4 +1,4 @@
-import { getBotUpdates } from './telegram';
+import { errorMessage, getBotUpdates, safeSend } from './telegram';
 
 /** getBotUpdates: maps raw Telegram updates, drops non-text ones, and never throws. */
 describe('getBotUpdates', () => {
@@ -32,5 +32,39 @@ describe('getBotUpdates', () => {
   it('returns [] on a network error (never throws)', async () => {
     global.fetch = jest.fn().mockRejectedValue(new Error('down')) as unknown as typeof fetch;
     expect(await getBotUpdates('t')).toEqual([]);
+  });
+});
+
+/** safeSend: shared per-recipient sender — logs (labelled) on failure, never throws. */
+describe('safeSend', () => {
+  const logger = { warn: jest.fn() } as unknown as import('@nestjs/common').Logger;
+
+  afterEach(() => jest.restoreAllMocks());
+  beforeEach(() => (logger.warn as jest.Mock).mockClear());
+
+  it('sends and logs nothing on a 2xx response', async () => {
+    global.fetch = jest.fn().mockResolvedValue({ ok: true }) as unknown as typeof fetch;
+    await safeSend(logger, 't', 'c', 'hi', 'Investor report');
+    expect(logger.warn).not.toHaveBeenCalled();
+  });
+
+  it('logs a labelled "failed to send" on a non-2xx response (no throw)', async () => {
+    global.fetch = jest.fn().mockResolvedValue({ ok: false }) as unknown as typeof fetch;
+    await safeSend(logger, 't', 'c', 'hi', 'Investor report');
+    expect(logger.warn).toHaveBeenCalledWith('Investor report failed to send');
+  });
+
+  it('swallows a thrown error and logs it labelled (never throws)', async () => {
+    global.fetch = jest.fn().mockRejectedValue(new Error('network')) as unknown as typeof fetch;
+    await expect(safeSend(logger, 't', 'c', 'hi', 'Investor report')).resolves.toBeUndefined();
+    expect(logger.warn).toHaveBeenCalledWith('Investor report errored: network');
+  });
+});
+
+/** errorMessage: Error → its message, anything else → String(). */
+describe('errorMessage', () => {
+  it('reads an Error message, else stringifies', () => {
+    expect(errorMessage(new Error('boom'))).toBe('boom');
+    expect(errorMessage('plain')).toBe('plain');
   });
 });

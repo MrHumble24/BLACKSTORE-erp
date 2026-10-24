@@ -11,6 +11,8 @@ export interface TelegramFeatures {
   debtReminders: boolean;
   /** Warranty-expiry reminders to customers (F17). */
   warrantyReminders: boolean;
+  /** Monthly report pushed to each linked investor (F18). */
+  investorReports: boolean;
 }
 
 /** Saved Telegram state from GET /integrations/telegram (never includes a token). */

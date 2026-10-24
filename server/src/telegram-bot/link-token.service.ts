@@ -1,5 +1,5 @@
 import { randomBytes } from 'node:crypto';
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { Prisma, TelegramLinkKind } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { TelegramConfigService } from '../integrations/telegram-config.service';
@@ -31,6 +31,13 @@ export class LinkTokenService {
    * exists so reprinting a receipt doesn't spawn endless rows; otherwise mint a fresh url-safe token.
    */
   async issueToken(kind: TelegramLinkKind, refId: number): Promise<string> {
+    // The OWN/business investor's report folds in whole-business and accessory figures, so its record
+    // must never be linked to a Telegram chat. Refuse at the single mint point (covers buildInviteLink
+    // and any future caller), so no token can ever exist for it — defense in depth with the F18 query.
+    if (kind === TelegramLinkKind.INVESTOR) {
+      const investor = await this.prisma.investor.findUnique({ where: { id: refId }, select: { isOwn: true } });
+      if (investor?.isOwn) throw new BadRequestException('The business investor cannot be linked to Telegram');
+    }
     const now = new Date();
     const live = await this.prisma.telegramLinkToken.findFirst({
       where: { kind, refId, usedAt: null, expiresAt: { gt: now } },
