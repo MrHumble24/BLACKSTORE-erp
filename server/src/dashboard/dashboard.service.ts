@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ConsignmentItemStatus, ItemStatus, Prisma, SaleStatus } from '@prisma/client';
+import { lowStockIds } from '../accessory-stock/low-stock';
 import type { PublicUser } from '../common/auth-user';
 import { endOfDay, startOfToday } from '../common/dates';
 import { hasPermission } from '../common/permissions';
@@ -32,10 +33,11 @@ export class DashboardService {
   async summary(actor: PublicUser) {
     const canViewProfit = hasPermission(actor, 'view_profit');
     const today = startOfToday();
-    const [todaySales, stock, debts, overdueCount, recentSales, todayProfit, monthProfit] =
+    const [todaySales, stock, lowStockCount, debts, overdueCount, recentSales, todayProfit, monthProfit] =
       await Promise.all([
         this.todaySales(today),
         this.stockCounts(),
+        lowStockIds(this.prisma).then((ids) => ids.length),
         this.customerDebt(),
         this.overdueConsignments(today),
         this.recentSales(),
@@ -48,6 +50,8 @@ export class DashboardService {
         ...(todayProfit ? { profit: todayProfit.gross.toFixed(2) } : {}),
       },
       stock,
+      // Count of accessory rows at/under their alert threshold (#7); stock info, visible to staff.
+      lowStockCount,
       debts,
       partners: { overdueCount },
       ...(monthProfit ? { monthNetProfit: monthProfit.net.toFixed(2) } : {}),

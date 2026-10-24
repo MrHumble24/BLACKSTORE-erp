@@ -33,6 +33,13 @@ function makeService() {
         Promise.resolve(args.where.status === 'IN_STOCK' ? 42 : 5),
       ),
     },
+    // Two low rows (both pass isLowStock) → lowStockCount 2.
+    accessoryStock: {
+      findMany: jest.fn().mockResolvedValue([
+        { id: 1, quantity: 2, productModel: { lowStockThreshold: 5 } },
+        { id: 2, quantity: 1, productModel: { lowStockThreshold: 3 } },
+      ]),
+    },
     consignmentItem: { count: jest.fn().mockResolvedValue(2) },
   } as unknown as PrismaService;
   const profit = {
@@ -48,6 +55,7 @@ describe('DashboardService.summary (F10)', () => {
     expect(res.today.salesCount).toBe(3);
     expect(res.today.salesTotal).toBe('1500.00');
     expect(res.stock).toEqual({ inStockDevices: 42, atPartnerDevices: 5 });
+    expect(res.lowStockCount).toBe(2); // two accessory rows at/under threshold (#7)
     // Only customer 1 still owes (600 + 500); customer 2's balance is 0 → excluded.
     expect(res.debts).toEqual({ customerDebtTotal: '1100.00', debtorCount: 1 });
     expect(res.partners.overdueCount).toBe(2);

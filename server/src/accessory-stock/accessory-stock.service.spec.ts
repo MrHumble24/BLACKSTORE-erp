@@ -12,7 +12,7 @@ const stockRow = {
   id: 1,
   quantity: 20,
   avgCost: new Prisma.Decimal('150'),
-  productModel: { id: 1, name: 'Charger', category: { id: 2, name: 'Accessory' } },
+  productModel: { id: 1, name: 'Charger', lowStockThreshold: null, category: { id: 2, name: 'Accessory' } },
   location: { id: 1, name: 'Shop' },
 };
 

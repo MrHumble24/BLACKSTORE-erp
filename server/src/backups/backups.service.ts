@@ -29,7 +29,8 @@ import {
   type Sidecar,
   KEEP,
 } from './backup-files';
-import { sendDocument, telegramSkipReason } from './telegram';
+import { sendDocument, telegramSkipReason } from '../common/telegram';
+import { TelegramConfigService } from '../integrations/telegram-config.service';
 
 export interface RestoreResult {
   restoredFrom: string;
@@ -70,6 +71,7 @@ export class BackupsService {
   constructor(
     private readonly config: ConfigService,
     private readonly audit: AuditService,
+    private readonly telegram: TelegramConfigService,
   ) {}
 
   /** Daily off-hours dump; failures are logged, never thrown (the cron must keep running). */
@@ -169,8 +171,7 @@ export class BackupsService {
 
   /** Sends the dump to Telegram when configured and under the size cap; else logs and skips. */
   private async maybeTelegram(encPath: string): Promise<boolean> {
-    const token = this.config.get<string>('TELEGRAM_BOT_TOKEN') ?? '';
-    const chatId = this.config.get<string>('TELEGRAM_BACKUP_CHAT_ID') ?? '';
+    const { token, backupChatId: chatId } = await this.telegram.getCredentials();
     const { size } = await stat(encPath);
     const skip = telegramSkipReason(token, chatId, size);
     if (skip) {

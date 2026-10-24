@@ -8,13 +8,14 @@ import { PrismaService } from '../prisma/prisma.service';
 import { blendAvgCost } from './avg-cost';
 import { CreateAccessoryStockDto } from './dto/create-accessory-stock.dto';
 import { QueryAccessoryStockDto } from './dto/query-accessory-stock.dto';
+import { lowStockIds } from './low-stock';
 
 const stockSelect = {
   id: true,
   quantity: true,
   avgCost: true,
   productModel: {
-    select: { id: true, name: true, category: { select: { id: true, name: true } } },
+    select: { id: true, name: true, lowStockThreshold: true, category: { select: { id: true, name: true } } },
   },
   location: { select: { id: true, name: true } },
 } satisfies Prisma.AccessoryStockSelect;
@@ -35,6 +36,7 @@ export class AccessoryStockService {
       locationId: query.locationId,
       productModel: query.categoryId ? { categoryId: query.categoryId } : undefined,
     };
+    await this.applyStockLevel(where, query.stockLevel);
     const [rows, total] = await this.prisma.$transaction([
       this.prisma.accessoryStock.findMany({
         where,
@@ -52,6 +54,25 @@ export class AccessoryStockService {
       page: query.page,
       pageSize: query.pageSize,
     };
+  }
+
+  /**
+   * Adds the stock-level predicate to the list `where`. LOW/IN need the low-row ids because Prisma
+   * can't compare a row's quantity to its related model's threshold; ALL adds nothing. Pagination
+   * stays correct: count uses the same `where`.
+   */
+  private async applyStockLevel(
+    where: Prisma.AccessoryStockWhereInput,
+    level: QueryAccessoryStockDto['stockLevel'],
+  ): Promise<void> {
+    if (level === 'OUT_OF_STOCK') {
+      where.quantity = 0;
+    } else if (level === 'LOW_STOCK') {
+      where.id = { in: await lowStockIds(this.prisma) };
+    } else if (level === 'IN_STOCK') {
+      where.quantity = { gt: 0 };
+      where.id = { notIn: await lowStockIds(this.prisma) };
+    }
   }
 
   /**
@@ -122,6 +143,7 @@ function toStock(row: StockRow, canViewCost: boolean) {
     productModel: row.productModel,
     location: row.location,
     quantity: row.quantity,
+    lowStockThreshold: row.productModel.lowStockThreshold,
   };
   return canViewCost ? { ...base, avgCost: row.avgCost.toFixed(2) } : base;
 }

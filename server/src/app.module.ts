@@ -15,6 +15,7 @@ import { ItemsModule } from './items/items.module';
 import { PrismaExceptionFilter } from './common/prisma-exception.filter';
 import { validateEnv } from './config/env.validation';
 import { HealthModule } from './health/health.module';
+import { IntegrationsModule } from './integrations/integrations.module';
 import { InvestorsModule } from './investors/investors.module';
 import { LedgerModule } from './ledger/ledger.module';
 import { LocationsModule } from './locations/locations.module';
@@ -58,6 +59,7 @@ import { WalkInPurchasesModule } from './walk-in-purchases/walk-in-purchases.mod
     ReportsModule,
     DashboardModule,
     SettingsModule,
+    IntegrationsModule,
     HealthModule,
   ],
   providers: [{ provide: APP_FILTER, useClass: PrismaExceptionFilter }],

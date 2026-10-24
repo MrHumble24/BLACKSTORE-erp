@@ -93,6 +93,9 @@ export class UsersService {
   }
 
   /** 400 if this change deactivates or demotes the only active Admin. */
+  // NOTE (F12): this guard protects the owner's last active Admin. A SuperAdmin must
+  // not be able to lock out the owner by deactivating/demoting the last Admin either —
+  // this guard already applies regardless of who makes the change, so leave it in place.
   // ponytail: check-then-write, two admins removing each other at the same instant could race; use a serializable transaction if that ever matters.
   private async assertNotLastAdmin(user: PublicUser, dto: UpdateUserDto) {
     const isActiveAdmin = user.isActive && user.role.name === ADMIN_ROLE;

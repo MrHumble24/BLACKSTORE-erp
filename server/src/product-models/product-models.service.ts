@@ -6,11 +6,11 @@ import { CreateProductModelDto } from './dto/create-product-model.dto';
 import { QueryProductModelDto } from './dto/query-product-model.dto';
 import { UpdateProductModelDto } from './dto/update-product-model.dto';
 
-// lowStockThreshold is intentionally omitted (Phase 2, not exposed yet).
 const modelSelect = {
   id: true,
   categoryId: true,
   name: true,
+  lowStockThreshold: true,
   isActive: true,
 } satisfies Prisma.ProductModelSelect;
 

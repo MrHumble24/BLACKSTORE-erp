@@ -5,9 +5,10 @@ import { join } from 'node:path';
 import type { ConfigService } from '@nestjs/config';
 import type { PublicUser } from '../common/auth-user';
 import type { AuditService } from '../audit/audit.service';
+import type { TelegramConfigService } from '../integrations/telegram-config.service';
 import { BACKUP_NAME, backupFileName, prune } from './backup-files';
 import { pgDump, pgEnv } from './backup-runner';
-import { telegramSkipReason, TELEGRAM_MAX_BYTES } from './telegram';
+import { telegramSkipReason, TELEGRAM_MAX_BYTES } from '../common/telegram';
 import { BackupsService } from './backups.service';
 
 describe('backupFileName', () => {
@@ -88,7 +89,11 @@ describe('telegramSkipReason', () => {
 
 describe('BackupsService.restore', () => {
   it('rejects a file name with a path traversal before touching the disk', async () => {
-    const service = new BackupsService({} as ConfigService, {} as AuditService);
+    const service = new BackupsService(
+      {} as ConfigService,
+      {} as AuditService,
+      {} as TelegramConfigService,
+    );
     for (const name of ['../etc/passwd', 'blackstore-2026-10-22-030509.sql.gz.enc.json']) {
       // eslint-disable-next-line no-await-in-loop
       await expect(service.restore(name, name, { id: 1 } as PublicUser)).rejects.toBeInstanceOf(
