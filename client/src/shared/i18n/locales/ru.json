@@ -50,7 +50,8 @@
     "importStock": "Импорт товаров",
     "backups": "Резервные копии",
     "telegram": "Telegram",
-    "closeDay": "Закрытие дня"
+    "closeDay": "Закрытие дня",
+    "hardDelete": "Опасная зона"
   },
   "auth": {
     "title": "Вход в систему",
@@ -1100,6 +1101,42 @@
   "superAdmin": {
     "title": "Супер-админ",
     "subtitle": "Интеграции и чувствительные настройки."
+  },
+  "hardDelete": {
+    "title": "Опасная зона",
+    "subtitle": "Безвозвратно удалить устройство, модель товара или категорию со всем содержимым.",
+    "pickTarget": "Выберите, что удалить",
+    "pickTargetHint": "Выберите тип и введите id, затем посмотрите, что будет удалено.",
+    "targetType": "Тип",
+    "targetId": "Id",
+    "targetIdPlaceholder": "напр. 42",
+    "type": {
+      "item": "Устройство",
+      "productModel": "Модель товара",
+      "category": "Категория"
+    },
+    "preview": "Предпросмотр",
+    "irreversible": "Это безвозвратно удалит записи ниже. Отменить нельзя.",
+    "counts": {
+      "productModels": "Модели товаров",
+      "items": "Устройства",
+      "accessoryStock": "Строки остатков аксессуаров",
+      "itemIdentifiers": "Идентификаторы"
+    },
+    "salesLine": "Будет удалено продаж: {{count}}",
+    "paymentsLine": "Удалено платежей: {{count}}, на сумму {{sum}}",
+    "returnsLine": "Удалено возвратов: {{count}}, возвращено {{sum}}",
+    "customers": "Затронутые клиенты",
+    "investors": "Затронутые инвесторы",
+    "none": "Нет",
+    "continueToDelete": "Перейти к удалению",
+    "confirmTitle": "Удалить безвозвратно?",
+    "confirmDescription": "Отменить нельзя. Подтвердите, чтобы навсегда удалить показанные записи.",
+    "typeToConfirm": "Введите {{word}} для подтверждения",
+    "passwordLabel": "Ваш пароль",
+    "deleteForever": "Удалить навсегда",
+    "success": "Безвозвратно удалено",
+    "wrongPassword": "Неверный пароль"
   },
   "telegram": {
     "title": "Telegram-бот",

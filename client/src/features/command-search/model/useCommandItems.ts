@@ -6,7 +6,7 @@ import {
   Home, Users, Smartphone, Headphones, MapPin, Shapes, Coins,
   Building2, Package, ShoppingCart, Receipt, Contact, Settings,
   ArrowLeftRight, ClipboardCheck, ScrollText, Handshake, BarChart3,
-  Upload, DatabaseBackup, Moon, Sun, Search, Barcode, CalendarCheck,
+  Upload, DatabaseBackup, Moon, Sun, Search, Barcode, CalendarCheck, Trash2,
 } from 'lucide-react';
 import { useAuthStore } from '@/entities/session';
 import { useItemByCode } from '@/entities/item';
@@ -113,6 +113,9 @@ function getAdminPages(args: ItemBuilderArgs): CommandItem[] {
   }
   if (hasPermission('manage_backups')) {
     pages.push({ id: 'page-backups', title: t('nav.backups'), category: 'pages', icon: DatabaseBackup, keywords: ['arxiv', 'baza'], perform: () => { navigate('/backups'); close(); } });
+  }
+  if (hasPermission('hard_delete')) {
+    pages.push({ id: 'page-hard-delete', title: t('nav.hardDelete'), category: 'pages', icon: Trash2, keywords: ['delete', 'ochirish', 'udalit', 'danger'], perform: () => { navigate('/super-admin/hard-delete'); close(); } });
   }
   return pages;
 }
