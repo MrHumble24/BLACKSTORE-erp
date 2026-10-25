@@ -1,17 +1,20 @@
 import SwiftUI
 
-/// Profit report for a period: net profit on top, split, breakdown and low-margin sales (FR-28, FR-11).
+/// Profit report for a period (FR-28, FR-11): KPI band and the same charts as the web report, then
+/// low-margin sales, the profit split and the breakdown tables. Cost shows only with `view_cost`.
 public struct ProfitReportsView: View {
+    let canViewCost: Bool
     @StateObject private var viewModel = ProfitReportViewModel()
     @State private var breakdownTab: Int = 0
 
-    public init() {}
+    public init(canViewCost: Bool) {
+        self.canViewCost = canViewCost
+    }
 
     public var body: some View {
         content
             .navigationTitle("Foyda va hisobotlar")
             .navigationBarTitleDisplayMode(.inline) // inline: a pinned filter bar under a large title leaves a blank band
-            .navigationBarTitleDisplayMode(.inline)
             .safeAreaInset(edge: .top, spacing: 0) { periodPicker }
             .task(id: viewModel.selectedPeriod) {
                 await viewModel.fetchReport()
@@ -23,24 +26,32 @@ public struct ProfitReportsView: View {
     @ViewBuilder
     private var content: some View {
         if let report = viewModel.report {
-            List {
-                netProfitHeader(report.totals)
-                if let err = viewModel.errorMessage {
-                    Section { InlineMessage(text: err, font: .footnote) }
-                }
-                splitSection(report.totals)
-                breakdownSection(report)
-                if !report.lowMargin.isEmpty {
-                    ProfitLowMarginSection(items: report.lowMargin)
-                }
-            }
-            .listStyle(.insetGrouped)
-            .refreshable { await viewModel.fetchReport() }
+            reportList(report)
+                .refreshable { await viewModel.fetchReport() }
         } else if let err = viewModel.errorMessage {
             ErrorState(message: err) { await viewModel.fetchReport() }
         } else {
-            LoadingState()
+            // First load: the real layout with placeholder figures, redacted.
+            reportList(.placeholder)
+                .redacted(reason: .placeholder)
+                .allowsHitTesting(false)
         }
+    }
+
+    private func reportList(_ report: ProfitReportResponse) -> some View {
+        List {
+            ProfitKpiBand(report: report, isLoading: viewModel.isLoading)
+            if let err = viewModel.errorMessage {
+                Section { InlineMessage(text: err, font: .footnote) }
+            }
+            ProfitChartsSections(report: report, canViewCost: canViewCost)
+            if !report.lowMargin.isEmpty {
+                ProfitLowMarginSection(items: report.lowMargin)
+            }
+            splitSection(report.totals)
+            breakdownSection(report)
+        }
+        .listStyle(.insetGrouped)
     }
 
     private var periodPicker: some View {
@@ -55,23 +66,12 @@ public struct ProfitReportsView: View {
         .background(.bar)
     }
 
-    private func netProfitHeader(_ totals: ProfitTotals) -> some View {
-        PeopleAmountHeader(title: "Sof foyda", amount: totals.netProfitDouble, tint: peopleSignTint(totals.netProfitDouble)) {
-            HStack {
-                Text("Jami savdo: \(APIConfig.formatMoney(totals.sales))")
-                if viewModel.isLoading { Spacer(); ProgressView() }
-            }
-            .font(.footnote)
-            .foregroundStyle(.secondary)
-            .monospacedDigit()
-        }
-    }
-
     private func splitSection(_ totals: ProfitTotals) -> some View {
         Section {
+            if canViewCost, let cost = totals.cost { MoneyRow("Tannarx", Double(cost) ?? 0) }
             MoneyRow("Yalpi foyda", totals.profitDouble)
             MoneyRow("Chiqimlar", totals.expensesDouble)
-            MoneyRow("Boshqa kirimlar", Double(totals.otherIncome) ?? 0)
+            MoneyRow("Boshqa kirimlar", totals.otherIncomeDouble)
             MoneyRow("Do'kon ulushi", totals.businessShareDouble)
             MoneyRow("Investorlar ulushi", totals.investorShareDouble)
         } header: {
@@ -101,4 +101,14 @@ public struct ProfitReportsView: View {
             }
         }
     }
+}
+
+private extension ProfitReportResponse {
+    /// Zero report drawn redacted while the first load runs, so the page keeps its shape.
+    static let placeholder: ProfitReportResponse = {
+        let zero = #"{"sales":"0","refunded":"0","profit":"0","investorShare":"0","businessShare":"0","expenses":"0","otherIncome":"0","netProfit":"0"}"#
+        let json = #"{"totals":\#(zero),"byLocation":[],"byCategory":[],"byInvestor":[],"dailyTrends":[],"lowMargin":[],"lines":{"items":[],"total":0,"page":1,"pageSize":20}}"#
+        // Constant literal that matches the model, so decoding cannot fail.
+        return try! JSONDecoder().decode(ProfitReportResponse.self, from: Data(json.utf8))
+    }()
 }
