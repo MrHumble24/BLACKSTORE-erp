@@ -18,6 +18,10 @@ nonisolated public struct ProductModel: Codable, Identifiable, Hashable, Sendabl
     public let id: Int
     public let name: String
     public let category: ItemCategory?
+    /// Catalog fields, present on GET /product-models.
+    public var categoryId: Int? = nil
+    public var isActive: Bool? = nil
+    public var lowStockThreshold: Int? = nil
 }
 
 /// Store or warehouse location.
