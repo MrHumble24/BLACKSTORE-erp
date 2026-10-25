@@ -45,7 +45,8 @@ public final class NetworkLogger: ObservableObject {
     /// Logs an outgoing request and returns a tracking UUID.
     public func logRequest(method: String, url: String, headers: [String: String]?, body: Data?) -> UUID {
         let id = UUID()
-        let bodyString = body.flatMap { String(data: $0, encoding: .utf8) }
+        // Never keep login credentials in the log.
+        let bodyString = url.contains("/auth/login") ? nil : body.flatMap { String(data: $0, encoding: .utf8) }
         let entry = NetworkLogEntry(
             id: id,
             timestamp: Date(),
@@ -53,7 +54,7 @@ public final class NetworkLogger: ObservableObject {
             url: url,
             statusCode: nil,
             duration: nil,
-            requestHeaders: headers,
+            requestHeaders: headers.map(Self.maskSecrets),
             requestBody: bodyString,
             responseBody: nil,
             errorMessage: nil
@@ -71,7 +72,8 @@ public final class NetworkLogger: ObservableObject {
         guard let idx = entries.firstIndex(where: { $0.id == id }) else { return }
         entries[idx].statusCode = statusCode
         entries[idx].duration = duration
-        if let body = body {
+        // The login response carries tokens, so it is not stored either.
+        if let body = body, !entries[idx].url.contains("/auth/login") {
             entries[idx].responseBody = formatJSON(data: body)
         }
     }
@@ -84,6 +86,14 @@ public final class NetworkLogger: ObservableObject {
         }
         entries[idx].duration = duration
         entries[idx].errorMessage = error.localizedDescription
+    }
+
+    /// Replaces Authorization and Cookie header values with "<hidden>".
+    private static func maskSecrets(_ headers: [String: String]) -> [String: String] {
+        let secret: Set<String> = ["authorization", "cookie"]
+        return headers.reduce(into: [:]) { result, pair in
+            result[pair.key] = secret.contains(pair.key.lowercased()) ? "<hidden>" : pair.value
+        }
     }
 
     /// Clears all recorded entries.

@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Main tab controller hosting Sales POS Terminal, Sales History, Customer CRM, and Staff Profile.
+/// Root tab bar: POS terminal, today's sales, customers and profile.
 public struct MainTabView: View {
     @ObservedObject public var authViewModel: AuthViewModel
 
@@ -10,25 +10,18 @@ public struct MainTabView: View {
 
     public var body: some View {
         TabView {
-            SalesTerminalView()
-                .tabItem {
-                    Label("Kassa", systemImage: "cart.fill")
-                }
-
-            TodaySalesView()
-                .tabItem {
-                    Label("Savdolar", systemImage: "clock.fill")
-                }
-
-            CustomersView()
-                .tabItem {
-                    Label("Xaridorlar", systemImage: "person.2.fill")
-                }
-
-            ProfileView(authViewModel: authViewModel)
-                .tabItem {
-                    Label("Profil", systemImage: "person.fill")
-                }
+            Tab("Kassa", systemImage: "cart") {
+                SalesTerminalView()
+            }
+            Tab("Savdolar", systemImage: "clock") {
+                TodaySalesView()
+            }
+            Tab("Xaridorlar", systemImage: "person.2") {
+                CustomersView()
+            }
+            Tab("Profil", systemImage: "person.crop.circle") {
+                ProfileView(authViewModel: authViewModel)
+            }
         }
     }
 }

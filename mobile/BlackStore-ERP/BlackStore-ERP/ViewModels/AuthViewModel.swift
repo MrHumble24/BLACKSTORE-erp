@@ -71,6 +71,7 @@ public final class AuthViewModel: ObservableObject {
         KeychainStorage.shared.sessionCookie = nil
         HTTPCookieStorage.shared.cookies?.forEach { HTTPCookieStorage.shared.deleteCookie($0) }
         currentUser = nil
+        NetworkLogger.shared.clear()
         phone = ""
         password = ""
         Task {

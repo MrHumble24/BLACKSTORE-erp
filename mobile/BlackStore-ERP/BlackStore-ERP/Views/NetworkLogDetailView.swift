@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Detailed inspector view for a single HTTP network transaction.
+/// Developer inspector for one HTTP request: summary, error, bodies and a cURL copy action.
 public struct NetworkLogDetailView: View {
     public let entry: NetworkLogEntry
     @State private var isCopied: Bool = false
@@ -11,19 +11,20 @@ public struct NetworkLogDetailView: View {
 
     public var body: some View {
         List {
-            Section("So'rov umumiy ma'lumotlari") {
-                LabeledContent("Method", value: entry.method)
-                LabeledContent("Status", value: entry.statusBadgeText)
-                LabeledContent("Duration", value: entry.formattedDuration)
-                LabeledContent("Vaqt", value: entry.timestamp.formatted(date: .omitted, time: .standard))
-                LabeledContent("URL", value: entry.url)
+            summarySection
+
+            Section("URL") {
+                Text(entry.url)
+                    .font(.system(.footnote, design: .monospaced))
+                    .textSelection(.enabled)
             }
 
             if let err = entry.errorMessage {
                 Section("Xatolik") {
                     Text(err)
-                        .font(.caption)
+                        .font(.footnote)
                         .foregroundStyle(.red)
+                        .textSelection(.enabled)
                 }
             }
 
@@ -31,6 +32,7 @@ public struct NetworkLogDetailView: View {
                 Section("Request Body") {
                     Text(reqBody)
                         .font(.system(.caption, design: .monospaced))
+                        .textSelection(.enabled)
                 }
             }
 
@@ -38,6 +40,7 @@ public struct NetworkLogDetailView: View {
                 Section("Response Body") {
                     Text(resBody)
                         .font(.system(.caption, design: .monospaced))
+                        .textSelection(.enabled)
                 }
             }
 
@@ -45,12 +48,24 @@ public struct NetworkLogDetailView: View {
                 Button {
                     copyToClipboard(curlCommand)
                 } label: {
-                    Label(isCopied ? "Nusxa olindi!" : "cURL sifatida nusxa olish", systemImage: "doc.on.doc")
+                    Label(isCopied ? "Nusxa olindi!" : "cURL sifatida nusxa olish",
+                          systemImage: isCopied ? "checkmark" : "doc.on.doc")
                 }
             }
         }
         .navigationTitle("\(entry.method) \(entry.statusBadgeText)")
         .navigationBarTitleDisplayMode(.inline)
+    }
+
+    private var summarySection: some View {
+        Section("So'rov umumiy ma'lumotlari") {
+            LabeledContent("Method", value: entry.method)
+            LabeledContent("Status", value: entry.statusBadgeText)
+            LabeledContent("Duration") {
+                Text(entry.formattedDuration).monospacedDigit()
+            }
+            LabeledContent("Vaqt", value: entry.timestamp.formatted(date: .omitted, time: .standard))
+        }
     }
 
     private var curlCommand: String {
