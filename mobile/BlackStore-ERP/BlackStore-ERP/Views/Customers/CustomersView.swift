@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Customer CRM and Debt Directory view.
+/// Customer directory with debt filter, search and quick add (Xaridorlar tab).
 public struct CustomersView: View {
     @StateObject private var viewModel = CustomerListViewModel()
     @State private var showingAddCustomerSheet: Bool = false
@@ -9,119 +9,133 @@ public struct CustomersView: View {
 
     public var body: some View {
         NavigationStack {
-            VStack(spacing: 0) {
-                filterPicker
-
-                if viewModel.isLoading && viewModel.customers.isEmpty {
-                    Spacer()
-                    ProgressView("Xaridorlar yuklanmoqda...")
-                    Spacer()
-                } else if viewModel.customers.isEmpty {
-                    emptyStateView
-                } else {
-                    customerListView
-                }
-            }
-            .navigationTitle("Xaridorlar")
-            .searchable(text: $viewModel.searchText, prompt: "Ism yoki telefon raqami...")
-            .onChange(of: viewModel.searchText) {
-                Task { await viewModel.fetchCustomers() }
-            }
-            .onChange(of: viewModel.filterDebtOnly) {
-                Task { await viewModel.fetchCustomers() }
-            }
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        showingAddCustomerSheet = true
-                    } label: {
-                        Image(systemName: "person.crop.circle.badge.plus")
+            content
+                .navigationTitle("Xaridorlar")
+                .searchable(text: $viewModel.searchText, prompt: "Ism yoki telefon raqami")
+                .safeAreaInset(edge: .top, spacing: 0) { filterPicker }
+                .task(id: reloadKey) { await reload() }
+                .toolbar {
+                    ToolbarItem(placement: .primaryAction) {
+                        Button {
+                            showingAddCustomerSheet = true
+                        } label: {
+                            Label("Yangi xaridor", systemImage: "person.crop.circle.badge.plus")
+                        }
                     }
                 }
-            }
-            .sheet(isPresented: $showingAddCustomerSheet) {
-                CustomerPickerSheet { _ in
-                    Task { await viewModel.fetchCustomers() }
+                .sheet(isPresented: $showingAddCustomerSheet) {
+                    CustomerPickerSheet { _ in
+                        Task { await viewModel.fetchCustomers() }
+                    }
+                    .presentationDetents([.large])
+                    .presentationDragIndicator(.visible)
                 }
-            }
-            .task {
-                await viewModel.fetchCustomers()
-            }
+        }
+    }
+
+    /// Search text and filter together; any change reloads the list.
+    private var reloadKey: String { "\(viewModel.filterDebtOnly)|\(viewModel.searchText)" }
+
+    /// Waits briefly while the user is still typing, then fetches.
+    private func reload() async {
+        if !viewModel.searchText.isEmpty {
+            do { try await Task.sleep(for: .milliseconds(300)) } catch { return }
+        }
+        await viewModel.fetchCustomers()
+        // A newer keystroke cancelled this load; its "cancelled" error is not a real failure.
+        if Task.isCancelled { viewModel.errorMessage = nil }
+    }
+
+    @ViewBuilder
+    private var content: some View {
+        if viewModel.isLoading && viewModel.customers.isEmpty {
+            PeopleLoadingState()
+        } else if let err = viewModel.errorMessage, viewModel.customers.isEmpty {
+            PeopleErrorState(message: err) { await viewModel.fetchCustomers() }
+        } else if viewModel.customers.isEmpty {
+            emptyState
+        } else {
+            customerList
         }
     }
 
     private var filterPicker: some View {
-        Picker("Filter", selection: $viewModel.filterDebtOnly) {
+        Picker("Filtr", selection: $viewModel.filterDebtOnly) {
             Text("Barchasi").tag(false)
-            Text("Qarzdorlar (Nasiya)").tag(true)
+            Text("Qarzdorlar").tag(true)
         }
         .pickerStyle(.segmented)
         .padding(.horizontal)
         .padding(.vertical, 8)
+        .background(.bar)
     }
 
-    private var customerListView: some View {
-        List(viewModel.customers) { customer in
-            NavigationLink {
-                CustomerDetailView(customerId: customer.id)
-            } label: {
-                customerRow(customer: customer)
+    private var customerList: some View {
+        List {
+            if let err = viewModel.errorMessage {
+                PeopleInlineError(message: err)
+            }
+            Section {
+                ForEach(viewModel.customers) { customer in
+                    NavigationLink {
+                        CustomerDetailView(customerId: customer.id)
+                    } label: {
+                        CustomerRow(customer: customer)
+                    }
+                }
             }
         }
-        .listStyle(.plain)
-        .refreshable {
-            await viewModel.fetchCustomers()
-        }
+        .listStyle(.insetGrouped)
+        .refreshable { await viewModel.fetchCustomers() }
     }
 
-    private func customerRow(customer: Customer) -> some View {
+    @ViewBuilder
+    private var emptyState: some View {
+        if !viewModel.searchText.isEmpty {
+            ContentUnavailableView.search(text: viewModel.searchText)
+        } else {
+            ContentUnavailableView(
+                viewModel.filterDebtOnly ? "Qarzdor xaridorlar yo'q" : "Xaridorlar topilmadi",
+                systemImage: "person.2.slash",
+                description: Text(viewModel.filterDebtOnly ? "Hech kim qarzdor emas." : "Yangi xaridor qo'shish uchun + tugmasini bosing.")
+            )
+        }
+    }
+}
+
+/// One customer in the directory: initial, name, phone and debt if any.
+private struct CustomerRow: View {
+    let customer: Customer
+
+    var body: some View {
         HStack(spacing: 12) {
-            Circle()
-                .fill(Color.accentColor.opacity(0.15))
+            Text(String(customer.name.prefix(1)).uppercased())
+                .font(.headline)
+                .foregroundStyle(.tint)
                 .frame(width: 44, height: 44)
-                .overlay {
-                    Text(String(customer.name.prefix(1)).uppercased())
-                        .font(.headline)
-                        .foregroundStyle(Color.accentColor)
-                }
+                .background(Color.accentColor.opacity(0.15), in: Circle())
+                .accessibilityHidden(true)
 
-            VStack(alignment: .leading, spacing: 4) {
-                Text(customer.name)
-                    .font(.headline)
-
+            VStack(alignment: .leading, spacing: 2) {
+                Text(customer.name).font(.headline)
                 Text(customer.phone)
-                    .font(.caption)
+                    .font(.subheadline)
                     .foregroundStyle(.secondary)
             }
 
-            Spacer()
+            Spacer(minLength: 8)
 
             if let debt = customer.displayDebt {
                 VStack(alignment: .trailing, spacing: 2) {
                     Text(debt)
-                        .font(.subheadline)
-                        .fontWeight(.bold)
-                        .foregroundStyle(.red)
-
-                    Text("Qarz")
-                        .font(.caption2)
-                        .foregroundStyle(.red)
+                        .font(.subheadline.weight(.bold))
+                        .monospacedDigit()
+                    Text("Qarz").font(.caption)
                 }
+                .foregroundStyle(.red)
             }
         }
-        .padding(.vertical, 4)
-    }
-
-    private var emptyStateView: some View {
-        VStack(spacing: 12) {
-            Spacer()
-            Image(systemName: "person.2.slash")
-                .font(.system(size: 48))
-                .foregroundStyle(.secondary)
-            Text(viewModel.filterDebtOnly ? "Qarzdor xaridorlar topilmadi" : "Xaridorlar topilmadi")
-                .font(.headline)
-                .foregroundStyle(.secondary)
-            Spacer()
-        }
+        .padding(.vertical, 2)
+        .accessibilityElement(children: .combine)
     }
 }

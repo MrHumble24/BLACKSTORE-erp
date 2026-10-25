@@ -1,84 +1,92 @@
 import SwiftUI
 
-/// Investors overview list view (FR-8, FR-10).
+/// Investor list with search; tap an investor to open their account (FR-8, FR-10).
 public struct InvestorsView: View {
     @StateObject private var viewModel = InvestorsViewModel()
+    @State private var searchText = ""
 
     public init() {}
 
     public var body: some View {
-        List {
-            if let err = viewModel.errorMessage {
-                Section {
-                    Text(err).font(.caption).foregroundStyle(.red)
-                }
-            }
+        content
+            .navigationTitle("Investorlar")
+            .navigationBarTitleDisplayMode(.inline)
+            .searchable(text: $searchText, prompt: "Ism yoki kod")
+            .task { await viewModel.fetchInvestors() }
+    }
 
-            if viewModel.isLoading && viewModel.investors.isEmpty {
-                Section {
-                    ProgressView().padding(.vertical, 20)
-                }
-            } else if viewModel.investors.isEmpty {
-                Section {
-                    Text("Investorlar topilmadi")
-                        .foregroundStyle(.secondary)
-                }
-            } else {
-                ForEach(viewModel.investors) { investor in
-                    NavigationLink(destination: InvestorDetailView(investorId: investor.id)) {
-                        investorRow(for: investor)
-                    }
-                }
-            }
-        }
-        .listStyle(.insetGrouped)
-        .navigationTitle("Investorlar")
-        .navigationBarTitleDisplayMode(.inline)
-        .task {
-            await viewModel.fetchInvestors()
-        }
-        .refreshable {
-            await viewModel.fetchInvestors()
+    /// Investors matching the search by name or code.
+    private var filtered: [InvestorSummary] {
+        let q = searchText.trimmingCharacters(in: .whitespaces)
+        guard !q.isEmpty else { return viewModel.investors }
+        return viewModel.investors.filter {
+            $0.name.localizedCaseInsensitiveContains(q) || $0.code.localizedCaseInsensitiveContains(q)
         }
     }
 
-    private func investorRow(for investor: InvestorSummary) -> some View {
+    @ViewBuilder
+    private var content: some View {
+        if viewModel.isLoading && viewModel.investors.isEmpty {
+            PeopleLoadingState()
+        } else if let err = viewModel.errorMessage, viewModel.investors.isEmpty {
+            PeopleErrorState(message: err) { await viewModel.fetchInvestors() }
+        } else if viewModel.investors.isEmpty {
+            ContentUnavailableView("Investorlar topilmadi", systemImage: "person.2.slash")
+        } else if filtered.isEmpty {
+            ContentUnavailableView.search(text: searchText)
+        } else {
+            List {
+                if let err = viewModel.errorMessage {
+                    PeopleInlineError(message: err)
+                }
+                Section {
+                    ForEach(filtered) { investor in
+                        NavigationLink(destination: InvestorDetailView(investorId: investor.id)) {
+                            InvestorRow(investor: investor)
+                        }
+                    }
+                }
+            }
+            .listStyle(.insetGrouped)
+            .refreshable { await viewModel.fetchInvestors() }
+        }
+    }
+}
+
+/// One investor: icon, name, code, and own-money / inactive badges.
+private struct InvestorRow: View {
+    let investor: InvestorSummary
+
+    var body: some View {
         HStack(spacing: 12) {
             Image(systemName: investor.isOwn ? "building.columns.fill" : "person.crop.circle.fill")
                 .font(.title2)
-                .foregroundStyle(investor.isOwn ? .blue : .purple)
+                .foregroundStyle(investor.isOwn ? Color.accentColor : Color.purple)
+                .frame(width: 44, height: 44)
+                .accessibilityHidden(true)
 
-            VStack(alignment: .leading, spacing: 4) {
-                HStack {
-                    Text(investor.name)
-                        .font(.headline)
-                    if investor.isOwn {
-                        Text("O'z mablag'i")
-                            .font(.caption2)
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 2)
-                            .background(Color.blue.opacity(0.12))
-                            .clipShape(Capsule())
-                    }
-                }
-
+            VStack(alignment: .leading, spacing: 2) {
+                Text(investor.name).font(.headline)
                 Text("Kod: \(investor.code)")
-                    .font(.caption)
+                    .font(.subheadline)
                     .foregroundStyle(.secondary)
             }
 
-            Spacer()
+            Spacer(minLength: 8)
 
-            if !investor.isActive {
-                Text("Nofaol")
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-                    .padding(.horizontal, 6)
-                    .padding(.vertical, 2)
-                    .background(Color(.systemGray5))
-                    .clipShape(Capsule())
-            }
+            if investor.isOwn { badge("O'z mablag'i") }
+            if !investor.isActive { badge("Nofaol") }
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, 2)
+        .accessibilityElement(children: .combine)
+    }
+
+    private func badge(_ text: String) -> some View {
+        Text(text)
+            .font(.caption)
+            .foregroundStyle(.secondary)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 3)
+            .background(Color(.tertiarySystemFill), in: Capsule())
     }
 }

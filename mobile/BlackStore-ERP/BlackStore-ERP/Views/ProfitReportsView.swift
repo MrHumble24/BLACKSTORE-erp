@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Comprehensive financial reports and profit analytics view (FR-28, FR-11).
+/// Profit report for a period: net profit on top, split, breakdown and low-margin sales (FR-28, FR-11).
 public struct ProfitReportsView: View {
     @StateObject private var viewModel = ProfitReportViewModel()
     @State private var breakdownTab: Int = 0
@@ -8,34 +8,38 @@ public struct ProfitReportsView: View {
     public init() {}
 
     public var body: some View {
-        ScrollView {
-            VStack(spacing: 16) {
-                periodPicker
+        content
+            .navigationTitle("Foyda va hisobotlar")
+            .navigationBarTitleDisplayMode(.inline)
+            .safeAreaInset(edge: .top, spacing: 0) { periodPicker }
+            .task(id: viewModel.selectedPeriod) {
+                await viewModel.fetchReport()
+                // A newer period choice cancelled this load; drop its "cancelled" error.
+                if Task.isCancelled { viewModel.errorMessage = nil }
+            }
+    }
 
+    @ViewBuilder
+    private var content: some View {
+        if let report = viewModel.report {
+            List {
+                netProfitHeader(report.totals)
                 if let err = viewModel.errorMessage {
-                    errorBanner(err)
+                    PeopleInlineError(message: err)
                 }
-
-                if viewModel.isLoading && viewModel.report == nil {
-                    ProgressView().padding(.top, 40)
-                } else if let report = viewModel.report {
-                    totalsCards(for: report.totals)
-                    sharesCard(for: report.totals)
-                    breakdownSection(for: report)
-
-                    if !report.lowMargin.isEmpty {
-                        lowMarginSection(for: report.lowMargin)
-                    }
+                splitSection(report.totals)
+                breakdownSection(report)
+                if !report.lowMargin.isEmpty {
+                    ProfitLowMarginSection(items: report.lowMargin)
                 }
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
+            .listStyle(.insetGrouped)
+            .refreshable { await viewModel.fetchReport() }
+        } else if let err = viewModel.errorMessage {
+            PeopleErrorState(message: err) { await viewModel.fetchReport() }
+        } else {
+            PeopleLoadingState()
         }
-        .background(Color(.systemGroupedBackground))
-        .navigationTitle("Foyda va hisobotlar")
-        .navigationBarTitleDisplayMode(.inline)
-        .task { await viewModel.fetchReport() }
-        .refreshable { await viewModel.fetchReport() }
     }
 
     private var periodPicker: some View {
@@ -45,97 +49,41 @@ public struct ProfitReportsView: View {
             }
         }
         .pickerStyle(.segmented)
-        .onChange(of: viewModel.selectedPeriod) {
-            Task { await viewModel.fetchReport() }
+        .padding(.horizontal)
+        .padding(.vertical, 8)
+        .background(.bar)
+    }
+
+    private func netProfitHeader(_ totals: ProfitTotals) -> some View {
+        PeopleAmountHeader(title: "Sof foyda", amount: totals.netProfitDouble, tint: peopleSignTint(totals.netProfitDouble)) {
+            HStack {
+                Text("Jami savdo: \(APIConfig.formatMoney(totals.sales))")
+                if viewModel.isLoading { Spacer(); ProgressView() }
+            }
+            .font(.footnote)
+            .foregroundStyle(.secondary)
+            .monospacedDigit()
         }
     }
 
-    private func totalsCards(for totals: ProfitTotals) -> some View {
-        VStack(spacing: 12) {
-            VStack(alignment: .leading, spacing: 6) {
-                Text("Sof foyda (Net profit)")
-                    .font(.caption)
-                    .fontWeight(.medium)
-                    .foregroundStyle(.secondary)
-                HStack(alignment: .firstTextBaseline) {
-                    Text(String(format: "$%.2f", totals.netProfitDouble))
-                        .font(.system(size: 32, weight: .bold, design: .rounded))
-                        .foregroundStyle(totals.netProfitDouble >= 0 ? .green : .red)
-                    Spacer()
-                    Text("Jami savdo: $\(totals.sales)")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
-                }
-            }
-            .padding(16)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Color(.secondarySystemGroupedBackground))
-            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-
-            HStack(spacing: 12) {
-                metricTile(
-                    title: "Yalpi foyda",
-                    amount: String(format: "$%.2f", totals.profitDouble),
-                    color: .blue
-                )
-                metricTile(
-                    title: "Chiqimlar",
-                    amount: String(format: "$%.2f", totals.expensesDouble),
-                    color: .orange
-                )
-            }
+    private func splitSection(_ totals: ProfitTotals) -> some View {
+        Section {
+            PeopleMoneyRow("Yalpi foyda", totals.profitDouble)
+            PeopleMoneyRow("Chiqimlar", totals.expensesDouble)
+            PeopleMoneyRow("Boshqa kirimlar", Double(totals.otherIncome) ?? 0)
+            PeopleMoneyRow("Do'kon ulushi", totals.businessShareDouble)
+            PeopleMoneyRow("Investorlar ulushi", totals.investorShareDouble)
+        } header: {
+            Text("Foyda taqsimoti")
+        } footer: {
+            Text("Sof foyda = yalpi foyda − chiqimlar + foydaga qo'shiladigan kirimlar.")
         }
     }
 
-    private func metricTile(title: String, amount: String, color: Color) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(title)
-                .font(.caption2)
-                .foregroundStyle(.secondary)
-            Text(amount)
-                .font(.headline)
-                .fontWeight(.bold)
-                .foregroundStyle(color)
-        }
-        .padding(12)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color(.secondarySystemGroupedBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-    }
-
-    private func sharesCard(for totals: ProfitTotals) -> some View {
-        HStack(spacing: 12) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Do'kon ulushi")
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-                Text(String(format: "$%.2f", totals.businessShareDouble))
-                    .font(.subheadline)
-                    .fontWeight(.semibold)
-                    .foregroundStyle(.primary)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-
-            Divider()
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Investorlar ulushi")
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-                Text(String(format: "$%.2f", totals.investorShareDouble))
-                    .font(.subheadline)
-                    .fontWeight(.semibold)
-                    .foregroundStyle(.purple)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-        }
-        .padding(14)
-        .background(Color(.secondarySystemGroupedBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-    }
-
-    private func breakdownSection(for report: ProfitReportResponse) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
+    private func breakdownSection(_ report: ProfitReportResponse) -> some View {
+        let groups = breakdownTab == 0 ? report.byLocation :
+                     breakdownTab == 1 ? report.byCategory : report.byInvestor
+        return Section("Tahlil") {
             Picker("Tahlil", selection: $breakdownTab) {
                 Text("Filiallar").tag(0)
                 Text("Kategoriyalar").tag(1)
@@ -143,93 +91,13 @@ public struct ProfitReportsView: View {
             }
             .pickerStyle(.segmented)
 
-            let groups = breakdownTab == 0 ? report.byLocation :
-                         breakdownTab == 1 ? report.byCategory : report.byInvestor
-
             if groups.isEmpty {
-                Text("Ma'lumot topilmadi")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .padding(.vertical, 8)
+                Text("Ma'lumot topilmadi").foregroundStyle(.secondary)
             } else {
                 ForEach(groups) { group in
-                    groupRow(for: group)
+                    ProfitGroupRow(group: group)
                 }
             }
         }
-        .padding(16)
-        .background(Color(.secondarySystemGroupedBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-    }
-
-    private func groupRow(for group: ProfitGroup) -> some View {
-        VStack(spacing: 4) {
-            HStack {
-                Text(group.name)
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-                Spacer()
-                Text(String(format: "$%.2f", group.profitDouble))
-                    .font(.subheadline)
-                    .fontWeight(.bold)
-                    .foregroundStyle(.green)
-            }
-            HStack {
-                Text("\(group.quantity) ta sotuv")
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-                Spacer()
-                Text("Savdo: $\(group.sales)")
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-            }
-            Divider().padding(.top, 2)
-        }
-    }
-
-    private func lowMarginSection(for items: [LowMarginItem]) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Label("Kam marjali sotuvlar (<10%)", systemImage: "exclamationmark.triangle.fill")
-                .font(.subheadline)
-                .fontWeight(.bold)
-                .foregroundStyle(.orange)
-
-            ForEach(items) { item in
-                HStack {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(item.productModel)
-                            .font(.caption)
-                            .fontWeight(.medium)
-                        Text("Savdo: $\(item.salePrice)")
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
-                    }
-                    Spacer()
-                    VStack(alignment: .trailing, spacing: 2) {
-                        Text("+\(item.profit)$")
-                            .font(.caption)
-                            .fontWeight(.semibold)
-                            .foregroundStyle(.orange)
-                        Text("\(String(format: "%.1f", item.marginPct))% marja")
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
-                    }
-                }
-                Divider()
-            }
-        }
-        .padding(16)
-        .background(Color(.secondarySystemGroupedBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-    }
-
-    private func errorBanner(_ msg: String) -> some View {
-        Text(msg)
-            .font(.caption)
-            .foregroundStyle(.red)
-            .padding(12)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Color.red.opacity(0.1))
-            .clipShape(RoundedRectangle(cornerRadius: 8))
     }
 }

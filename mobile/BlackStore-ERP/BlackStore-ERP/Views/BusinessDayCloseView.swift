@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Register close and daily cash reconciliation view (PRD W4, F13).
+/// Close the register: count cash and card, see the difference, then close the day (PRD W4, F13).
 public struct BusinessDayCloseView: View {
     @Environment(\.dismiss) private var dismiss
     @StateObject private var viewModel = BusinessDayViewModel()
@@ -9,40 +9,10 @@ public struct BusinessDayCloseView: View {
     public init() {}
 
     public var body: some View {
-        NavigationStack {
-            Form {
-                if let snapshot = viewModel.closedSnapshot {
-                    snapshotSection(snapshot: snapshot)
-                } else if let day = viewModel.currentDay {
-                    overviewSection(day: day)
-                    cashSection
-                    cardSection
-                    noteSection
-
-                    if let err = viewModel.errorMessage {
-                        Section {
-                            Text(err).font(.caption).foregroundStyle(.red)
-                        }
-                    }
-
-                    submitSection
-                } else if viewModel.isLoading {
-                    Section {
-                        HStack {
-                            Spacer()
-                            ProgressView("Yuklanmoqda...")
-                            Spacer()
-                        }
-                    }
-                }
-            }
-            .navigationTitle("Kun yakuni (Kassa)")
+        content
+            .navigationTitle("Kun yakuni")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Yopish") { dismiss() }
-                }
-            }
+            .peopleKeyboardDoneBar()
             .confirmationDialog(
                 "Kunni yopishni tasdiqlaysizmi?",
                 isPresented: $showingConfirmAlert,
@@ -55,58 +25,62 @@ public struct BusinessDayCloseView: View {
             } message: {
                 Text("Kun yopilgach, barcha kassa hisoblari muzlatiladi va yangi kun ochiladi.")
             }
-            .task {
-                await viewModel.fetchCurrentDay()
+            .task { await viewModel.fetchCurrentDay() }
+    }
+
+    @ViewBuilder
+    private var content: some View {
+        if let snapshot = viewModel.closedSnapshot {
+            Form { snapshotSection(snapshot) }
+        } else if let day = viewModel.currentDay {
+            dayForm(day)
+        } else if let err = viewModel.errorMessage {
+            PeopleErrorState(message: err) { await viewModel.fetchCurrentDay() }
+        } else {
+            PeopleLoadingState()
+        }
+    }
+
+    private func dayForm(_ day: CurrentBusinessDay) -> some View {
+        Form {
+            PeopleAmountHeader(title: "Kassada bo'lishi kerak (naqd)", amount: viewModel.expectedCashAmount, tint: .primary) {
+                Text("Bugun \(day.sales.count) ta savdo")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
             }
-        }
-    }
-
-    private func overviewSection(day: CurrentBusinessDay) -> some View {
-        Section("Kunlik ko'rsatkichlar") {
-            LabeledContent("Savdolar soni", value: "\(day.sales.count) ta")
-            LabeledContent("Naqd tushum", value: APIConfig.formatMoney(Double(day.payments.cash) ?? 0.0))
-            LabeledContent("Karta tushum", value: APIConfig.formatMoney(Double(day.payments.card) ?? 0.0))
-        }
-    }
-
-    private var cashSection: some View {
-        Section("Naqd pul hisob-kitobi (G'aladon)") {
-            LabeledContent("Kutilayotgan naqd", value: APIConfig.formatMoney(viewModel.expectedCashAmount))
-
-            HStack {
-                Text("Sanalgan naqd ($):")
-                Spacer()
-                TextField("0.00", text: $viewModel.countedCashText)
-                    .keyboardType(.decimalPad)
-                    .multilineTextAlignment(.trailing)
-                    .frame(width: 120)
+            BusinessDayCountSection(
+                title: "Naqd pul (G'aladon)",
+                takingsTitle: "Naqd tushum",
+                takings: Double(day.payments.cash) ?? 0,
+                expectedTitle: "Kutilayotgan naqd",
+                expected: viewModel.expectedCashAmount,
+                countedTitle: "Sanalgan naqd",
+                counted: $viewModel.countedCashText,
+                variance: viewModel.cashVariance
+            )
+            BusinessDayCountSection(
+                title: "Karta to'lovlari (Terminal)",
+                takingsTitle: "Karta tushum",
+                takings: Double(day.payments.card) ?? 0,
+                expectedTitle: "Kutilayotgan karta",
+                expected: viewModel.expectedCardAmount,
+                countedTitle: "Terminaldagi jami",
+                counted: $viewModel.countedCardText,
+                variance: viewModel.cardVariance
+            )
+            Section("Izoh (ixtiyoriy)") {
+                TextField("Kun yakuni bo'yicha izoh", text: $viewModel.noteText)
             }
-
-            varianceRow(title: "Naqd tafovut:", variance: viewModel.cashVariance)
-        }
-    }
-
-    private var cardSection: some View {
-        Section("Karta to'lovlari (Terminal)") {
-            LabeledContent("Kutilayotgan karta", value: APIConfig.formatMoney(viewModel.expectedCardAmount))
-
-            HStack {
-                Text("Terminaldagi jami ($):")
-                Spacer()
-                TextField("0.00", text: $viewModel.countedCardText)
-                    .keyboardType(.decimalPad)
-                    .multilineTextAlignment(.trailing)
-                    .frame(width: 120)
+            if let err = viewModel.errorMessage {
+                PeopleInlineError(message: err)
             }
-
-            varianceRow(title: "Karta tafovut:", variance: viewModel.cardVariance)
+            submitSection
         }
     }
 
-    private var noteSection: some View {
-        Section("Izoh (Ixtiyoriy)") {
-            TextField("Kun yakuni bo'yicha qo'shimcha izoh", text: $viewModel.noteText)
-        }
+    /// Both drawer counts must be numbers before the day can be closed.
+    private var countsAreValid: Bool {
+        peopleParseAmount(viewModel.countedCashText) != nil && peopleParseAmount(viewModel.countedCardText) != nil
     }
 
     private var submitSection: some View {
@@ -114,61 +88,46 @@ public struct BusinessDayCloseView: View {
             Button {
                 showingConfirmAlert = true
             } label: {
-                if viewModel.isSubmitting {
-                    ProgressView().frame(maxWidth: .infinity)
-                } else {
-                    Text("Kunni yopish")
-                        .font(.headline)
-                        .frame(maxWidth: .infinity)
+                Group {
+                    if viewModel.isSubmitting {
+                        ProgressView()
+                    } else {
+                        Text("Kunni yopish").font(.headline)
+                    }
                 }
+                .frame(maxWidth: .infinity)
             }
             .buttonStyle(.borderedProminent)
-            .tint(.red)
             .controlSize(.large)
-            .disabled(viewModel.isSubmitting)
+            .disabled(viewModel.isSubmitting || !countsAreValid)
+            .listRowInsets(EdgeInsets())
+            .listRowBackground(Color.clear)
+        } footer: {
+            Text("Yopishdan oldin naqd va terminal summalarini tekshiring.")
         }
     }
 
-    private func varianceRow(title: String, variance: Double) -> some View {
-        HStack {
-            Text(title).font(.subheadline)
-            Spacer()
-            if abs(variance) < 0.01 {
-                Text("To'g'ri (0.00)")
-                    .font(.subheadline)
-                    .fontWeight(.bold)
-                    .foregroundStyle(.green)
-            } else if variance < 0 {
-                Text("Kamomad: \(APIConfig.formatMoney(variance))")
-                    .font(.subheadline)
-                    .fontWeight(.bold)
-                    .foregroundStyle(.red)
-            } else {
-                Text("Ortiqcha: +\(APIConfig.formatMoney(variance))")
-                    .font(.subheadline)
-                    .fontWeight(.bold)
-                    .foregroundStyle(.blue)
-            }
-        }
-    }
-
-    private func snapshotSection(snapshot: ClosedDaySnapshot) -> some View {
-        Section("Kun yakunlandi") {
+    private func snapshotSection(_ snapshot: ClosedDaySnapshot) -> some View {
+        Section {
             VStack(spacing: 8) {
                 Image(systemName: "checkmark.seal.fill")
-                    .font(.system(size: 48))
+                    .font(.largeTitle)
                     .foregroundStyle(.green)
-                Text("Kassa muvaffaqiyatli yopildi")
-                    .font(.headline)
+                    .accessibilityHidden(true)
+                Text("Kassa muvaffaqiyatli yopildi").font(.headline)
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 8)
 
-            LabeledContent("Naqd tafovut", value: APIConfig.formatMoney(Double(snapshot.cashVariance) ?? 0.0))
-            LabeledContent("Karta tafovut", value: APIConfig.formatMoney(Double(snapshot.cardVariance) ?? 0.0))
+            BusinessDayVarianceRow(title: "Naqd tafovut", variance: Double(snapshot.cashVariance) ?? 0)
+            BusinessDayVarianceRow(title: "Karta tafovut", variance: Double(snapshot.cardVariance) ?? 0)
 
             Button("Tayyor") { dismiss() }
+                .buttonStyle(.borderedProminent)
+                .controlSize(.large)
                 .frame(maxWidth: .infinity)
+        } header: {
+            Text("Kun yakunlandi")
         }
     }
 }
