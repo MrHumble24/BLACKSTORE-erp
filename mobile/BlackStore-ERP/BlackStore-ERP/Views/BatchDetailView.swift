@@ -11,10 +11,10 @@ public struct BatchDetailView: View {
     @State private var selectedModel: ProductModel? = nil
     @State private var imeiInput: String = ""
     @State private var serialInput: String = ""
-    @State private var defaultSalePrice: Double = 0
-    @State private var defaultMinPrice: Double = 0
+    @State private var defaultPurchasePrice: Double = 0
     @State private var isShowingCamera: Bool = false
     @State private var isAddingItem: Bool = false
+    @State private var modelWarning: Bool = false
     @State private var feedback: ScanFeedback? = nil
     @State private var sessionScanCount: Int = 0
 
@@ -31,6 +31,12 @@ public struct BatchDetailView: View {
             .navigationBarTitleDisplayMode(.inline)
             .task { await loadDetail() }
             .refreshable { await loadDetail() }
+            .onAppear {
+                if selectedModel == nil { selectedModel = parentVM.models.first }
+            }
+            .onChange(of: parentVM.models) { _, models in
+                if selectedModel == nil { selectedModel = models.first }
+            }
             .keyboardDoneBar()
             .sheet(isPresented: $isShowingCamera) {
                 ScannerSheet(title: "IMEI skanerlash", count: sessionScanCount, feedback: feedback) { code in
@@ -74,25 +80,42 @@ public struct BatchDetailView: View {
     private var receiveSection: some View {
         Section {
             Picker("Model", selection: $selectedModel) {
-                Text("Tanlanmagan").tag(nil as ProductModel?)
-                ForEach(parentVM.models) { mod in
-                    Text(mod.name).tag(mod as ProductModel?)
+                if parentVM.models.isEmpty {
+                    Text("Modellar yuklanmoqda…").tag(nil as ProductModel?)
+                } else {
+                    Text("Tanlanmagan").tag(nil as ProductModel?)
+                    ForEach(parentVM.models) { mod in
+                        Text(mod.name).tag(mod as ProductModel?)
+                    }
                 }
             }
-            priceField("Sotuv narxi", value: $defaultSalePrice)
-            priceField("Min narx", value: $defaultMinPrice)
+            .onChange(of: selectedModel) { _, newModel in
+                if newModel != nil { modelWarning = false }
+            }
+
+            priceField("Tan narxi (ixtiyoriy)", value: $defaultPurchasePrice)
             imeiRow
+
+            if selectedModel == nil {
+                InlineMessage(text: "Qurilmani qabul qilish uchun avval yuqoridan modelni tanlang", isError: modelWarning)
+            }
             if let feedback {
                 InlineMessage(text: "\(feedback.code): \(feedback.message)", isError: feedback.isError)
             }
+
             PrimaryButton(title: "Kamera bilan skanerlash", systemImage: "camera.viewfinder") {
-                isShowingCamera = true
+                if selectedModel == nil {
+                    modelWarning = true
+                    HapticManager.warning()
+                } else {
+                    modelWarning = false
+                    isShowingCamera = true
+                }
             }
-            .disabled(selectedModel == nil)
         } header: {
             Text("Tezkor qabul qilish")
         } footer: {
-            Text("Modelni tanlang, so'ng qurilmalarni ketma-ket skanerlang. Narxlar har bir qurilmaga qo'llanadi.")
+            Text("Modelni tanlang, so'ng qurilmalarni ketma-ket skanerlang.")
         }
     }
 
@@ -119,7 +142,7 @@ public struct BatchDetailView: View {
             }
             .accessibilityLabel(isAddingItem ? "Qabul qilinmoqda" : "Qabul")
             .buttonStyle(.borderedProminent)
-            .disabled(selectedModel == nil || imeiInput.trimmingCharacters(in: .whitespaces).isEmpty || isAddingItem)
+            .disabled(imeiInput.trimmingCharacters(in: .whitespaces).isEmpty || isAddingItem)
         }
     }
 
@@ -136,7 +159,12 @@ public struct BatchDetailView: View {
 
     /// Adds one device by IMEI (typed or scanned) and records the outcome for the scanner panel.
     private func submitDevice(code: String) {
-        guard !isAddingItem, let model = selectedModel else { return }
+        guard !isAddingItem else { return }
+        guard let model = selectedModel else {
+            modelWarning = true
+            HapticManager.warning()
+            return
+        }
         let cleanImei = code.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !cleanImei.isEmpty else { return }
 
@@ -147,8 +175,7 @@ public struct BatchDetailView: View {
                 modelId: model.id,
                 imei: cleanImei,
                 serial: serialInput.isEmpty ? nil : serialInput,
-                salePrice: defaultSalePrice > 0 ? defaultSalePrice : nil,
-                minSalePrice: defaultMinPrice > 0 ? defaultMinPrice : nil
+                purchasePrice: defaultPurchasePrice > 0 ? defaultPurchasePrice : nil
             )
             isAddingItem = false
             if ok {
@@ -160,7 +187,6 @@ public struct BatchDetailView: View {
             } else {
                 feedback = ScanFeedback(code: cleanImei, message: parentVM.errorMessage ?? "Xatolik", isError: true)
             }
-            // The outcome is shown here; keep it off the batches list.
             parentVM.errorMessage = nil
             parentVM.successMessage = nil
         }
@@ -168,6 +194,12 @@ public struct BatchDetailView: View {
 
     private func loadDetail() async {
         isLoading = true
+        if parentVM.models.isEmpty {
+            await parentVM.loadPrerequisites()
+            if selectedModel == nil {
+                selectedModel = parentVM.models.first
+            }
+        }
         do {
             detail = try await parentVM.fetchDetail(id: batchId)
             loadError = nil

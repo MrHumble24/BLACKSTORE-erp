@@ -94,8 +94,7 @@ public final class BatchesViewModel: ObservableObject {
         modelId: Int,
         imei: String,
         serial: String? = nil,
-        salePrice: Double? = nil,
-        minSalePrice: Double? = nil
+        purchasePrice: Double? = nil
     ) async -> Bool {
         let cleanImei = imei.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !cleanImei.isEmpty else {
@@ -109,16 +108,14 @@ public final class BatchesViewModel: ObservableObject {
         }
 
         let payload = AddBatchItemPayload(
-            modelId: modelId,
+            productModelId: modelId,
             condition: "NEW",
-            purchasePrice: nil,
-            salePrice: salePrice.map { String(format: "%.2f", $0) },
-            minSalePrice: minSalePrice.map { String(format: "%.2f", $0) },
+            purchasePrice: purchasePrice.map { String(format: "%.2f", $0) },
             identifiers: identifiers
         )
 
         do {
-            let _: BatchDetail = try await APIClient.shared.post("/batches/\(batchId)/items", body: payload)
+            let _: Item = try await APIClient.shared.post("/batches/\(batchId)/items", body: payload)
             self.successMessage = "Qurilma qabul qilindi (IMEI: \(cleanImei))"
             HapticManager.success()
             return true

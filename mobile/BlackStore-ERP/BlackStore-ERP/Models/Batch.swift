@@ -128,7 +128,7 @@ nonisolated public struct CreateBatchPayload: Codable, Sendable {
     }
 }
 
-/// Payload for rapidly scanning an item into an existing batch (FR-14).
+/// Payload for rapidly scanning an item into an existing batch (CreateBatchItemDto, PRD FR-14).
 nonisolated public struct AddBatchItemPayload: Codable, Sendable {
     public struct IdentifierInput: Codable, Sendable {
         public let type: String
@@ -140,26 +140,20 @@ nonisolated public struct AddBatchItemPayload: Codable, Sendable {
         }
     }
 
-    public let modelId: Int
-    public let condition: String
+    public let productModelId: Int
+    public let condition: String?
     public let purchasePrice: String?
-    public let salePrice: String?
-    public let minSalePrice: String?
     public let identifiers: [IdentifierInput]
 
     public init(
-        modelId: Int,
-        condition: String = "NEW",
+        productModelId: Int,
+        condition: String? = "NEW",
         purchasePrice: String? = nil,
-        salePrice: String? = nil,
-        minSalePrice: String? = nil,
         identifiers: [IdentifierInput]
     ) {
-        self.modelId = modelId
+        self.productModelId = productModelId
         self.condition = condition
         self.purchasePrice = purchasePrice
-        self.salePrice = salePrice
-        self.minSalePrice = minSalePrice
         self.identifiers = identifiers
     }
 }

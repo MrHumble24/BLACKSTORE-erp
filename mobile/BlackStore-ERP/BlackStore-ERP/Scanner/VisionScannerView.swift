@@ -18,14 +18,12 @@ public struct VisionScannerView: View {
         Group {
             if !DataScannerViewController.isSupported {
                 ScannerUnavailableView(reason: .unsupported)
-            } else if authStatus == .notDetermined {
-                ProgressView("Kameraga ruxsat so'ralmoqda…")
             } else if authStatus == .denied {
                 ScannerUnavailableView(reason: .permissionDenied)
             } else if authStatus == .restricted {
                 ScannerUnavailableView(reason: .restricted)
-            } else if !isAvailable {
-                ScannerUnavailableView(reason: .unavailable)
+            } else if authStatus == .notDetermined {
+                ProgressView("Kameraga ruxsat so'ralmoqda…")
             } else {
                 DataScannerRepresentable(onCodeScanned: onCodeScanned)
             }
@@ -103,7 +101,7 @@ private struct DataScannerRepresentable: UIViewControllerRepresentable {
     func makeUIViewController(context: Context) -> DataScannerViewController {
         let scanner = DataScannerViewController(
             recognizedDataTypes: [
-                .barcode(symbologies: [.code128, .qr, .ean13, .code39]),
+                .barcode(symbologies: [.code128, .qr, .ean13, .code39, .dataMatrix]),
                 .text(textContentType: nil)
             ],
             qualityLevel: .balanced,
@@ -119,8 +117,14 @@ private struct DataScannerRepresentable: UIViewControllerRepresentable {
     }
 
     func updateUIViewController(_ uiViewController: DataScannerViewController, context: Context) {
-        // Keep the latest callback so the scanner reports into current state.
         context.coordinator.onCodeScanned = onCodeScanned
+        if !uiViewController.isScanning && DataScannerViewController.isAvailable {
+            try? uiViewController.startScanning()
+        }
+    }
+
+    static func dismantleUIViewController(_ uiViewController: DataScannerViewController, coordinator: Coordinator) {
+        uiViewController.stopScanning()
     }
 
     func makeCoordinator() -> Coordinator {
