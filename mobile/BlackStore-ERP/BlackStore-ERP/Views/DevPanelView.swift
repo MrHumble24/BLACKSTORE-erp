@@ -1,12 +1,13 @@
 import SwiftUI
 
-/// Secret developer panel for environment switching, quick dev login, and network debugging.
+/// Hidden developer panel: server switching, quick dev login, network logs and session tools.
 public struct DevPanelView: View {
     @Environment(\.dismiss) private var dismiss
     public var authVM: AuthViewModel?
 
     @State private var serverURL: String = APIConfig.baseURL
-    @State private var pingStatus: String? = nil
+    @State private var pingStatus: (ok: Bool, message: String)? = nil
+    @State private var isConfirmingSessionWipe: Bool = false
     @State private var isPinging: Bool = false
     @State private var copiedTokenToast: Bool = false
 
@@ -18,12 +19,14 @@ public struct DevPanelView: View {
         NavigationStack {
             Form {
                 environmentSection
+                #if DEBUG
                 quickLoginSection
+                #endif
                 networkSection
                 keychainSection
                 deviceInfoSection
             }
-            .navigationTitle("Developer Options 🛠️")
+            .navigationTitle("Developer Options")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -33,14 +36,20 @@ public struct DevPanelView: View {
             .alert("Nusxa olindi", isPresented: $copiedTokenToast) {
                 Button("OK", role: .cancel) {}
             }
+            .confirmationDialog("Sessiya va tokenlar o'chirilsinmi?", isPresented: $isConfirmingSessionWipe, titleVisibility: .visible) {
+                Button("Sessiya va tokenlarni tozalash", role: .destructive, action: wipeSession)
+            }
         }
     }
 
     private var environmentSection: some View {
-        Section("Server Muhiti (Environment)") {
-
+        Section {
             presetSelector
             customUrlRow
+        } header: {
+            Text("Server Muhiti (Environment)")
+        } footer: {
+            Text("Faol: \(APIConfig.baseURL)")
         }
     }
 
@@ -61,6 +70,8 @@ public struct DevPanelView: View {
     private var customUrlRow: some View {
         VStack(alignment: .leading, spacing: 6) {
             TextField("Server URL (http://...)", text: $serverURL)
+                .keyboardType(.URL)
+                .textContentType(.URL)
                 .autocorrectionDisabled()
                 .textInputAutocapitalization(.never)
                 .textFieldStyle(.roundedBorder)
@@ -68,9 +79,9 @@ public struct DevPanelView: View {
             urlActionButtons
 
             if let status = pingStatus {
-                Text(status)
-                    .font(.caption2)
-                    .foregroundStyle(status.contains("mavjud") ? .green : .red)
+                Label(status.message, systemImage: status.ok ? "checkmark.circle.fill" : "xmark.octagon.fill")
+                    .font(.footnote)
+                    .foregroundStyle(status.ok ? .green : .red)
             }
         }
     }
@@ -82,7 +93,6 @@ public struct DevPanelView: View {
                 HapticManager.selection()
             }
             .buttonStyle(.borderedProminent)
-            .controlSize(.small)
 
             Button("Asliga qaytarish") {
                 APIConfig.resetToDefault()
@@ -90,7 +100,6 @@ public struct DevPanelView: View {
                 HapticManager.medium()
             }
             .buttonStyle(.bordered)
-            .controlSize(.small)
 
             Spacer()
 
@@ -104,11 +113,13 @@ public struct DevPanelView: View {
                 }
             }
             .buttonStyle(.bordered)
-            .controlSize(.small)
+            .disabled(isPinging)
         }
     }
 
 
+    #if DEBUG
+    /// Fills test credentials; compiled into debug builds only.
     private var quickLoginSection: some View {
         Section("Tezkor Dev Login (Quick Fill)") {
             Button {
@@ -124,6 +135,7 @@ public struct DevPanelView: View {
             }
         }
     }
+    #endif
 
     private var networkSection: some View {
         Section("Tarmoq va So'rovlar (Network)") {
@@ -132,12 +144,8 @@ public struct DevPanelView: View {
                     Label("Network Logs", systemImage: "network")
                     Spacer()
                     Text("\(NetworkLogger.shared.entries.count)")
-                        .font(.caption)
+                        .font(.callout.monospacedDigit())
                         .foregroundStyle(.secondary)
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 2)
-                        .background(Color(.tertiarySystemBackground))
-                        .clipShape(Capsule())
                 }
             }
 
@@ -180,17 +188,11 @@ public struct DevPanelView: View {
 
             if KeychainStorage.shared.sessionCookie == nil && KeychainStorage.shared.accessToken == nil {
                 Text("Sessiya yoki token yo'q (tizimga kirmagan)")
-                    .font(.caption)
                     .foregroundStyle(.secondary)
             }
 
             Button(role: .destructive) {
-                KeychainStorage.shared.sessionCookie = nil
-                KeychainStorage.shared.accessToken = nil
-                KeychainStorage.shared.refreshToken = nil
-                HTTPCookieStorage.shared.cookies?.forEach { HTTPCookieStorage.shared.deleteCookie($0) }
-                authVM?.logout()
-                HapticManager.medium()
+                isConfirmingSessionWipe = true
             } label: {
                 Label("Sessiya va tokenlarni tozalash", systemImage: "key.slash")
             }
@@ -199,7 +201,7 @@ public struct DevPanelView: View {
 
     private var deviceInfoSection: some View {
         Section("Qurilma ma'lumotlari") {
-            LabeledContent("App Version", value: "1.0.0 (Build 1)")
+            LabeledContent("App Version", value: appVersion)
             LabeledContent("iOS Version", value: UIDevice.current.systemVersion)
             LabeledContent("Model", value: UIDevice.current.model)
         }
@@ -212,7 +214,7 @@ public struct DevPanelView: View {
             HapticManager.selection()
         }
         .buttonStyle(.bordered)
-        .controlSize(.small)
+        .frame(maxWidth: .infinity)
     }
 
     private func pingActiveServer() {
@@ -221,11 +223,30 @@ public struct DevPanelView: View {
         Task {
             let (ok, msg) = await APIConfig.ping(urlString: serverURL)
             self.isPinging = false
-            self.pingStatus = ok ? "✅ \(msg)" : "❌ \(msg)"
+            self.pingStatus = (ok, msg)
             if ok { HapticManager.success() } else { HapticManager.error() }
         }
     }
 
+    /// Version and build from Info.plist, e.g. "1.0 (1)".
+    private var appVersion: String {
+        let info = Bundle.main.infoDictionary
+        let version = info?["CFBundleShortVersionString"] as? String ?? "-"
+        let build = info?["CFBundleVersion"] as? String ?? "-"
+        return "\(version) (\(build))"
+    }
+
+    /// Clears every stored credential and signs the user out.
+    private func wipeSession() {
+        KeychainStorage.shared.sessionCookie = nil
+        KeychainStorage.shared.accessToken = nil
+        KeychainStorage.shared.refreshToken = nil
+        HTTPCookieStorage.shared.cookies?.forEach { HTTPCookieStorage.shared.deleteCookie($0) }
+        authVM?.logout()
+        HapticManager.medium()
+    }
+
+    #if DEBUG
     private func fillCredentials(phone: String, pass: String) {
         if let vm = authVM {
             vm.phone = phone
@@ -234,4 +255,5 @@ public struct DevPanelView: View {
             dismiss()
         }
     }
+    #endif
 }

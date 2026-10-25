@@ -1,9 +1,10 @@
 import SwiftUI
 
-/// Developer view for browsing and inspecting recent in-app network traffic.
+/// Developer list of recent in-app network requests, searchable by method, path or status.
 public struct NetworkLogsView: View {
     @ObservedObject private var logger = NetworkLogger.shared
     @State private var filterText: String = ""
+    @State private var isConfirmingClear: Bool = false
 
     public init() {}
 
@@ -25,6 +26,8 @@ public struct NetworkLogsView: View {
                     systemImage: "network",
                     description: Text("App orqali biror amal bajaring, so'rovlar bu yerda aks etadi.")
                 )
+            } else if filteredEntries.isEmpty {
+                ContentUnavailableView.search(text: filterText)
             } else {
                 List(filteredEntries) { entry in
                     NavigationLink(destination: NetworkLogDetailView(entry: entry)) {
@@ -40,12 +43,17 @@ public struct NetworkLogsView: View {
             if !logger.entries.isEmpty {
                 ToolbarItem(placement: .primaryAction) {
                     Button(role: .destructive) {
-                        logger.clear()
-                        HapticManager.medium()
+                        isConfirmingClear = true
                     } label: {
                         Label("Tozalash", systemImage: "trash")
                     }
                 }
+            }
+        }
+        .confirmationDialog("Barcha loglarni tozalash?", isPresented: $isConfirmingClear, titleVisibility: .visible) {
+            Button("Tozalash", role: .destructive) {
+                logger.clear()
+                HapticManager.medium()
             }
         }
     }
@@ -57,7 +65,7 @@ public struct NetworkLogsView: View {
             VStack(alignment: .leading, spacing: 3) {
                 HStack {
                     Text(entry.method)
-                        .font(.caption)
+                        .font(.caption.monospaced())
                         .fontWeight(.bold)
                         .foregroundStyle(.primary)
 
@@ -76,7 +84,7 @@ public struct NetworkLogsView: View {
                     Spacer()
 
                     Text(entry.formattedDuration)
-                        .font(.caption2)
+                        .font(.caption2.monospacedDigit())
                         .foregroundStyle(.secondary)
                 }
             }
@@ -95,7 +103,7 @@ public struct NetworkLogsView: View {
         }
 
         return Text(entry.statusBadgeText)
-            .font(.caption2)
+            .font(.caption2.monospacedDigit())
             .fontWeight(.bold)
             .foregroundStyle(color)
             .frame(width: 44)

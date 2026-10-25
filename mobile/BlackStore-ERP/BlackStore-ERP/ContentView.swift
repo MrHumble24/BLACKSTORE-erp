@@ -19,6 +19,8 @@ public struct ContentView: View {
         .task {
             await authViewModel.checkCurrentUser()
         }
+        #if DEBUG
+        // Shake opens the developer panel in debug builds only.
         .onReceive(NotificationCenter.default.publisher(for: .deviceDidShakeNotification)) { _ in
             isShowingDevPanel = true
             HapticManager.medium()
@@ -26,5 +28,6 @@ public struct ContentView: View {
         .sheet(isPresented: $isShowingDevPanel) {
             DevPanelView(authVM: authViewModel)
         }
+        #endif
     }
 }
