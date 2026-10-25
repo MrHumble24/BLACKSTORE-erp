@@ -121,7 +121,7 @@ public struct ProfileView: View {
             Section("Moliya va hisobotlar") {
                 if user.hasPermission("view_profit") {
                     NavigationLink {
-                        ProfitReportsView()
+                        ProfitReportsView(canViewCost: user.hasPermission("view_cost"))
                     } label: {
                         Label("Foyda va hisobotlar", systemImage: "chart.line.uptrend.xyaxis")
                     }
