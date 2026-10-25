@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Modal sheet for recording a cash or card payment against a debt sale (PRD FR-21, W3).
+/// Sheet to take a cash or card payment against a debt sale (PRD FR-21, W3).
 public struct RecordPaymentSheet: View {
     @Environment(\.dismiss) private var dismiss
     @ObservedObject public var viewModel: SaleDetailViewModel
@@ -17,120 +17,100 @@ public struct RecordPaymentSheet: View {
         return Double(bal) ?? 0.0
     }
 
+    private var enteredAmount: Double {
+        Double(amountText.replacingOccurrences(of: " ", with: "")) ?? 0.0
+    }
+
     public var body: some View {
         NavigationStack {
             Form {
                 debtSummarySection
-
                 paymentInputSection
-
                 if let err = viewModel.errorMessage {
-                    Section {
-                        Text(err)
-                            .font(.caption)
-                            .foregroundStyle(.red)
-                    }
-                }
-
-                Section {
-                    Button(action: submitPayment) {
-                        if viewModel.isSubmitting {
-                            ProgressView()
-                                .frame(maxWidth: .infinity)
-                        } else {
-                            Text("To'lovni tasdiqlash (\(formattedEnteredAmount))")
-                                .font(.headline)
-                                .frame(maxWidth: .infinity)
-                        }
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .controlSize(.large)
-                    .disabled(viewModel.isSubmitting || enteredAmount <= 0)
+                    Section { Label(err, systemImage: "exclamationmark.triangle.fill").foregroundStyle(.red) }
                 }
             }
-            .navigationTitle("Nasiya to'lovini qabul qilish")
+            .salesKeyboardDoneBar()
+            .safeAreaInset(edge: .bottom) {
+                SalesBottomBar(
+                    title: "To'lovni tasdiqlash (\(APIConfig.formatMoney(enteredAmount)))",
+                    isBusy: viewModel.isSubmitting,
+                    isDisabled: enteredAmount <= 0,
+                    action: submitPayment
+                )
+            }
+            .navigationTitle("Nasiya to'lovi")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Bekor qilish") { dismiss() }
                 }
             }
-            .onAppear {
-                amountText = String(format: "%.2f", remainingBalance)
-            }
+            .onAppear { amountText = String(format: "%.2f", remainingBalance) }
         }
+        .presentationDetents([.medium, .large])
+        .presentationDragIndicator(.visible)
+        .interactiveDismissDisabled(viewModel.isSubmitting)
     }
 
     private var debtSummarySection: some View {
-        Section("Qarz ma'lumotlari") {
+        Section {
+            VStack(spacing: 4) {
+                Text("Qoldiq qarz").font(.subheadline).foregroundStyle(.secondary)
+                Text(APIConfig.formatMoney(viewModel.sale.balance))
+                    .font(.largeTitle.bold())
+                    .monospacedDigit()
+                    .foregroundStyle(.red)
+            }
+            .frame(maxWidth: .infinity)
+            .accessibilityElement(children: .combine)
             if let customer = viewModel.sale.customer {
                 LabeledContent("Xaridor", value: customer.name)
             }
-            LabeledContent("Jami summa", value: APIConfig.formatMoney(viewModel.sale.total))
-            LabeledContent("To'langan", value: APIConfig.formatMoney(viewModel.sale.paid))
-            HStack {
-                Text("Qoldiq qarz:")
-                    .fontWeight(.semibold)
-                Spacer()
-                Text(APIConfig.formatMoney(viewModel.sale.balance))
-                    .font(.headline)
-                    .foregroundStyle(.red)
-            }
+            MoneyRow(title: "Jami summa", amount: APIConfig.formatMoney(viewModel.sale.total))
+            MoneyRow(title: "To'langan", amount: APIConfig.formatMoney(viewModel.sale.paid))
         }
     }
 
     private var paymentInputSection: some View {
-        Section("To'lov miqdori va usuli") {
+        Section {
             Picker("To'lov usuli", selection: $paymentMethod) {
                 Text("Naqd").tag("CASH")
                 Text("Karta").tag("CARD")
             }
             .pickerStyle(.segmented)
-
-            HStack {
-                Text("Summa ($):")
-                Spacer()
+            LabeledContent("Summa (\(APIConfig.currency))") {
                 TextField("0.00", text: $amountText)
                     .keyboardType(.decimalPad)
                     .multilineTextAlignment(.trailing)
-                    .textFieldStyle(.roundedBorder)
-                    .frame(width: 120)
+                    .monospacedDigit()
+                    .salesDecimalCommaFix($amountText)
             }
-
             HStack {
-                Button("To'liq qoldiq") {
-                    amountText = String(format: "%.2f", remainingBalance)
-                    HapticManager.selection()
-                }
-                .buttonStyle(.bordered)
-                .controlSize(.small)
-
+                quickFill("To'liq qoldiq", amount: remainingBalance)
                 if remainingBalance > 50 {
-                    Button("50%") {
-                        amountText = String(format: "%.2f", remainingBalance / 2)
-                        HapticManager.selection()
-                    }
-                    .buttonStyle(.bordered)
-                    .controlSize(.small)
+                    quickFill("50%", amount: remainingBalance / 2)
                 }
             }
+        } header: {
+            Text("To'lov miqdori va usuli")
+        } footer: {
+            Text("Qisman to'lash mumkin; qolgani qarzda qoladi.")
         }
     }
 
-    private var enteredAmount: Double {
-        Double(amountText.replacingOccurrences(of: " ", with: "")) ?? 0.0
-    }
-
-    private var formattedEnteredAmount: String {
-        APIConfig.formatMoney(enteredAmount)
+    private func quickFill(_ title: String, amount: Double) -> some View {
+        Button(title) {
+            amountText = String(format: "%.2f", amount)
+            HapticManager.selection()
+        }
+        .buttonStyle(.bordered)
+        .frame(minHeight: 44)
     }
 
     private func submitPayment() {
         Task {
-            let success = await viewModel.recordPayment(amount: enteredAmount, method: paymentMethod)
-            if success {
-                dismiss()
-            }
+            if await viewModel.recordPayment(amount: enteredAmount, method: paymentMethod) { dismiss() }
         }
     }
 }

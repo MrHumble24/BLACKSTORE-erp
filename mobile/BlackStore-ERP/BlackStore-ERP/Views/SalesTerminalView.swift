@@ -1,236 +1,136 @@
 import SwiftUI
 
-/// Main POS terminal view for scanning devices, trade-ins, inventory search, and processing sales.
+/// Main POS screen: scan or type a code, review the cart, then go to payment.
 public struct SalesTerminalView: View {
+    /// Sheets the terminal can open; only one is shown at a time.
+    enum TerminalSheet: String, Identifiable {
+        case scanner, accessory, checkout, inspector, inventory, walkIn
+        #if DEBUG
+        case devPanel
+        #endif
+        var id: String { rawValue }
+    }
+
     @StateObject private var cartViewModel = CartViewModel()
-    @State private var manualCodeInput: String = ""
-    @State private var isShowingScannerSheet: Bool = false
-    @State private var isShowingAccessorySheet: Bool = false
-    @State private var isShowingCheckoutSheet: Bool = false
-    @State private var isShowingInspectorSheet: Bool = false
-    @State private var isShowingInventoryLookup: Bool = false
-    @State private var isShowingWalkInSheet: Bool = false
-    @State private var isShowingDevPanel: Bool = false
-    @State private var completedSale: Sale? = nil
+    @State private var activeSheet: TerminalSheet?
+    @State private var completedSale: Sale?
+    @State private var isConfirmingClear = false
 
     public init() {}
 
     public var body: some View {
         NavigationStack {
-            VStack(spacing: 0) {
-                topActionStrip
-
-                if let err = cartViewModel.errorMessage {
-                    bannerView(text: err, color: .red)
-                }
-
-                if let succ = cartViewModel.successMessage {
-                    bannerView(text: succ, color: .green)
-                }
-
+            List {
+                TerminalCodeEntrySection(cartViewModel: cartViewModel, open: { activeSheet = $0 })
                 if cartViewModel.lines.isEmpty {
-                    emptyCartPlaceholder
+                    emptyCart
                 } else {
-                    cartList
-                }
-
-                if !cartViewModel.lines.isEmpty {
-                    bottomCheckoutBar
+                    cartSection
                 }
             }
+            .listStyle(.insetGrouped)
             .navigationTitle("Kassa")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .primaryAction) {
-                    Button {
-                        isShowingScannerSheet = true
-                    } label: {
-                        Label("Kamera", systemImage: "barcode.viewfinder")
-                    }
-                }
-
-                if !cartViewModel.lines.isEmpty {
-                    ToolbarItem(placement: .cancellationAction) {
-                        Button("Tozalash", role: .destructive) {
-                            cartViewModel.clear()
-                        }
-                    }
-                }
+            .salesKeyboardDoneBar()
+            .safeAreaInset(edge: .bottom) {
+                CartTotalBar(cartViewModel: cartViewModel) { activeSheet = .checkout }
             }
-            .sheet(isPresented: $isShowingScannerSheet) { cameraScannerSheet }
-            .sheet(isPresented: $isShowingAccessorySheet) { accessorySheet }
-            .sheet(isPresented: $isShowingCheckoutSheet) { checkoutSheet }
+            .toolbar { toolbarContent }
+            .confirmationDialog("Savatchani tozalash?", isPresented: $isConfirmingClear, titleVisibility: .visible) {
+                Button("Tozalash", role: .destructive) { cartViewModel.clear() }
+            }
+            .sheet(item: $activeSheet) { sheetContent(for: $0) }
             .sheet(item: $completedSale) { sale in
                 ReceiptView(sale: sale) { completedSale = nil }
             }
-            .sheet(isPresented: $isShowingDevPanel) { DevPanelView() }
-            .sheet(isPresented: $isShowingInspectorSheet) { inspectorSheet }
-            .sheet(isPresented: $isShowingInventoryLookup) { inventorySheet }
-            .sheet(isPresented: $isShowingWalkInSheet) { walkInSheet }
         }
     }
 
-    private var topActionStrip: some View {
-        VStack(spacing: 8) {
-            HStack(spacing: 8) {
-                TextField("IMEI / Shtrix-kod / S/N", text: $manualCodeInput)
-                    .textFieldStyle(.roundedBorder)
-                    .textInputAutocapitalization(.characters)
-                    .autocorrectionDisabled()
-                    .onSubmit { submitManualCode() }
-
-                Button(action: submitManualCode) {
-                    if cartViewModel.isScanning {
-                        ProgressView().controlSize(.small)
-                    } else {
-                        Text("Qo'shish")
-                    }
-                }
-                .buttonStyle(.borderedProminent)
-                .disabled(manualCodeInput.trimmingCharacters(in: .whitespaces).isEmpty || cartViewModel.isScanning)
-            }
-
-            HStack {
-                actionBtn("Ombor", icon: "shippingbox") { isShowingInventoryLookup = true }
-                Spacer()
-                actionBtn("Trade-in", icon: "arrow.triangle.2.circlepath") { isShowingWalkInSheet = true }
-                Spacer()
-                actionBtn("Aksessuar", icon: "plus.circle") { isShowingAccessorySheet = true }
-                Spacer()
-                actionBtn("Tekshirish", icon: "info.circle") { isShowingInspectorSheet = true }
-                Spacer()
-                actionBtn("Kamera", icon: "camera.fill") { isShowingScannerSheet = true }
+    @ToolbarContentBuilder
+    private var toolbarContent: some ToolbarContent {
+        if !cartViewModel.lines.isEmpty {
+            ToolbarItem(placement: .topBarLeading) {
+                Button("Tozalash", role: .destructive) { isConfirmingClear = true }
+                    .tint(.red)
             }
         }
-        .padding(12)
-        .background(Color(.secondarySystemBackground))
-        .contentShape(Rectangle())
-        .onTapGesture(count: 3) {
-            isShowingDevPanel = true
-            HapticManager.success()
-        }
-    }
-
-    private func actionBtn(_ title: String, icon: String, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Label(title, systemImage: icon).font(.caption2)
-        }
-    }
-
-    private var cartList: some View {
-        ScrollView {
-            LazyVStack(spacing: 10) {
-                ForEach(cartViewModel.lines) { line in
-                    CartLineRow(
-                        line: line,
-                        onPriceChange: { p in _ = cartViewModel.updatePrice(for: line.id, newPrice: p) },
-                        onQuantityChange: { q in cartViewModel.updateQuantity(for: line.id, quantity: q) },
-                        onDelete: { cartViewModel.removeLine(id: line.id) }
-                    )
-                }
+        ToolbarItem(placement: .primaryAction) {
+            Button { activeSheet = .scanner } label: {
+                Label("Skanerlash", systemImage: "barcode.viewfinder")
             }
-            .padding()
         }
     }
 
-    private var emptyCartPlaceholder: some View {
-        ContentUnavailableView(
-            "Savatcha bo'sh",
-            systemImage: "barcode.viewfinder",
-            description: Text("Mahsulot shtrix-kodini skanerlang, ombordan tanlang yoki trade-in orqali qabul qiling.")
-        )
-    }
-
-    private var bottomCheckoutBar: some View {
-        VStack(spacing: 8) {
-            HStack {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("\(cartViewModel.totalUnitsCount) dona mahsulot")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                    Text(cartViewModel.formattedTotal)
-                        .font(.title2)
-                        .fontWeight(.bold)
-                }
-                Spacer()
-                Button { isShowingCheckoutSheet = true } label: {
-                    Text("To'lovga o'tish")
-                        .font(.headline)
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 8)
+    private var emptyCart: some View {
+        Section {
+            ContentUnavailableView {
+                Label("Savatcha bo'sh", systemImage: "cart")
+            } description: {
+                Text("Shtrix-kodni skanerlang yoki ombordan tanlang.")
+            } actions: {
+                Button { activeSheet = .scanner } label: {
+                    Label("Skanerlash", systemImage: "barcode.viewfinder")
                 }
                 .buttonStyle(.borderedProminent)
                 .controlSize(.large)
-                .disabled(!cartViewModel.allPricesValid)
             }
         }
-        .padding()
-        .background(Color(.systemBackground))
-        .overlay(Divider(), alignment: .top)
+        .listRowBackground(Color.clear)
     }
 
-    private var cameraScannerSheet: some View {
-        NavigationStack {
-            VisionScannerView { code in
+    private var cartSection: some View {
+        Section {
+            ForEach(cartViewModel.lines) { line in
+                CartLineRow(
+                    line: line,
+                    onPriceChange: { p in _ = cartViewModel.updatePrice(for: line.id, newPrice: p) },
+                    onQuantityChange: { q in cartViewModel.updateQuantity(for: line.id, quantity: q) },
+                    onDelete: { cartViewModel.removeLine(id: line.id) }
+                )
+            }
+        } header: {
+            Text("Savatcha")
+        } footer: {
+            Text("Narxni o'zgartirish uchun summaga bosing.")
+        }
+    }
+
+    @ViewBuilder
+    private func sheetContent(for sheet: TerminalSheet) -> some View {
+        switch sheet {
+        case .scanner:
+            SalesScannerSheet(title: "Shtrix-kod skaner", onClose: { activeSheet = nil }) { code in
                 Task {
-                    if await cartViewModel.scanCode(code) {
-                        isShowingScannerSheet = false
-                    }
+                    if await cartViewModel.scanCode(code) { activeSheet = nil }
                 }
             }
-            .navigationTitle("Shtrix-kod skaner")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Yopish") { isShowingScannerSheet = false }
-                }
+        case .accessory:
+            AccessoryPickerSheet { id, name, price in
+                cartViewModel.addAccessory(modelId: id, name: name, unitPrice: price)
             }
+        case .checkout:
+            CheckoutView(cartViewModel: cartViewModel) { sale in
+                completedSale = sale
+                cartViewModel.clear()
+            }
+        case .inspector:
+            DeviceInspectionSheet { item in addToCart(item) }
+        case .inventory:
+            InventoryLookupView { item in addToCart(item) }
+                .presentationDragIndicator(.visible)
+        case .walkIn:
+            WalkInPurchaseSheet { item in
+                cartViewModel.successMessage = "Mijozdan #\(item.id) (\(item.productModel.name)) qabul qilindi!"
+            }
+        #if DEBUG
+        case .devPanel:
+            DevPanelView()
+                .presentationDragIndicator(.visible)
+        #endif
         }
     }
 
-    private var accessorySheet: some View {
-        AccessoryPickerSheet { id, name, price in
-            cartViewModel.addAccessory(modelId: id, name: name, unitPrice: price)
-        }
-    }
-
-    private var checkoutSheet: some View {
-        CheckoutView(cartViewModel: cartViewModel) { sale in
-            completedSale = sale
-            cartViewModel.clear()
-        }
-    }
-
-    private var inspectorSheet: some View {
-        DeviceInspectionSheet { item in
-            Task { _ = await cartViewModel.scanCode(item.primaryIdentifier) }
-        }
-    }
-
-    private var inventorySheet: some View {
-        InventoryLookupView { item in
-            Task { _ = await cartViewModel.scanCode(item.primaryIdentifier) }
-        }
-    }
-
-    private var walkInSheet: some View {
-        WalkInPurchaseSheet { item in
-            cartViewModel.successMessage = "Mijozdan #\(item.id) (\(item.productModel.name)) qabul qilindi!"
-        }
-    }
-
-    private func submitManualCode() {
-        let code = manualCodeInput
-        manualCodeInput = ""
-        Task { _ = await cartViewModel.scanCode(code) }
-    }
-
-    private func bannerView(text: String, color: Color) -> some View {
-        Text(text)
-            .font(.caption)
-            .foregroundStyle(.white)
-            .padding(8)
-            .frame(maxWidth: .infinity)
-            .background(color)
+    /// Adds a looked-up device to the cart through the same path as scanning.
+    private func addToCart(_ item: Item) {
+        Task { _ = await cartViewModel.scanCode(item.primaryIdentifier) }
     }
 }
