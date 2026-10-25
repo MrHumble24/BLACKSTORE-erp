@@ -25,10 +25,10 @@ public struct CreateBatchSheet: View {
                 sourceSection
                 shipmentSection
                 if let err = viewModel.errorMessage {
-                    Section { StockMessageRow(text: err) }
+                    Section { InlineMessage(text: err) }
                 }
                 Section {
-                    StockPrimaryButton(title: "Partiyani ochish", isBusy: viewModel.isLoading, action: submitBatch)
+                    PrimaryButton(title: "Partiyani ochish", isBusy: viewModel.isLoading, action: submitBatch)
                         .disabled(!isValid)
                 }
                 .listRowInsets(EdgeInsets())

@@ -41,7 +41,7 @@ public struct ConsignmentHandoverSheet: View {
                 }
             }
             .sheet(isPresented: $isShowingScanner) {
-                StockScannerSheet(title: "Skanerlash", count: handoverItems.count, feedback: feedback) { code in
+                ScannerSheet(title: "Skanerlash", count: handoverItems.count, feedback: feedback) { code in
                     lookupItem(code: code)
                 }
             }
@@ -81,7 +81,7 @@ public struct ConsignmentHandoverSheet: View {
                 Label("Kamera bilan skanerlash", systemImage: "camera.viewfinder")
             }
             if let feedback {
-                StockMessageRow(text: "\(feedback.code): \(feedback.message)", isError: feedback.isError)
+                InlineMessage(text: "\(feedback.code): \(feedback.message)", isError: feedback.isError)
             }
         } header: {
             Text("Mahsulot qo'shish")
@@ -145,9 +145,9 @@ public struct ConsignmentHandoverSheet: View {
     private var submitSection: some View {
         Section {
             if let err = viewModel.errorMessage {
-                StockMessageRow(text: err)
+                InlineMessage(text: err)
             }
-            StockPrimaryButton(
+            PrimaryButton(
                 title: "Topshirish (\(handoverItems.count))",
                 isBusy: viewModel.isLoading,
                 action: submitHandover

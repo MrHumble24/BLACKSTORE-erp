@@ -33,17 +33,9 @@ public struct BatchesView: View {
     @ViewBuilder
     private var content: some View {
         if viewModel.isLoading && viewModel.batches.isEmpty {
-            ProgressView("Yuklanmoqda…")
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            LoadingState()
         } else if let err = viewModel.errorMessage, viewModel.batches.isEmpty {
-            ContentUnavailableView {
-                Label("Yuklab bo'lmadi", systemImage: "wifi.exclamationmark")
-            } description: {
-                Text(err)
-            } actions: {
-                Button("Qayta urinish") { Task { await viewModel.fetchBatches() } }
-                    .buttonStyle(.borderedProminent)
-            }
+            ErrorState(message: err) { await viewModel.fetchBatches() }
         } else if viewModel.batches.isEmpty {
             emptyState
         } else {
@@ -65,7 +57,7 @@ public struct BatchesView: View {
     private var batchesList: some View {
         List {
             if let err = viewModel.errorMessage {
-                Section { StockMessageRow(text: err) }
+                Section { InlineMessage(text: err) }
             }
             Section {
                 ForEach(filteredBatches) { batch in
@@ -109,7 +101,7 @@ private struct BatchRow: View {
             HStack(alignment: .firstTextBaseline) {
                 Text(batch.supplier.name).font(.headline)
                 Spacer()
-                StockBadge(text: batch.location.name)
+                StatusBadge(text: batch.location.name)
             }
             HStack {
                 if let date = batch.arrivalDate {

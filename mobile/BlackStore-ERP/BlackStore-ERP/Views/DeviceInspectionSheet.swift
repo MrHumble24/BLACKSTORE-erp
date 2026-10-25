@@ -43,7 +43,7 @@ public struct DeviceInspectionSheet: View {
                 }
             }
             .sheet(isPresented: $isShowingCamera) {
-                SalesScannerSheet(title: "Kamerada skanerlash", onClose: { isShowingCamera = false }) { code in
+                ScannerSheet(title: "Kamerada skanerlash", onClose: { isShowingCamera = false }) { code in
                     inputCode = code
                     isShowingCamera = false
                     Task { _ = await viewModel.lookup(code: code) }
@@ -100,7 +100,7 @@ public struct DeviceInspectionSheet: View {
     @ViewBuilder
     private var addToCartBar: some View {
         if let onAddToCart, let item = viewModel.item, item.status == "IN_STOCK" {
-            SalesBottomBar(title: "Savatchaga qo'shish", systemImage: "cart.badge.plus", isDisabled: false) {
+            BottomBar(title: "Savatchaga qo'shish", systemImage: "cart.badge.plus", isDisabled: false) {
                 onAddToCart(item)
                 dismiss()
             }

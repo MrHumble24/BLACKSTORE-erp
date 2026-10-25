@@ -63,14 +63,7 @@ public struct TodaySalesView: View {
         if viewModel.isLoading && viewModel.sales.isEmpty {
             ProgressView("Savdolar yuklanmoqda...").frame(maxWidth: .infinity, minHeight: 160)
         } else if let err = viewModel.errorMessage, viewModel.sales.isEmpty {
-            ContentUnavailableView {
-                Label("Yuklab bo'lmadi", systemImage: "wifi.exclamationmark")
-            } description: {
-                Text(err)
-            } actions: {
-                Button("Qayta urinish") { Task { await viewModel.fetchSales() } }
-                    .buttonStyle(.borderedProminent)
-            }
+            ErrorState(message: err) { await viewModel.fetchSales() }
         } else if !searchText.isEmpty {
             ContentUnavailableView.search(text: searchText)
         } else {

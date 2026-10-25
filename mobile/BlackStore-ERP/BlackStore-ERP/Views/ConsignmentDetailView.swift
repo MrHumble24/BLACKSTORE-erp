@@ -54,7 +54,7 @@ public struct ConsignmentDetailView: View {
     @ViewBuilder
     private var content: some View {
         if isLoading && detail == nil {
-            ProgressView("Yuklanmoqda…")
+            LoadingState()
         } else if let detail {
             List {
                 headerSection(for: detail)
@@ -71,14 +71,7 @@ public struct ConsignmentDetailView: View {
             }
             .listStyle(.insetGrouped)
         } else {
-            ContentUnavailableView {
-                Label("Ma'lumot topilmadi", systemImage: "exclamationmark.triangle")
-            } description: {
-                Text(loadError ?? "")
-            } actions: {
-                Button("Qayta urinish") { Task { await loadDetail() } }
-                    .buttonStyle(.borderedProminent)
-            }
+            ErrorState(title: "Ma'lumot topilmadi", systemImage: "exclamationmark.triangle", message: loadError ?? "") { await loadDetail() }
         }
     }
 
@@ -161,7 +154,7 @@ private struct ConsignmentItemRow: View {
             HStack(alignment: .firstTextBaseline) {
                 Text(item.item.productModel.name).font(.headline)
                 Spacer()
-                StockBadge(text: item.overdue ? "Muddati o'tgan" : item.status.title, color: statusColor)
+                StatusBadge(text: item.overdue ? "Muddati o'tgan" : item.status.title, tint: statusColor)
             }
             Text(item.item.primaryIdentifier)
                 .font(.caption.monospaced())

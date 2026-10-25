@@ -33,20 +33,3 @@ func peopleSignTint(_ value: Double) -> Color {
     if value < -0.005 { return .red }
     return .secondary
 }
-
-/// A labelled money value row used in money breakdown sections.
-struct PeopleMoneyRow: View {
-    let title: String
-    let amount: Double
-
-    init(_ title: String, _ amount: Double) {
-        self.title = title
-        self.amount = amount
-    }
-
-    var body: some View {
-        LabeledContent(title) {
-            Text(APIConfig.formatMoney(amount)).monospacedDigit()
-        }
-    }
-}

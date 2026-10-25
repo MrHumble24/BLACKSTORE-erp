@@ -49,9 +49,9 @@ public struct CustomersView: View {
     @ViewBuilder
     private var content: some View {
         if viewModel.isLoading && viewModel.customers.isEmpty {
-            PeopleLoadingState()
+            LoadingState()
         } else if let err = viewModel.errorMessage, viewModel.customers.isEmpty {
-            PeopleErrorState(message: err) { await viewModel.fetchCustomers() }
+            ErrorState(message: err) { await viewModel.fetchCustomers() }
         } else if viewModel.customers.isEmpty {
             emptyState
         } else {
@@ -73,7 +73,7 @@ public struct CustomersView: View {
     private var customerList: some View {
         List {
             if let err = viewModel.errorMessage {
-                PeopleInlineError(message: err)
+                Section { InlineMessage(text: err, font: .footnote) }
             }
             Section {
                 ForEach(viewModel.customers) { customer in

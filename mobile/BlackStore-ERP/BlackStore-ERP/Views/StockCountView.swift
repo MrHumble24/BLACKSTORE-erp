@@ -29,7 +29,7 @@ public struct StockCountView: View {
         .navigationTitle("Inventarizatsiya")
         .navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $isShowingScanner) {
-            StockScannerSheet(title: "Skanerlash", count: viewModel.recentScans.count, feedback: feedback) { code in
+            ScannerSheet(title: "Skanerlash", count: viewModel.recentScans.count, feedback: feedback) { code in
                 scan(code)
             }
         }
@@ -66,9 +66,9 @@ public struct StockCountView: View {
             }
             Section {
                 if let err = viewModel.errorMessage {
-                    StockMessageRow(text: err)
+                    InlineMessage(text: err)
                 }
-                StockPrimaryButton(title: "Auditni boshlash", systemImage: "play.fill", isBusy: viewModel.isLoading) {
+                PrimaryButton(title: "Auditni boshlash", systemImage: "play.fill", isBusy: viewModel.isLoading) {
                     Task { _ = await viewModel.startCount() }
                 }
                 .disabled(viewModel.selectedLocation == nil || viewModel.isLoading)
@@ -85,7 +85,7 @@ public struct StockCountView: View {
                     Label("Kamera bilan skanerlash", systemImage: "camera.viewfinder")
                 }
                 if let feedback {
-                    StockMessageRow(text: "\(feedback.code): \(feedback.message)", isError: feedback.isError)
+                    InlineMessage(text: "\(feedback.code): \(feedback.message)", isError: feedback.isError)
                 }
             }
             Section("Oxirgi skanerlanganlar (\(viewModel.recentScans.count))") {
@@ -100,12 +100,9 @@ public struct StockCountView: View {
         }
         .listStyle(.insetGrouped)
         .safeAreaInset(edge: .bottom) {
-            StockPrimaryButton(title: "Auditni yakunlash", systemImage: "flag.checkered", isBusy: viewModel.isLoading) {
+            BottomBar(title: "Auditni yakunlash", systemImage: "flag.checkered", isBusy: viewModel.isLoading, isDisabled: false) {
                 isConfirmingFinish = true
             }
-            .disabled(viewModel.isLoading)
-            .padding()
-            .background(.bar)
         }
     }
 

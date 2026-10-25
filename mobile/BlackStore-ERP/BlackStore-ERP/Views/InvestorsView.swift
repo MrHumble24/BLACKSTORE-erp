@@ -27,9 +27,9 @@ public struct InvestorsView: View {
     @ViewBuilder
     private var content: some View {
         if viewModel.isLoading && viewModel.investors.isEmpty {
-            PeopleLoadingState()
+            LoadingState()
         } else if let err = viewModel.errorMessage, viewModel.investors.isEmpty {
-            PeopleErrorState(message: err) { await viewModel.fetchInvestors() }
+            ErrorState(message: err) { await viewModel.fetchInvestors() }
         } else if viewModel.investors.isEmpty {
             ContentUnavailableView("Investorlar topilmadi", systemImage: "person.2.slash")
         } else if filtered.isEmpty {
@@ -37,7 +37,7 @@ public struct InvestorsView: View {
         } else {
             List {
                 if let err = viewModel.errorMessage {
-                    PeopleInlineError(message: err)
+                    Section { InlineMessage(text: err, font: .footnote) }
                 }
                 Section {
                     ForEach(filtered) { investor in

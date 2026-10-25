@@ -49,9 +49,9 @@ public struct CheckoutView: View {
             }
             .navigationTitle("To'lov")
             .navigationBarTitleDisplayMode(.inline)
-            .salesKeyboardDoneBar()
+            .keyboardDoneBar()
             .safeAreaInset(edge: .bottom) {
-                SalesBottomBar(
+                BottomBar(
                     title: "Savdoni yakunlash · \(cartViewModel.formattedTotal)",
                     isBusy: viewModel.isSubmitting,
                     isDisabled: !canSubmit,

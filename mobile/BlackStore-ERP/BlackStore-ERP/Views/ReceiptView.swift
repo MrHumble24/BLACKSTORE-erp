@@ -57,7 +57,7 @@ public struct ReceiptView: View {
     }
 
     private var actions: some View {
-        SalesBottomBar(title: "Yangi savdo", isDisabled: false, action: close) {
+        BottomBar(title: "Yangi savdo", isDisabled: false, action: close) {
             ShareLink(item: content.shareText) {
                 Label("Chekni yuborish (Telegram / AirDrop)", systemImage: "square.and.arrow.up")
                     .frame(maxWidth: .infinity)

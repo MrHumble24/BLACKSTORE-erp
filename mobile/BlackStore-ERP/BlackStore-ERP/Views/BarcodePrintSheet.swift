@@ -70,7 +70,7 @@ public struct BarcodePrintSheet: View {
     }
 
     private var actionButtons: some View {
-        SalesBottomBar(
+        BottomBar(
             title: "AirPrint orqali chop etish",
             systemImage: "printer.fill",
             isDisabled: labelImage == nil,

@@ -32,9 +32,9 @@ public struct WalkInPurchaseSheet: View {
                     }
                 }
             }
-            .salesKeyboardDoneBar()
+            .keyboardDoneBar()
             .safeAreaInset(edge: .bottom) {
-                SalesBottomBar(
+                BottomBar(
                     title: "Qabul qilish va kirim qilish",
                     isBusy: viewModel.isSubmitting,
                     isDisabled: viewModel.isLoading || !isFormFilled,
@@ -49,7 +49,7 @@ public struct WalkInPurchaseSheet: View {
                 }
             }
             .sheet(isPresented: $isShowingScanner) {
-                SalesScannerSheet(title: "Shtrix-kod / IMEI skaneri", onClose: { isShowingScanner = false }) { code in
+                ScannerSheet(title: "Shtrix-kod / IMEI skaneri", onClose: { isShowingScanner = false }) { code in
                     viewModel.identifierValue = code
                     HapticManager.scanSuccess()
                     isShowingScanner = false

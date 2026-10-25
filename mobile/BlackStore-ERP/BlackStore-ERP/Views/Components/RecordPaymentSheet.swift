@@ -30,9 +30,9 @@ public struct RecordPaymentSheet: View {
                     Section { Label(err, systemImage: "exclamationmark.triangle.fill").foregroundStyle(.red) }
                 }
             }
-            .salesKeyboardDoneBar()
+            .keyboardDoneBar()
             .safeAreaInset(edge: .bottom) {
-                SalesBottomBar(
+                BottomBar(
                     title: "To'lovni tasdiqlash (\(APIConfig.formatMoney(enteredAmount)))",
                     isBusy: viewModel.isSubmitting,
                     isDisabled: enteredAmount <= 0,
@@ -84,7 +84,7 @@ public struct RecordPaymentSheet: View {
                     .keyboardType(.decimalPad)
                     .multilineTextAlignment(.trailing)
                     .monospacedDigit()
-                    .salesDecimalCommaFix($amountText)
+                    .decimalCommaFix($amountText)
             }
             HStack {
                 quickFill("To'liq qoldiq", amount: remainingBalance)

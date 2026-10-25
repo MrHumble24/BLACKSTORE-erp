@@ -51,7 +51,7 @@ struct StockScanRow: View {
         HStack {
             Text(scan.code).font(.subheadline.monospaced())
             Spacer()
-            StockBadge(text: scan.status.title, color: color)
+            StatusBadge(text: scan.status.title, tint: color)
         }
         .accessibilityElement(children: .combine)
     }
@@ -86,9 +86,7 @@ struct StockCountResultView: View {
         }
         .listStyle(.insetGrouped)
         .safeAreaInset(edge: .bottom) {
-            StockPrimaryButton(title: "Yangi audit boshlash", systemImage: "arrow.clockwise", action: onStartNew)
-                .padding()
-                .background(.bar)
+            BottomBar(title: "Yangi audit boshlash", systemImage: "arrow.clockwise", isDisabled: false, action: onStartNew)
         }
     }
 

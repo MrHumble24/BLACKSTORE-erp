@@ -79,14 +79,7 @@ public struct CustomerPickerSheet: View {
         if viewModel.isLoading {
             ProgressView().frame(maxWidth: .infinity, minHeight: 120)
         } else if let err = viewModel.errorMessage {
-            ContentUnavailableView {
-                Label("Yuklab bo'lmadi", systemImage: "wifi.exclamationmark")
-            } description: {
-                Text(err)
-            } actions: {
-                Button("Qayta urinish") { Task { await viewModel.search() } }
-                    .buttonStyle(.borderedProminent)
-            }
+            ErrorState(message: err) { await viewModel.search() }
         } else {
             ContentUnavailableView {
                 Label("Xaridor topilmadi", systemImage: "person.crop.circle.badge.questionmark")
@@ -171,7 +164,7 @@ private struct QuickCustomerForm: View {
             .listRowBackground(Color.clear)
             .listRowInsets(EdgeInsets())
         }
-        .salesKeyboardDoneBar()
+        .keyboardDoneBar()
         .onAppear { focusedField = .name }
     }
 

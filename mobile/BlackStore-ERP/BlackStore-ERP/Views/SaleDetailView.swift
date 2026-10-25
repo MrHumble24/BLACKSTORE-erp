@@ -34,7 +34,7 @@ public struct SaleDetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         .safeAreaInset(edge: .bottom) {
             if debt != nil {
-                SalesBottomBar(title: "Nasiya to'lovini qabul qilish", systemImage: "creditcard.and.123", isDisabled: false) {
+                BottomBar(title: "Nasiya to'lovini qabul qilish", systemImage: "creditcard.and.123", isDisabled: false) {
                     isShowingPaymentSheet = true
                 }
             }

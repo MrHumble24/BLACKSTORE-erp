@@ -7,11 +7,13 @@ struct ScanFeedback: Equatable {
     let isError: Bool
 }
 
-/// Camera sheet for continuous scanning: running count, last scanned item and a finish button.
-struct StockScannerSheet: View {
+/// Camera barcode scanner sheet. Pass `count` for continuous scanning (running count, last result,
+/// finish button); pass `onClose` for a Close button in the navigation bar.
+struct ScannerSheet: View {
     let title: String
-    let count: Int
-    let feedback: ScanFeedback?
+    var count: Int? = nil
+    var feedback: ScanFeedback? = nil
+    var onClose: (() -> Void)? = nil
     let onScan: (String) -> Void
     @Environment(\.dismiss) private var dismiss
 
@@ -19,15 +21,24 @@ struct StockScannerSheet: View {
         NavigationStack {
             VisionScannerView(onCodeScanned: onScan)
                 .ignoresSafeArea(edges: .bottom)
-                .safeAreaInset(edge: .bottom) { statusPanel }
+                .safeAreaInset(edge: .bottom) {
+                    if let count { statusPanel(count: count) }
+                }
                 .navigationTitle(title)
                 .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    if let onClose {
+                        ToolbarItem(placement: .cancellationAction) {
+                            Button("Yopish", action: onClose)
+                        }
+                    }
+                }
         }
         .presentationDetents([.large])
         .presentationDragIndicator(.visible)
     }
 
-    private var statusPanel: some View {
+    private func statusPanel(count: Int) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .firstTextBaseline) {
                 Text("\(count)")
@@ -42,7 +53,7 @@ struct StockScannerSheet: View {
 
             lastScanRow
 
-            StockPrimaryButton(title: "Tugatish", systemImage: "checkmark") { dismiss() }
+            PrimaryButton(title: "Tugatish", systemImage: "checkmark") { dismiss() }
         }
         .padding()
         .background(.regularMaterial)

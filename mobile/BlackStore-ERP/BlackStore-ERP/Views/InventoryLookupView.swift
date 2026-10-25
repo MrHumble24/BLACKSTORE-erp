@@ -46,17 +46,9 @@ public struct InventoryLookupView: View {
     @ViewBuilder
     private var content: some View {
         if viewModel.isLoading && viewModel.items.isEmpty {
-            ProgressView("Yuklanmoqda…")
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            LoadingState()
         } else if let err = viewModel.errorMessage, viewModel.items.isEmpty {
-            ContentUnavailableView {
-                Label("Yuklab bo'lmadi", systemImage: "wifi.exclamationmark")
-            } description: {
-                Text(err)
-            } actions: {
-                Button("Qayta urinish") { Task { await viewModel.fetchItems() } }
-                    .buttonStyle(.borderedProminent)
-            }
+            ErrorState(message: err) { await viewModel.fetchItems() }
         } else if viewModel.items.isEmpty {
             if viewModel.searchText.isEmpty {
                 ContentUnavailableView("Omborda tovarlar topilmadi", systemImage: "shippingbox")
@@ -120,9 +112,9 @@ private struct InventoryItemRow: View {
             }
             HStack(spacing: 6) {
                 if let loc = item.location {
-                    StockBadge(text: loc.name)
+                    StatusBadge(text: loc.name)
                 }
-                StockBadge(text: item.condition, color: .secondary)
+                StatusBadge(text: item.condition, tint: .secondary)
                 Spacer()
                 if let onAdd {
                     Button(action: onAdd) {

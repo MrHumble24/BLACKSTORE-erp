@@ -27,7 +27,7 @@ struct CheckoutPaymentSection: View {
                         .keyboardType(.decimalPad)
                         .multilineTextAlignment(.trailing)
                         .monospacedDigit()
-                        .salesDecimalCommaFix($viewModel.paidAmountText)
+                        .decimalCommaFix($viewModel.paidAmountText)
                 }
             }
             if showsDueDate {

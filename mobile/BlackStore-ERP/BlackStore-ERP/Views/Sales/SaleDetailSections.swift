@@ -17,7 +17,7 @@ struct SaleHeadlineSection: View {
                     .foregroundStyle(debt != nil ? .red : .green)
                     .minimumScaleFactor(0.6)
                     .lineLimit(1)
-                SaleStatusBadge(status: sale.status)
+                StatusBadge.sale(sale.status)
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 8)
@@ -40,7 +40,7 @@ struct SaleSummarySection: View {
                     LabeledContent("Telefon", value: customer.phone)
                 }
             }
-            if let date = SalesFormat.dateTime(sale.createdAt) {
+            if let date = DateDisplay.dateTime(sale.createdAt) {
                 LabeledContent("Sana", value: date)
             }
             if let seller = sale.seller {
