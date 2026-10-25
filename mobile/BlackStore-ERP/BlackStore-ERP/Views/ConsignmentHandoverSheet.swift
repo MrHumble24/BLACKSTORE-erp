@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Sheet for creating a new consignment handover to a partner shop (W4).
+/// Sheet for handing devices over to a partner shop on consignment (W4).
 public struct ConsignmentHandoverSheet: View {
     @Environment(\.dismiss) private var dismiss
     @ObservedObject public var viewModel: ConsignmentsViewModel
@@ -12,10 +12,15 @@ public struct ConsignmentHandoverSheet: View {
     @State private var hasDueDate: Bool = false
     @State private var dueDate: Date = Calendar.current.date(byAdding: .day, value: 7, to: Date()) ?? Date()
     @State private var note: String = ""
-    @State private var errorMessage: String? = nil
+    @State private var feedback: ScanFeedback? = nil
+    @State private var isShowingScanner: Bool = false
 
     public init(viewModel: ConsignmentsViewModel) {
         self.viewModel = viewModel
+    }
+
+    private var isValid: Bool {
+        selectedPartner != nil && !handoverItems.isEmpty && !viewModel.isLoading
     }
 
     public var body: some View {
@@ -25,24 +30,30 @@ public struct ConsignmentHandoverSheet: View {
                 itemScanSection
                 itemsListSection
                 optionsSection
+                submitSection
             }
             .navigationTitle("Yangi topshirish")
             .navigationBarTitleDisplayMode(.inline)
+            .keyboardDoneBar()
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Bekor qilish") { dismiss() }
                 }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Topshirish") { submitHandover() }
-                        .disabled(selectedPartner == nil || handoverItems.isEmpty || viewModel.isLoading)
+            }
+            .sheet(isPresented: $isShowingScanner) {
+                StockScannerSheet(title: "Skanerlash", count: handoverItems.count, feedback: feedback) { code in
+                    lookupItem(code: code)
                 }
             }
+            .onAppear { viewModel.errorMessage = nil }
         }
+        .presentationDetents([.large])
+        .presentationDragIndicator(.visible)
     }
 
     private var partnerSection: some View {
         Section("Hamkor do'kon") {
-            Picker("Hamkorni tanlang", selection: $selectedPartner) {
+            Picker("Hamkor", selection: $selectedPartner) {
                 Text("Tanlanmagan").tag(nil as Partner?)
                 ForEach(viewModel.partners) { partner in
                     Text(partner.name).tag(partner as Partner?)
@@ -52,101 +63,123 @@ public struct ConsignmentHandoverSheet: View {
     }
 
     private var itemScanSection: some View {
-        Section("Mahsulot qo'shish") {
+        Section {
             HStack {
                 TextField("IMEI / Shtrix-kod", text: $scannedCode)
-                    .textFieldStyle(.roundedBorder)
                     .textInputAutocapitalization(.characters)
                     .autocorrectionDisabled()
-                    .onSubmit { lookupItem() }
-
-                Button(action: lookupItem) {
-                    if isLookingUp {
-                        ProgressView().controlSize(.small)
-                    } else {
-                        Text("Qidirish")
-                    }
+                    .submitLabel(.search)
+                    .onSubmit { lookupItem(code: scannedCode) }
+                Button { lookupItem(code: scannedCode) } label: {
+                    if isLookingUp { ProgressView() } else { Text("Qidirish") }
                 }
-                .buttonStyle(.borderedProminent)
+                .accessibilityLabel(isLookingUp ? "Qidirilmoqda" : "Qidirish")
+                .buttonStyle(.bordered)
                 .disabled(scannedCode.trimmingCharacters(in: .whitespaces).isEmpty || isLookingUp)
             }
-
-            if let err = errorMessage {
-                Text(err)
-                    .font(.caption2)
-                    .foregroundStyle(.red)
+            Button { isShowingScanner = true } label: {
+                Label("Kamera bilan skanerlash", systemImage: "camera.viewfinder")
             }
+            if let feedback {
+                StockMessageRow(text: "\(feedback.code): \(feedback.message)", isError: feedback.isError)
+            }
+        } header: {
+            Text("Mahsulot qo'shish")
+        } footer: {
+            Text("Faqat omborda turgan mahsulotlarni topshirish mumkin.")
         }
     }
 
     private var itemsListSection: some View {
         Section("Topshiriladigan mahsulotlar (\(handoverItems.count))") {
             if handoverItems.isEmpty {
-                Text("Hali hech narsa qo'shilmadi")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                Text("Hali hech narsa qo'shilmadi").foregroundStyle(.secondary)
             } else {
                 ForEach(handoverItems.indices, id: \.self) { idx in
                     handoverItemRow(at: idx)
                 }
-                .onDelete { indices in
-                    handoverItems.remove(atOffsets: indices)
-                }
+                .onDelete { handoverItems.remove(atOffsets: $0) }
             }
         }
     }
 
     private func handoverItemRow(at idx: Int) -> some View {
-        let entry = handoverItems[idx]
-        return VStack(alignment: .leading, spacing: 4) {
-            Text(entry.item.productModel.name)
-                .font(.headline)
-
-            HStack {
-                Text("Min narx ($):")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-
-                TextField("Min narx", value: Binding(
-                    get: { handoverItems[idx].minPrice },
-                    set: { handoverItems[idx].minPrice = $0 }
-                ), format: .number)
-                .keyboardType(.decimalPad)
-                .textFieldStyle(.roundedBorder)
-                .frame(width: 120)
+        HStack {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(handoverItems[idx].item.productModel.name).font(.headline)
+                LabeledContent("Min narx (\(APIConfig.currency))") {
+                    TextField("Min narx", value: minPriceBinding(at: idx), format: .number)
+                        .keyboardType(.decimalPad)
+                        .multilineTextAlignment(.trailing)
+                        .monospacedDigit()
+                }
             }
+            Button(role: .destructive) {
+                handoverItems.remove(at: idx)
+            } label: {
+                Image(systemName: "trash").frame(minWidth: 44, minHeight: 44)
+            }
+            .buttonStyle(.borderless)
+            .accessibilityLabel("O'chirish")
         }
+    }
+
+    /// Bounds-checked binding so deleting a row never reads a stale index.
+    private func minPriceBinding(at idx: Int) -> Binding<Double> {
+        Binding(
+            get: { handoverItems.indices.contains(idx) ? handoverItems[idx].minPrice : 0 },
+            set: { if handoverItems.indices.contains(idx) { handoverItems[idx].minPrice = $0 } }
+        )
     }
 
     private var optionsSection: some View {
         Section("Qo'shimcha sozlamalar") {
-            Toggle("Qaytarish muddati bor", isOn: $hasDueDate)
+            Toggle("Qaytarish muddati bor", isOn: $hasDueDate.animation())
             if hasDueDate {
-                DatePicker("Muddat", selection: $dueDate, displayedComponents: .date)
+                DatePicker("Muddat", selection: $dueDate, in: Date()..., displayedComponents: .date)
             }
-            TextField("Izoh (ixtiyoriy)", text: $note)
+            TextField("Izoh (ixtiyoriy)", text: $note, axis: .vertical)
         }
     }
 
-    private func lookupItem() {
-        let clean = scannedCode.trimmingCharacters(in: .whitespacesAndNewlines)
+    private var submitSection: some View {
+        Section {
+            if let err = viewModel.errorMessage {
+                StockMessageRow(text: err)
+            }
+            StockPrimaryButton(
+                title: "Topshirish (\(handoverItems.count))",
+                isBusy: viewModel.isLoading,
+                action: submitHandover
+            )
+            .disabled(!isValid)
+        }
+    }
+
+    /// Looks the code up and appends the item with its default minimum price.
+    private func lookupItem(code: String) {
+        let clean = code.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !clean.isEmpty else { return }
         isLookingUp = true
-        errorMessage = nil
 
         Task {
             do {
                 let item: Item = try await APIClient.shared.get("/items/by-code/\(clean)")
-                let basePrice = Double(item.minSalePrice ?? item.salePrice ?? "0") ?? 0
-                handoverItems.append((item: item, minPrice: basePrice))
-                scannedCode = ""
-                isLookingUp = false
-                HapticManager.selection()
+                if handoverItems.contains(where: { $0.item.id == item.id }) {
+                    feedback = ScanFeedback(code: clean, message: "Ro'yxatga allaqachon qo'shilgan", isError: true)
+                    HapticManager.warning()
+                } else {
+                    let basePrice = Double(item.minSalePrice ?? item.salePrice ?? "0") ?? 0
+                    handoverItems.append((item: item, minPrice: basePrice))
+                    feedback = ScanFeedback(code: clean, message: item.productModel.name, isError: false)
+                    HapticManager.selection()
+                }
+                if scannedCode.trimmingCharacters(in: .whitespacesAndNewlines) == clean { scannedCode = "" }
             } catch {
-                errorMessage = "Mahsulot topilmadi yoki omborda emas"
-                isLookingUp = false
+                feedback = ScanFeedback(code: clean, message: "Mahsulot topilmadi yoki omborda emas", isError: true)
                 HapticManager.error()
             }
+            isLookingUp = false
         }
     }
 
@@ -162,6 +195,8 @@ public struct ConsignmentHandoverSheet: View {
             if ok {
                 HapticManager.success()
                 dismiss()
+            } else {
+                HapticManager.error()
             }
         }
     }

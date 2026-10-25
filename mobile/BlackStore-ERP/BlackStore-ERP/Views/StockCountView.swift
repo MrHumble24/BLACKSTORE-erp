@@ -1,230 +1,143 @@
 import SwiftUI
 
-/// Physical stock count view for shelf auditing via camera barcode scanning (PRD FR-6, W7).
+/// Physical stock count: pick a branch, scan the shelf, finish to lock discrepancies (PRD FR-6, W7).
 public struct StockCountView: View {
-    @Environment(\.dismiss) private var dismiss
     @StateObject private var viewModel = StockCountViewModel()
     @State private var isShowingScanner: Bool = false
+    @State private var isConfirmingFinish: Bool = false
     @State private var manualInput: String = ""
+    @State private var feedback: ScanFeedback? = nil
+    @State private var finishError: String? = nil
 
     public init() {}
 
     public var body: some View {
-        NavigationStack {
-            VStack(spacing: 0) {
-                if let count = viewModel.activeCount {
-                    if count.isFinished {
-                        finishedAuditView(count: count)
-                    } else {
-                        activeAuditView(count: count)
+        Group {
+            if let count = viewModel.activeCount {
+                if count.isFinished {
+                    StockCountResultView(count: count) {
+                        feedback = nil
+                        viewModel.activeCount = nil
                     }
                 } else {
-                    setupView
+                    activeAuditView(count: count)
                 }
-            }
-            .navigationTitle("Inventarizatsiya")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Yopish") { dismiss() }
-                }
-            }
-            .sheet(isPresented: $isShowingScanner) {
-                NavigationStack {
-                    VisionScannerView { code in
-                        Task { _ = await viewModel.recordScan(code: code) }
-                    }
-                    .navigationTitle("Skanerlash")
-                    .navigationBarTitleDisplayMode(.inline)
-                    .toolbar {
-                        ToolbarItem(placement: .cancellationAction) {
-                            Button("Tugatish") { isShowingScanner = false }
-                        }
-                    }
-                }
-            }
-            .task {
-                await viewModel.loadLocations()
+            } else {
+                setupView
             }
         }
+        .navigationTitle("Inventarizatsiya")
+        .navigationBarTitleDisplayMode(.inline)
+        .sheet(isPresented: $isShowingScanner) {
+            StockScannerSheet(title: "Skanerlash", count: viewModel.recentScans.count, feedback: feedback) { code in
+                scan(code)
+            }
+        }
+        .confirmationDialog("Auditni yakunlaysizmi?", isPresented: $isConfirmingFinish, titleVisibility: .visible) {
+            Button("Auditni yakunlash", role: .destructive) {
+                Task {
+                    if !(await viewModel.finishCount()) { finishError = viewModel.errorMessage ?? "Xatolik" }
+                }
+            }
+            Button("Bekor qilish", role: .cancel) {}
+        } message: {
+            Text("Yakunlangandan so'ng skanerlab bo'lmaydi, kamomad qayd etiladi.")
+        }
+        .alert("Auditni yakunlab bo'lmadi", isPresented: Binding(isPresent: $finishError)) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(finishError ?? "")
+        }
+        .task { await viewModel.loadLocations() }
     }
 
     private var setupView: some View {
         Form {
-            Section("Filial tanlash") {
+            Section {
                 Picker("Filial", selection: $viewModel.selectedLocation) {
                     ForEach(viewModel.locations) { loc in
                         Text(loc.name).tag(Optional(loc))
                     }
                 }
+            } header: {
+                Text("Filial tanlash")
+            } footer: {
+                Text("Tanlangan filialdagi barcha qurilmalarni skanerlab sanaysiz.")
             }
-
-            if let err = viewModel.errorMessage {
-                Section {
-                    Text(err).font(.caption).foregroundStyle(.red)
-                }
-            }
-
             Section {
-                Button(action: startAudit) {
-                    if viewModel.isLoading {
-                        ProgressView().frame(maxWidth: .infinity)
-                    } else {
-                        Text("Auditni boshlash")
-                            .font(.headline)
-                            .frame(maxWidth: .infinity)
-                    }
+                if let err = viewModel.errorMessage {
+                    StockMessageRow(text: err)
                 }
-                .buttonStyle(.borderedProminent)
-                .controlSize(.large)
+                StockPrimaryButton(title: "Auditni boshlash", systemImage: "play.fill", isBusy: viewModel.isLoading) {
+                    Task { _ = await viewModel.startCount() }
+                }
+                .disabled(viewModel.selectedLocation == nil || viewModel.isLoading)
             }
         }
     }
 
     private func activeAuditView(count: StockCount) -> some View {
-        VStack(spacing: 0) {
-            auditStatBar(count: count)
-
-            HStack(spacing: 8) {
-                TextField("Kod / IMEI", text: $manualInput)
-                    .textFieldStyle(.roundedBorder)
-                    .textInputAutocapitalization(.characters)
-                    .onSubmit { submitManual() }
-
-                Button("Qo'shish") { submitManual() }
-                    .buttonStyle(.bordered)
-
-                Button {
-                    isShowingScanner = true
-                } label: {
-                    Image(systemName: "camera.viewfinder")
-                        .font(.title3)
-                }
-                .buttonStyle(.borderedProminent)
-            }
-            .padding()
-            .background(Color(.secondarySystemBackground))
-
-            List {
-                Section("Oxirgi skanerlanganlar") {
-                    if viewModel.recentScans.isEmpty {
-                        Text("Hali skanerlanmadi").font(.caption).foregroundStyle(.secondary)
-                    } else {
-                        ForEach(viewModel.recentScans, id: \.code) { scan in
-                            scanRow(scan: scan)
-                        }
-                    }
-                }
-            }
-            .listStyle(.plain)
-
-            Button(action: finishAudit) {
-                Text("Auditni yakunlash")
-                    .font(.headline)
-                    .frame(maxWidth: .infinity)
-                    .padding()
-            }
-            .buttonStyle(.borderedProminent)
-            .tint(.red)
-            .padding()
-        }
-    }
-
-    private func auditStatBar(count: StockCount) -> some View {
-        let expected = count.result?.expectedCount ?? 0
-        let found = count.result?.found ?? 0
-
-        return HStack(spacing: 16) {
-            statBlock(title: "Kutilgan", value: "\(expected)", color: .primary)
-            statBlock(title: "Topildi", value: "\(found)", color: .green)
-            statBlock(title: "Yetishmayotgan", value: "\(max(0, expected - found))", color: .red)
-        }
-        .padding()
-        .background(Color(.systemBackground))
-        .overlay(Divider(), alignment: .bottom)
-    }
-
-    private func statBlock(title: String, value: String, color: Color) -> some View {
-        VStack(spacing: 2) {
-            Text(value)
-                .font(.title2)
-                .fontWeight(.bold)
-                .foregroundStyle(color)
-            Text(title)
-                .font(.caption2)
-                .foregroundStyle(.secondary)
-        }
-        .frame(maxWidth: .infinity)
-    }
-
-    private func scanRow(scan: StockCountScanResponse) -> some View {
-        HStack {
-            Text(scan.code)
-                .font(.subheadline)
-                .fontWeight(.medium)
-            Spacer()
-            Text(scan.status.title)
-                .font(.caption2)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 2)
-                .background(badgeColor(scan.status).opacity(0.15))
-                .foregroundStyle(badgeColor(scan.status))
-                .clipShape(Capsule())
-        }
-    }
-
-    private func finishedAuditView(count: StockCount) -> some View {
         List {
-            Section("Natija") {
-                LabeledContent("Kutilgan", value: "\(count.result?.expectedCount ?? 0)")
-                LabeledContent("Topildi", value: "\(count.result?.found ?? 0)")
-                LabeledContent("Kamomad (Yetishmayotgan)", value: "\(count.result?.missing.count ?? 0)")
+            Section { StockCountStatsRow(result: count.result) }
+            Section("Kod kiritish") {
+                manualEntryRow
+                Button { isShowingScanner = true } label: {
+                    Label("Kamera bilan skanerlash", systemImage: "camera.viewfinder")
+                }
+                if let feedback {
+                    StockMessageRow(text: "\(feedback.code): \(feedback.message)", isError: feedback.isError)
+                }
             }
-
-            if let missing = count.result?.missing, !missing.isEmpty {
-                Section("Topilmagan qurilmalar (\(missing.count))") {
-                    ForEach(missing) { item in
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(item.productModel.name)
-                                .font(.subheadline)
-                            if let firstId = item.identifiers.first {
-                                Text("\(firstId.type): \(firstId.value)")
-                                    .font(.caption2)
-                                    .foregroundStyle(.secondary)
-                            }
-                        }
+            Section("Oxirgi skanerlanganlar (\(viewModel.recentScans.count))") {
+                if viewModel.recentScans.isEmpty {
+                    Text("Hali skanerlanmadi").foregroundStyle(.secondary)
+                } else {
+                    ForEach(Array(viewModel.recentScans.enumerated()), id: \.offset) { _, scan in
+                        StockScanRow(scan: scan)
                     }
                 }
             }
-
-            Section {
-                Button("Yangi audit boshlash") {
-                    viewModel.activeCount = nil
-                }
-                .frame(maxWidth: .infinity)
+        }
+        .listStyle(.insetGrouped)
+        .safeAreaInset(edge: .bottom) {
+            StockPrimaryButton(title: "Auditni yakunlash", systemImage: "flag.checkered", isBusy: viewModel.isLoading) {
+                isConfirmingFinish = true
             }
+            .disabled(viewModel.isLoading)
+            .padding()
+            .background(.bar)
         }
     }
 
-    private func badgeColor(_ status: StockScanStatus) -> Color {
-        switch status {
-        case .found: return .green
-        case .duplicate: return .gray
-        case .unknown, .wrongLocation: return .red
+    private var manualEntryRow: some View {
+        HStack {
+            TextField("Kod / IMEI", text: $manualInput)
+                .textInputAutocapitalization(.characters)
+                .autocorrectionDisabled()
+                .submitLabel(.done)
+                .onSubmit(submitManual)
+            Button("Qo'shish", action: submitManual)
+                .buttonStyle(.bordered)
+                .disabled(manualInput.trimmingCharacters(in: .whitespaces).isEmpty)
         }
     }
 
     private func submitManual() {
         let code = manualInput
         manualInput = ""
-        Task { _ = await viewModel.recordScan(code: code) }
+        scan(code)
     }
 
-    private func startAudit() {
-        Task { _ = await viewModel.startCount() }
-    }
-
-    private func finishAudit() {
-        Task { _ = await viewModel.finishCount() }
+    /// Records one code and keeps its result for the scanner panel.
+    private func scan(_ code: String) {
+        let clean = code.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !clean.isEmpty else { return }
+        Task {
+            if await viewModel.recordScan(code: clean), let last = viewModel.recentScans.first(where: { $0.code == clean }) {
+                feedback = ScanFeedback(code: last.code, message: last.status.title, isError: last.status != .found)
+            } else {
+                feedback = ScanFeedback(code: clean, message: viewModel.errorMessage ?? "Xatolik", isError: true)
+            }
+        }
     }
 }
