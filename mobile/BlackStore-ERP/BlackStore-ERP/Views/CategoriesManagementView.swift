@@ -35,12 +35,13 @@ public struct CategoriesManagementView: View {
                 if let err = viewModel.errorMessage {
                     Section { InlineMessage(text: err) }
                 }
-                ForEach(viewModel.categories) { category in
-                    NavigationLink {
-                        CategoryDetailView(viewModel: viewModel, categoryId: category.id)
-                    } label: {
-                        CategoryRow(category: category)
-                    }
+                if let notice = viewModel.notice {
+                    Section { InlineMessage(text: notice.text, isError: notice.isError) }
+                }
+                Section {
+                    ForEach(viewModel.categories, content: row)
+                } footer: {
+                    Text("Mahsulot kategoriyalari va xususiyatlari")
                 }
             }
             .listStyle(.insetGrouped)
@@ -49,7 +50,30 @@ public struct CategoriesManagementView: View {
     }
 }
 
-/// One category: icon, name, serialized note, active badge and attribute count.
+extension CategoriesManagementView {
+    /// Row linking to the detail, with the web's on/off switch as swipe and context-menu actions.
+    private func row(_ category: CategoryItem) -> some View {
+        NavigationLink {
+            CategoryDetailView(viewModel: viewModel, categoryId: category.id)
+        } label: {
+            CategoryRow(category: category)
+        }
+        .swipeActions(edge: .trailing) { activeButton(category) }
+        .contextMenu { activeButton(category) }
+    }
+
+    private func activeButton(_ category: CategoryItem) -> some View {
+        Button(
+            category.isActive ? "O'chirish" : "Yoqish",
+            systemImage: category.isActive ? "pause.circle" : "play.circle"
+        ) {
+            Task { await viewModel.setCategoryActive(category, isActive: !category.isActive) }
+        }
+        .tint(category.isActive ? .red : .green)
+    }
+}
+
+/// One category: icon, name, serialized note and active badge.
 private struct CategoryRow: View {
     let category: CategoryItem
 
@@ -62,18 +86,12 @@ private struct CategoryRow: View {
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 2) {
                 Text(category.name).font(.headline)
-                Text(category.isSerialized ? "Seriyali" : "Seriyasiz")
+                Text(category.isSerialized ? "Seriya raqamli mahsulotlar" : "Seriya raqamisiz mahsulotlar (aksessuarlar)")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
             Spacer()
-            VStack(alignment: .trailing, spacing: 4) {
-                ActiveBadge(isActive: category.isActive)
-                Text("\(category.attributes.count) ta xususiyat")
-                    .font(.caption)
-                    .monospacedDigit()
-                    .foregroundStyle(.secondary)
-            }
+            ActiveBadge(isActive: category.isActive)
         }
         .padding(.vertical, 2)
         .accessibilityElement(children: .combine)

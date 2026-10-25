@@ -1,15 +1,6 @@
 import SwiftUI
 
-/// Active / inactive capsule used by category and model rows.
-struct ActiveBadge: View {
-    let isActive: Bool
-
-    var body: some View {
-        StatusBadge(text: isActive ? "Faol" : "Nofaol", tint: isActive ? .green : .red)
-    }
-}
-
-/// One attribute: label, key, type, options, required mark and order, like the web table row.
+/// One attribute: label, key, type, options, required and order, like the web table row.
 struct AttributeRow: View {
     let attribute: CategoryAttribute
 
@@ -20,42 +11,44 @@ struct AttributeRow: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            HStack(alignment: .firstTextBaseline) {
-                Text(attribute.label).font(.headline)
-                if attribute.required { StatusBadge(text: "Majburiy", tint: .orange) }
-                Spacer()
-                Text("#\(attribute.sortOrder)")
-                    .font(.caption)
-                    .monospacedDigit()
-                    .foregroundStyle(.secondary)
-                    .accessibilityLabel("Tartib raqami \(attribute.sortOrder)")
-            }
+            Text(attribute.label).font(.headline)
             Text(attribute.key).font(.caption.monospaced()).foregroundStyle(.secondary)
             Text("\(attribute.type.label) · \(optionsText)")
-                .font(.caption)
-                .foregroundStyle(.secondary)
                 .lineLimit(2)
+            HStack {
+                Text("Majburiy maydon: \(attribute.required ? "Ha" : "—")")
+                Spacer()
+                Text("Tartib raqami: \(attribute.sortOrder)").monospacedDigit()
+            }
         }
+        .font(.caption)
+        .foregroundStyle(.secondary)
         .padding(.vertical, 2)
         .accessibilityElement(children: .combine)
     }
 }
 
-/// One product model: name and active badge (tap to edit), with an inline active toggle.
+/// One product model: name and active badge (tap to edit), with an optimistic active toggle.
 struct ModelRow: View {
     let model: ProductModel
-    let isBusy: Bool
     let onEdit: () -> Void
-    let onToggle: (Bool) -> Void
+    /// Saves the new state; returns false when the server refused it.
+    let onToggle: (Bool) async -> Bool
+    @State private var isOn: Bool
 
-    private var isActive: Bool { model.isActive ?? true }
+    init(model: ProductModel, onEdit: @escaping () -> Void, onToggle: @escaping (Bool) async -> Bool) {
+        self.model = model
+        self.onEdit = onEdit
+        self.onToggle = onToggle
+        _isOn = State(initialValue: model.isActive ?? true)
+    }
 
     var body: some View {
         HStack {
             Button(action: onEdit) {
                 HStack {
                     Text(model.name).foregroundStyle(.primary)
-                    ActiveBadge(isActive: isActive)
+                    ActiveBadge(isActive: model.isActive ?? true)
                     Spacer()
                 }
                 .frame(minHeight: 44)
@@ -64,10 +57,16 @@ struct ModelRow: View {
             .buttonStyle(.borderless)
             .accessibilityHint("Tahrirlash")
 
-            Toggle("Faol", isOn: Binding(get: { isActive }, set: onToggle))
+            Toggle("Faol", isOn: Binding(get: { isOn }, set: toggle))
                 .labelsHidden()
-                .disabled(isBusy)
                 .accessibilityLabel("\(model.name) faol")
         }
+        .onChange(of: model.isActive) { _, value in isOn = value ?? true }
+    }
+
+    /// Flips at once, flips back if the save fails.
+    private func toggle(_ value: Bool) {
+        isOn = value
+        Task { if !(await onToggle(value)) { isOn = !value } }
     }
 }

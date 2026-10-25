@@ -43,12 +43,12 @@ struct AttributeDraft: Equatable {
 
     var labelError: String? {
         if trimmedLabel.isEmpty { return "Maydon nomini kiriting" }
-        return trimmedLabel.count > 100 ? "Ko'pi bilan 100 ta belgi" : nil
+        return trimmedLabel.utf16.count > 100 ? "Ko'pi bilan 100 ta belgi" : nil
     }
 
     var keyError: String? {
         if trimmedKey.isEmpty { return "Kalit so'zni kiriting" }
-        if trimmedKey.count > 50 { return "Ko'pi bilan 50 ta belgi" }
+        if trimmedKey.utf16.count > 50 { return "Ko'pi bilan 50 ta belgi" }
         let valid = trimmedKey.range(of: "^[a-z][a-z0-9_]*$", options: .regularExpression) != nil
         return valid ? nil : "Kalit faqat lotin harflari va raqamlardan iborat bo'lishi kerak"
     }
@@ -57,7 +57,7 @@ struct AttributeDraft: Equatable {
         guard type == .select else { return nil }
         if options.isEmpty { return "Tanlov turi uchun kamida bitta variant kiriting" }
         if options.count > 50 { return "Ko'pi bilan 50 ta variant kiritish mumkin" }
-        return options.contains { $0.count > 50 } ? "Variant uzunligi 50 belgidan oshmasligi kerak" : nil
+        return options.contains { $0.utf16.count > 50 } ? "Variant uzunligi 50 belgidan oshmasligi kerak" : nil
     }
 
     var orderError: String? {
