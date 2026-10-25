@@ -68,12 +68,18 @@ public enum APIConfig {
 
     /// Formats numeric amount with currency prefix and grouped digits.
     nonisolated public static func formatMoney(_ value: Double) -> String {
+        let formatted = moneyFormatter.string(from: NSNumber(value: value)) ?? String(format: "%.2f", value)
+        return "\(currency)\(formatted)"
+    }
+
+    /// One shared formatter: creating a NumberFormatter per call is costly and charts format many values.
+    /// Configured once and only read afterwards, which NumberFormatter allows from any thread.
+    nonisolated private static let moneyFormatter: NumberFormatter = {
         let formatter = NumberFormatter()
         formatter.numberStyle = .decimal
         formatter.minimumFractionDigits = 2
         formatter.maximumFractionDigits = 2
         formatter.groupingSeparator = " "
-        let formatted = formatter.string(from: NSNumber(value: value)) ?? String(format: "%.2f", value)
-        return "\(currency)\(formatted)"
-    }
+        return formatter
+    }()
 }

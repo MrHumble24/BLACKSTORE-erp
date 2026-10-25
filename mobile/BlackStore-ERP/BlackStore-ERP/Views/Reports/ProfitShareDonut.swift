@@ -1,22 +1,18 @@
 import SwiftUI
 import Charts
 
-/// Sales share by a grouping (web ProfitShareDonut): top 5 in the fixed palette order, the rest in
-/// one neutral "Boshqalar" slice; total in the centre, legend with name and share.
+/// Sales share by a grouping (web ProfitShareDonut): slices in the fixed palette order, more than six
+/// groups fold into a neutral "Boshqa" slice; total in the centre, legend with name and whole-percent share.
 struct ProfitShareDonut: View {
     let title: String
     let caption: String
-    let groups: [ProfitGroup]
+    let slices: [ShareSlice]
     @Environment(\.dynamicTypeSize) private var typeSize
 
     private static let height: CGFloat = 180
-    private var slices: [ShareSlice] {
-        ProfitCharts.slices(groups.map { ($0.name, $0.salesDouble) }, otherName: "Boshqalar")
-    }
 
     var body: some View {
         ChartSection(title: title, caption: caption) {
-            let slices = slices
             if slices.isEmpty {
                 ChartEmpty(height: Self.height)
             } else {
@@ -28,7 +24,7 @@ struct ProfitShareDonut: View {
                     legend(slices)
                 }
                 .accessibilityElement(children: .ignore)
-                .accessibilityLabel("\(title): " + slices.map { "\($0.name) \(ChartFormat.percent($0.share))" }.joined(separator: ", "))
+                .accessibilityLabel("\(title): " + slices.map { "\($0.name) \(Self.share($0))" }.joined(separator: ", "))
             }
         }
     }
@@ -54,7 +50,7 @@ struct ProfitShareDonut: View {
 
     private func centre(_ slices: [ShareSlice]) -> some View {
         VStack(spacing: 0) {
-            Text("Savdo").font(.caption2).foregroundStyle(.secondary)
+            Text("Sotuvlar").font(.caption2).foregroundStyle(.secondary)
             Text(ChartFormat.shortMoney(slices.reduce(0) { $0 + $1.value }))
                 .font(.subheadline.weight(.semibold)).monospacedDigit()
         }
@@ -69,11 +65,16 @@ struct ProfitShareDonut: View {
                     Circle().fill(ChartPalette.categorical(slice.colorIndex)).frame(width: 8, height: 8)
                     Text(slice.name).foregroundStyle(.primary).lineLimit(typeSize >= .accessibility1 ? nil : 1)
                     Spacer(minLength: 8)
-                    Text(ChartFormat.percent(slice.share)).foregroundStyle(.secondary).monospacedDigit()
+                    Text(Self.share(slice)).foregroundStyle(.secondary).monospacedDigit()
                 }
                 .font(.footnote)
             }
         }
         .frame(maxWidth: .infinity)
+    }
+
+    /// Whole percent, as on the web ("51%").
+    private static func share(_ slice: ShareSlice) -> String {
+        "\(Int(slice.share))%"
     }
 }

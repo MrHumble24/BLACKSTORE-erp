@@ -8,16 +8,12 @@ struct ProfitMarginGauge: View {
 
     private static let height: CGFloat = 180
     private static let lineWidth: CGFloat = 14
-    private var margin: Double? { ProfitCharts.margin(totals.profitDouble, of: totals.salesDouble) }
-    private var previousMargin: Double? { previous.flatMap { ProfitCharts.margin($0.profitDouble, of: $0.salesDouble) } }
+    private var previousMargin: Double? { ProfitCharts.grossMargin(previous) }
 
     var body: some View {
-        ChartSection(title: "Yalpi marja", caption: "Yalpi foyda savdoning necha foizi") {
-            if let margin {
-                gauge(margin)
-            } else {
-                ChartEmpty(height: Self.height)
-            }
+        // No sales means no margin; like the web the gauge then reads 0 %.
+        ChartSection(title: "Yalpi marja", caption: "Yalpi foyda sotuvlarning necha foizi") {
+            gauge(ProfitCharts.grossMargin(totals) ?? 0)
         }
     }
 
@@ -38,14 +34,17 @@ struct ProfitMarginGauge: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
             }
             .frame(height: Self.height - 24)
-            Text(previousMargin.map { "O'tgan davr \(ChartFormat.percent($0))" } ?? " ")
+            Text("Sof foyda \(APIConfig.formatMoney(totals.netProfitDouble))")
                 .font(.caption).foregroundStyle(.secondary).monospacedDigit()
-                .frame(height: 20)
+            if let previousMargin {
+                Text("Oldingi \(ChartFormat.percent(previousMargin))")
+                    .font(.caption).foregroundStyle(.secondary).monospacedDigit()
+            }
         }
-        .frame(height: Self.height)
+        .frame(maxWidth: .infinity, minHeight: Self.height)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Yalpi marja \(ChartFormat.percent(margin))" +
-                            (previousMargin.map { ", o'tgan davr \(ChartFormat.percent($0))" } ?? ""))
+                            (previousMargin.map { ", oldingi davr \(ChartFormat.percent($0))" } ?? ""))
     }
 
     private var stroke: StrokeStyle { StrokeStyle(lineWidth: Self.lineWidth, lineCap: .round) }
@@ -58,14 +57,11 @@ struct ProfitMarginGauge: View {
         GaugeArc(fraction: fraction).inset(by: Self.lineWidth / 2)
     }
 
+    /// Only the margin sits inside the arc; captions go below so large text never meets the arc.
     private func figure(_ margin: Double) -> some View {
-        VStack(spacing: 0) {
-            Text(ChartFormat.percent(margin)).font(.title.weight(.bold)).monospacedDigit()
-            Text("Sof foyda \(APIConfig.formatMoney(totals.netProfitDouble))")
-                .font(.caption).foregroundStyle(.secondary).monospacedDigit()
-                .minimumScaleFactor(0.7).lineLimit(1)
-        }
-        .padding(.bottom, 2)
+        Text(ChartFormat.percent(margin)).font(.title.weight(.bold)).monospacedDigit()
+            .minimumScaleFactor(0.5).lineLimit(1)
+            .padding(.bottom, 2)
     }
 }
 

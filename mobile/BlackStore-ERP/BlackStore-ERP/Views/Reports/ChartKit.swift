@@ -50,16 +50,22 @@ struct ChartLegend: View {
     let items: [LegendItem]
 
     var body: some View {
+        // One line when it fits, else two per line, else one per line.
         ViewThatFits(in: .horizontal) {
-            HStack(spacing: 14) { entries }
-            VStack(alignment: .leading, spacing: 4) { entries }
+            HStack(spacing: 14) { entries(items) }
+            VStack(alignment: .leading, spacing: 4) {
+                ForEach(Array(stride(from: 0, to: items.count, by: 2)), id: \.self) { start in
+                    HStack(spacing: 14) { entries(Array(items[start..<min(start + 2, items.count)])) }
+                }
+            }
+            VStack(alignment: .leading, spacing: 4) { entries(items) }
         }
         .font(.caption)
         .foregroundStyle(.secondary)
         .accessibilityHidden(true)
     }
 
-    private var entries: some View {
+    private func entries(_ items: [LegendItem]) -> some View {
         ForEach(items) { item in
             HStack(spacing: 6) {
                 if item.dashed {

@@ -10,20 +10,22 @@ struct ProfitWaterfallChart: View {
     private var steps: [WaterfallStep] {
         ProfitCharts.waterfall(gross: totals.profitDouble, expenses: totals.expensesDouble,
                                income: totals.otherIncomeDouble,
-                               names: ["Yalpi foyda", "Chiqimlar", "Kirimlar", "Sof foyda"])
+                               names: ["Yalpi foyda", "Xarajatlar", "Boshqa daromadlar", "Sof foyda"])
     }
 
     var body: some View {
-        ChartSection(title: "Foyda tarkibi", caption: "Yalpi foydadan sof foydagacha") {
+        let steps = steps
+        ChartSection(title: "Sof foyda qanday hosil bo'ladi",
+                     caption: "Yalpi foydadan xarajatlar chegirilib, boshqa daromad qo'shiladi") {
             if steps.allSatisfy({ $0.signed == 0 }) {
                 ChartEmpty(height: Self.height)
             } else {
-                chart
+                chart(steps)
             }
         }
     }
 
-    private var chart: some View {
+    private func chart(_ steps: [WaterfallStep]) -> some View {
         Chart(steps) { step in
             BarMark(x: .value("Qadam", step.name), yStart: .value("Dan", step.low), yEnd: .value("Gacha", step.high),
                     width: .ratio(0.6))

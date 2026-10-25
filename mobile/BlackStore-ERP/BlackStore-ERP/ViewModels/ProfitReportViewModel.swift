@@ -15,6 +15,8 @@ public enum ProfitPeriodPreset: String, CaseIterable, Identifiable {
 @MainActor
 public class ProfitReportViewModel: ObservableObject {
     @Published public var report: ProfitReportResponse? = nil
+    /// Chart series for `report`, built once per fetch.
+    @Published var chartData: ProfitChartData? = nil
     @Published public var selectedPeriod: ProfitPeriodPreset = .thisMonth
     @Published public var isLoading: Bool = false
     @Published public var errorMessage: String? = nil
@@ -31,6 +33,7 @@ public class ProfitReportViewModel: ObservableObject {
 
         do {
             let res: ProfitReportResponse = try await APIClient.shared.get(endpoint)
+            self.chartData = ProfitChartData(report: res)
             self.report = res
             self.isLoading = false
         } catch {
