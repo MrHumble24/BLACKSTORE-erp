@@ -1,10 +1,14 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/shared/api';
+import { reportKeys } from '@/entities/report';
+import { dashboardKeys } from '@/entities/dashboard';
+import { businessDayKeys } from '@/entities/business-day';
 import type {
   LedgerEntry,
   LedgerPage,
   LedgerFilters,
   CreateLedgerEntryPayload,
+  ExpenseStatus,
 } from '../model/types';
 
 export const LEDGER_PAGE_SIZE = 20;
@@ -17,13 +21,14 @@ export const ledgerKeys = {
   categories: () => [...ledgerKeys.all, 'categories'] as const,
 };
 
-/** Paginated ledger entries (newest first) with income/expense/net totals over the whole filter. */
+/** Paginated ledger entries (newest first) with income/confirmed/pending/excluded/net totals. */
 export function useLedger(filters: LedgerFilters, page = 1) {
   return useQuery({
     queryKey: ledgerKeys.list(filters, page),
     queryFn: async () => {
       const params: Record<string, string> = { page: String(page), pageSize: String(LEDGER_PAGE_SIZE) };
       if (filters.type) params.type = filters.type;
+      if (filters.status) params.status = filters.status;
       if (filters.category) params.category = filters.category;
       if (filters.from) params.from = filters.from;
       if (filters.to) params.to = filters.to;
@@ -54,6 +59,32 @@ export function useCreateLedgerEntry() {
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ledgerKeys.all });
+    },
+  });
+}
+
+interface SetLedgerStatusPayload {
+  id: number;
+  status: ExpenseStatus;
+}
+
+/**
+ * Confirms or excludes an EXPENSE (FR-27). Only CONFIRMED expenses reduce net profit and
+ * expected cash, so the ledger plus every derived view (profit report, dashboard, open day)
+ * must be refetched after the decision.
+ */
+export function useSetLedgerStatus() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, status }: SetLedgerStatusPayload) => {
+      const { data } = await api.patch<LedgerEntry>(`/ledger/${id}/status`, { status });
+      return data;
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ledgerKeys.all });
+      void queryClient.invalidateQueries({ queryKey: reportKeys.all });
+      void queryClient.invalidateQueries({ queryKey: dashboardKeys.all });
+      void queryClient.invalidateQueries({ queryKey: businessDayKeys.all });
     },
   });
 }

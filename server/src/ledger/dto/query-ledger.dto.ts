@@ -1,4 +1,4 @@
-import { LedgerType } from '@prisma/client';
+import { ExpenseStatus, LedgerType } from '@prisma/client';
 import { IsEnum, IsISO8601, IsOptional, IsString, MaxLength } from 'class-validator';
 import { PaginationQueryDto } from '../../common/pagination-query.dto';
 
@@ -7,6 +7,11 @@ export class QueryLedgerDto extends PaginationQueryDto {
   @IsOptional()
   @IsEnum(LedgerType)
   type?: LedgerType;
+
+  // Expense decision filter (F27); INCOME rows are always CONFIRMED.
+  @IsOptional()
+  @IsEnum(ExpenseStatus)
+  status?: ExpenseStatus;
 
   @IsOptional()
   @IsString()

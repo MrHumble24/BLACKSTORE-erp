@@ -1,4 +1,4 @@
-import { LedgerType, PaymentMethod, Prisma } from '@prisma/client';
+import { ExpenseStatus, LedgerType, PaymentMethod, Prisma } from '@prisma/client';
 import { computeExpected } from './business-day.reconcile';
 
 const dec = (v: string) => new Prisma.Decimal(v);
@@ -12,10 +12,10 @@ describe('computeExpected (F13 drawer math)', () => {
         { amount: dec('200'), method: PaymentMethod.CASH },
       ],
       ledger: [
-        { amount: dec('300'), type: LedgerType.INCOME, inCash: true }, // cash income raises expected cash
-        { amount: dec('150'), type: LedgerType.EXPENSE, inCash: true }, // cash expense reduces it
-        { amount: dec('999'), type: LedgerType.EXPENSE, inCash: false }, // bank expense excluded from cash
-        { amount: dec('999'), type: LedgerType.INCOME, inCash: false }, // bank income excluded from cash
+        { amount: dec('300'), type: LedgerType.INCOME, inCash: true, status: ExpenseStatus.CONFIRMED }, // cash income raises expected cash
+        { amount: dec('150'), type: LedgerType.EXPENSE, inCash: true, status: ExpenseStatus.CONFIRMED }, // cash expense reduces it
+        { amount: dec('999'), type: LedgerType.EXPENSE, inCash: false, status: ExpenseStatus.CONFIRMED }, // bank expense excluded from cash
+        { amount: dec('999'), type: LedgerType.INCOME, inCash: false, status: ExpenseStatus.CONFIRMED }, // bank income excluded from cash
       ],
       returns: [{ cashRefund: dec('100') }], // only the cash portion of refunds leaves the drawer
     });
@@ -38,7 +38,19 @@ describe('computeExpected (F13 drawer math)', () => {
   it('a bank expense is excluded from expected cash', () => {
     const result = computeExpected({
       payments: [{ amount: dec('500'), method: PaymentMethod.CASH }],
-      ledger: [{ amount: dec('200'), type: LedgerType.EXPENSE, inCash: false }],
+      ledger: [{ amount: dec('200'), type: LedgerType.EXPENSE, inCash: false, status: ExpenseStatus.CONFIRMED }],
+      returns: [],
+    });
+    expect(result.expectedCash.toFixed(2)).toBe('500.00');
+  });
+
+  it('a PENDING or EXCLUDED cash expense does not reduce expected cash (F27)', () => {
+    const result = computeExpected({
+      payments: [{ amount: dec('500'), method: PaymentMethod.CASH }],
+      ledger: [
+        { amount: dec('200'), type: LedgerType.EXPENSE, inCash: true, status: ExpenseStatus.PENDING },
+        { amount: dec('100'), type: LedgerType.EXPENSE, inCash: true, status: ExpenseStatus.EXCLUDED },
+      ],
       returns: [],
     });
     expect(result.expectedCash.toFixed(2)).toBe('500.00');

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { LedgerType, Prisma } from '@prisma/client';
+import { ExpenseStatus, LedgerType, Prisma } from '@prisma/client';
 import { dateRange } from '../common/dates';
 import { PrismaService } from '../prisma/prisma.service';
 import { QueryProfitDto } from './dto/query-profit.dto';
@@ -128,7 +128,10 @@ export class ProfitReportService {
   /** Ledger expenses and profit-counting other income over the same period (BR-5). */
   private async ledgerTotals(period: Period) {
     const [exp, inc] = await Promise.all([
-      this.prisma.ledgerEntry.aggregate({ _sum: { amount: true }, where: { type: LedgerType.EXPENSE, date: period } }),
+      this.prisma.ledgerEntry.aggregate({
+        _sum: { amount: true },
+        where: { type: LedgerType.EXPENSE, status: ExpenseStatus.CONFIRMED, date: period },
+      }),
       this.prisma.ledgerEntry.aggregate({
         _sum: { amount: true },
         where: { type: LedgerType.INCOME, countsInProfit: true, date: period },

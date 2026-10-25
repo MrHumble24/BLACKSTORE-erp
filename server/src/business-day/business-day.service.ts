@@ -1,17 +1,19 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { DayStatus, Prisma } from '@prisma/client';
 import { AuditService } from '../audit/audit.service';
 import type { PublicUser } from '../common/auth-user';
+import { PaginationQueryDto } from '../common/pagination-query.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { computeExpected } from './business-day.reconcile';
 import { CloseDayDto, FlagInputDto } from './dto/close-day.dto';
+import { UpdateBusinessDayDto } from './dto/update-business-day.dto';
 
 type Tx = Prisma.TransactionClient;
 type DbClient = PrismaService | Tx;
 
 // Window rows: everything the reconciliation (drawer math) and the review lists need in one pass.
 const paymentSelect = { id: true, amount: true, method: true } satisfies Prisma.SalePaymentSelect;
-const ledgerSelect = { id: true, category: true, amount: true, inCash: true, type: true } satisfies Prisma.LedgerEntrySelect;
+const ledgerSelect = { id: true, category: true, amount: true, inCash: true, type: true, status: true } satisfies Prisma.LedgerEntrySelect;
 const saleSelect = { id: true, total: true, createdAt: true, seller: { select: { id: true, name: true } } } satisfies Prisma.SaleSelect;
 const returnSelect = {
   id: true,
@@ -92,6 +94,54 @@ export class BusinessDayService {
       await this.audit.log({ userId: actor.id, action: 'close', entity: 'BusinessDay', entityId: day.id, before: { id: day.id, status: DayStatus.OPEN }, after: closed }, tx);
       await this.audit.log({ userId: actor.id, action: 'create', entity: 'BusinessDay', entityId: nextDay.id, after: nextDay }, tx);
       return toDay(closed);
+    });
+  }
+
+  /** CLOSED days only, newest close first, paginated (F28 history). */
+  async findClosed(query: PaginationQueryDto) {
+    const where = { status: DayStatus.CLOSED };
+    const [rows, total] = await Promise.all([
+      this.prisma.businessDay.findMany({
+        where,
+        select: daySelect,
+        orderBy: { closedAt: 'desc' },
+        skip: (query.page - 1) * query.pageSize,
+        take: query.pageSize,
+      }),
+      this.prisma.businessDay.count({ where }),
+    ]);
+    return { items: rows.map(toDay), total, page: query.page, pageSize: query.pageSize };
+  }
+
+  /**
+   * Admin correction of a CLOSED day's counted values / note (F28). Expected values stay frozen;
+   * variances are recomputed from the stored expected snapshot. Audited with before/after (FR-30).
+   */
+  async update(id: number, dto: UpdateBusinessDayDto, actor: PublicUser) {
+    if (dto.countedCash === undefined && dto.countedCard === undefined && dto.note === undefined) {
+      throw new BadRequestException('Nothing to update');
+    }
+    return this.prisma.$transaction(async (tx) => {
+      const before = await tx.businessDay.findUnique({ where: { id }, select: daySelect });
+      if (!before) throw new NotFoundException('Business day not found');
+      if (before.status !== DayStatus.CLOSED) throw new ConflictException('Only a closed day can be edited');
+
+      const data: Prisma.BusinessDayUpdateInput = {};
+      if (dto.countedCash !== undefined) {
+        const counted = new Prisma.Decimal(dto.countedCash);
+        data.countedCash = counted;
+        data.cashVariance = counted.minus(before.expectedCash ?? 0);
+      }
+      if (dto.countedCard !== undefined) {
+        const counted = new Prisma.Decimal(dto.countedCard);
+        data.countedCard = counted;
+        data.cardVariance = counted.minus(before.expectedCard ?? 0);
+      }
+      if (dto.note !== undefined) data.note = dto.note;
+
+      const after = await tx.businessDay.update({ where: { id }, data, select: daySelect });
+      await this.audit.log({ userId: actor.id, action: 'update', entity: 'BusinessDay', entityId: id, before, after }, tx);
+      return toDay(after);
     });
   }
 

@@ -214,19 +214,32 @@ describe('Operations (e2e)', () => {
     await staff.post(`/api/stock-counts/${restartId}/finish`).expect(200);
   });
 
-  it('Admin posts an expense and reads totals; countsInProfit is forced false', async () => {
+  it('Admin posts an expense (PENDING, countsInProfit forced false), then confirms it', async () => {
     const admin = await adminAgent();
     const entry = await admin
       .post('/api/ledger')
       .send({ type: 'EXPENSE', category: 'Rent', amount: '500', countsInProfit: true })
       .expect(201);
-    const body = entry.body as { id: number; countsInProfit: boolean };
+    const body = entry.body as { id: number; countsInProfit: boolean; status: string };
     ledgerEntryId = body.id;
     expect(body.countsInProfit).toBe(false);
+    expect(body.status).toBe('PENDING');
 
-    const page = await admin.get('/api/ledger?type=EXPENSE').expect(200);
-    const totals = (page.body as { totals: { expense: string } }).totals;
-    expect(Number(totals.expense)).toBeGreaterThanOrEqual(500);
+    type Totals = { expense: string; pendingExpense: string };
+    const before = (await admin.get('/api/ledger?type=EXPENSE').expect(200)).body as { totals: Totals };
+    expect(Number(before.totals.pendingExpense)).toBeGreaterThanOrEqual(500);
+
+    const patched = await admin.patch(`/api/ledger/${ledgerEntryId}/status`).send({ status: 'CONFIRMED' }).expect(200);
+    expect((patched.body as { status: string }).status).toBe('CONFIRMED');
+
+    const after = (await admin.get('/api/ledger?type=EXPENSE').expect(200)).body as { totals: Totals };
+    expect(Number(after.totals.expense)).toBeGreaterThanOrEqual(500);
+    expect(Number(after.totals.expense) - Number(before.totals.expense)).toBe(500);
+
+    // Staff has no ledger permission: both reading and changing status are blocked.
+    const staff = await staffAgent();
+    await staff.get('/api/ledger').expect(403);
+    await staff.patch(`/api/ledger/${ledgerEntryId}/status`).send({ status: 'EXCLUDED' }).expect(403);
   });
 
   it('Audit log: Staff is 403, Admin sees the transfer row', async () => {

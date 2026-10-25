@@ -1,10 +1,10 @@
-import { LedgerType, PaymentMethod, Prisma } from '@prisma/client';
+import { ExpenseStatus, LedgerType, PaymentMethod, Prisma } from '@prisma/client';
 
 /** Pure drawer math for the daily close (F13), over rows already loaded by the window query. */
 
 export interface ReconcileInput {
   payments: { amount: Prisma.Decimal; method: PaymentMethod }[];
-  ledger: { amount: Prisma.Decimal; type: LedgerType; inCash: boolean }[];
+  ledger: { amount: Prisma.Decimal; type: LedgerType; inCash: boolean; status: ExpenseStatus }[];
   returns: { cashRefund: Prisma.Decimal }[];
 }
 
@@ -16,14 +16,19 @@ export interface Expected {
 }
 
 /**
- * expectedCash = Σ cash payments + Σ cash income − Σ cash expenses − Σ cash refunds.
+ * expectedCash = Σ cash payments + Σ cash income − Σ confirmed cash expenses − Σ cash refunds.
  * expectedCard = Σ card payments (no card-refund path in v1). Bank/card ledger rows are excluded from cash.
  */
 export function computeExpected(input: ReconcileInput): Expected {
   const paymentsCash = sumIf(input.payments, (p) => p.method === PaymentMethod.CASH, (p) => p.amount);
   const paymentsCard = sumIf(input.payments, (p) => p.method === PaymentMethod.CARD, (p) => p.amount);
   const cashIncome = sumIf(input.ledger, (l) => l.inCash && l.type === LedgerType.INCOME, (l) => l.amount);
-  const cashExpense = sumIf(input.ledger, (l) => l.inCash && l.type === LedgerType.EXPENSE, (l) => l.amount);
+  // Only CONFIRMED expenses are expected gone from the drawer; undecided money is not (F27).
+  const cashExpense = sumIf(
+    input.ledger,
+    (l) => l.inCash && l.type === LedgerType.EXPENSE && l.status === ExpenseStatus.CONFIRMED,
+    (l) => l.amount,
+  );
   const cashRefunds = input.returns.reduce((s, r) => s.plus(r.cashRefund), new Prisma.Decimal(0));
   return {
     expectedCash: paymentsCash.plus(cashIncome).minus(cashExpense).minus(cashRefunds),

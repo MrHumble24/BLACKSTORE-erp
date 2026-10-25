@@ -1,8 +1,9 @@
-import { Body, Controller, Get, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseIntPipe, Patch, Post, Query } from '@nestjs/common';
 import type { PublicUser } from '../common/auth-user';
 import { CurrentUser, Permissions } from '../common/decorators';
 import { CreateLedgerEntryDto } from './dto/create-ledger-entry.dto';
 import { QueryLedgerDto } from './dto/query-ledger.dto';
+import { UpdateLedgerStatusDto } from './dto/update-ledger-status.dto';
 import { LedgerService } from './ledger.service';
 
 /** HTTP for the income/expense ledger. Every route needs manage_expenses (Admin). */
@@ -24,5 +25,14 @@ export class LedgerController {
   @Post()
   create(@Body() dto: CreateLedgerEntryDto, @CurrentUser() actor: PublicUser) {
     return this.ledger.create(dto, actor);
+  }
+
+  @Patch(':id/status')
+  setStatus(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateLedgerStatusDto,
+    @CurrentUser() actor: PublicUser,
+  ) {
+    return this.ledger.setStatus(id, dto.status, actor);
   }
 }

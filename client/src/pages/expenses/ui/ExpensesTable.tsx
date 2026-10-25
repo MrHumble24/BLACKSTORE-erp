@@ -6,6 +6,15 @@ import {
 } from '@/shared/ui';
 import { formatDate, formatMoney } from '@/shared/lib';
 import type { LedgerEntry } from '@/entities/ledger';
+import { ExpenseStatusCell } from './ExpenseStatusCell';
+
+/** The profit column: income keeps the check/dash mark, expenses show their confirmation status. */
+function ProfitCell({ entry }: { entry: LedgerEntry }) {
+  if (entry.type === 'EXPENSE') return <ExpenseStatusCell entry={entry} />;
+  return entry.countsInProfit
+    ? <Check className="h-3.5 w-3.5 text-apple-blue" />
+    : <span className="text-slate">—</span>;
+}
 
 function EntryRow({ entry }: { entry: LedgerEntry }) {
   const { t } = useTranslation();
@@ -20,16 +29,14 @@ function EntryRow({ entry }: { entry: LedgerEntry }) {
       </TableCell>
       <TableCell className="text-xs text-ink">{entry.category}</TableCell>
       <TableCell className="text-xs font-medium text-ink">{formatMoney(entry.amount)}</TableCell>
-      <TableCell className="text-xs">
-        {entry.countsInProfit ? <Check className="h-3.5 w-3.5 text-apple-blue" /> : <span className="text-slate">—</span>}
-      </TableCell>
+      <TableCell className="text-xs"><ProfitCell entry={entry} /></TableCell>
       <TableCell className="text-xs text-slate">{entry.note ?? '—'}</TableCell>
       <TableCell className="text-xs text-slate">{entry.user.name}</TableCell>
     </TableRow>
   );
 }
 
-/** Ledger table: date, type, category, amount, in-profit mark, note, user. */
+/** Ledger table: date, type, category, amount, profit mark/status, note, user. */
 export function ExpensesTable({ entries, isLoading }: { entries: LedgerEntry[]; isLoading: boolean }) {
   const { t } = useTranslation();
   return (
