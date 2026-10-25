@@ -1,39 +1,22 @@
 import SwiftUI
 
-/// Batches list view for tracking incoming supplier shipments (FR-16).
+/// Batches list for tracking incoming supplier shipments (FR-16).
 public struct BatchesView: View {
     @StateObject private var viewModel = BatchesViewModel()
-    @State private var isShowingCreateSheet: Bool = false
+    @State private var isShowingCreateSheet = false
+    @State private var searchText = ""
 
     public init() {}
 
     public var body: some View {
-        NavigationStack {
-            VStack(spacing: 0) {
-                if let err = viewModel.errorMessage {
-                    bannerView(text: err, color: .red)
-                }
-                if let succ = viewModel.successMessage {
-                    bannerView(text: succ, color: .green)
-                }
-
-                if viewModel.isLoading && viewModel.batches.isEmpty {
-                    ProgressView().padding(.top, 40)
-                    Spacer()
-                } else if viewModel.batches.isEmpty {
-                    emptyPlaceholder
-                } else {
-                    batchesList
-                }
-            }
-            .navigationTitle("Partiyalar (Qabul qilish)")
+        content
+            .navigationTitle("Partiyalar")
             .navigationBarTitleDisplayMode(.inline)
+            .searchable(text: $searchText, prompt: "Yetkazib beruvchi, ombor yoki trek")
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
-                    Button {
-                        isShowingCreateSheet = true
-                    } label: {
-                        Label("Yangi partiya", systemImage: "plus.circle.fill")
+                    Button { isShowingCreateSheet = true } label: {
+                        Label("Yangi partiya", systemImage: "plus")
                     }
                 }
             }
@@ -41,96 +24,111 @@ public struct BatchesView: View {
                 await viewModel.loadPrerequisites()
                 await viewModel.fetchBatches()
             }
-            .refreshable {
-                await viewModel.fetchBatches()
-            }
+            .refreshable { await viewModel.fetchBatches() }
             .sheet(isPresented: $isShowingCreateSheet) {
                 CreateBatchSheet(viewModel: viewModel)
             }
+    }
+
+    @ViewBuilder
+    private var content: some View {
+        if viewModel.isLoading && viewModel.batches.isEmpty {
+            ProgressView("Yuklanmoqda…")
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else if let err = viewModel.errorMessage, viewModel.batches.isEmpty {
+            ContentUnavailableView {
+                Label("Yuklab bo'lmadi", systemImage: "wifi.exclamationmark")
+            } description: {
+                Text(err)
+            } actions: {
+                Button("Qayta urinish") { Task { await viewModel.fetchBatches() } }
+                    .buttonStyle(.borderedProminent)
+            }
+        } else if viewModel.batches.isEmpty {
+            emptyState
+        } else {
+            batchesList
+        }
+    }
+
+    /// Batches matching the search text by supplier, location or tracking number.
+    private var filteredBatches: [BatchSummary] {
+        let query = searchText.trimmingCharacters(in: .whitespaces)
+        guard !query.isEmpty else { return viewModel.batches }
+        return viewModel.batches.filter {
+            $0.supplier.name.localizedCaseInsensitiveContains(query)
+                || $0.location.name.localizedCaseInsensitiveContains(query)
+                || ($0.trackingNumber ?? "").localizedCaseInsensitiveContains(query)
         }
     }
 
     private var batchesList: some View {
         List {
-            ForEach(viewModel.batches) { batch in
-                NavigationLink(destination: BatchDetailView(batchId: batch.id, parentVM: viewModel)) {
-                    batchRow(for: batch)
+            if let err = viewModel.errorMessage {
+                Section { StockMessageRow(text: err) }
+            }
+            Section {
+                ForEach(filteredBatches) { batch in
+                    NavigationLink {
+                        BatchDetailView(batchId: batch.id, parentVM: viewModel)
+                    } label: {
+                        BatchRow(batch: batch)
+                    }
                 }
+            } footer: {
+                Text("Partiyani oching va qurilmalarni skanerlab qabul qiling.")
             }
         }
         .listStyle(.insetGrouped)
-    }
-
-    private func batchRow(for batch: BatchSummary) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack {
-                Text(batch.supplier.name)
-                    .font(.headline)
-                Spacer()
-                Text(batch.location.name)
-                    .font(.caption2)
-                    .fontWeight(.semibold)
-                    .foregroundStyle(.blue)
-                    .padding(.horizontal, 6)
-                    .padding(.vertical, 2)
-                    .background(Color.blue.opacity(0.12))
-                    .clipShape(Capsule())
-            }
-
-            HStack {
-                if let date = batch.arrivalDate {
-                    Label(date, systemImage: "calendar")
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
-                }
-
-                Spacer()
-
-                if let count = batch.itemCount {
-                    Text("\(count) ta qurilma")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-            }
-
-            if let track = batch.trackingNumber, !track.isEmpty {
-                Label("Trek: \(track)", systemImage: "number")
-                    .font(.caption2)
-                    .foregroundStyle(.tertiary)
-            }
+        .overlay {
+            if filteredBatches.isEmpty { ContentUnavailableView.search(text: searchText) }
         }
-        .padding(.vertical, 4)
     }
 
-    private var emptyPlaceholder: some View {
-        VStack(spacing: 12) {
-            Spacer()
-            Image(systemName: "shippingbox")
-                .font(.system(size: 48))
-                .foregroundStyle(.secondary)
-            Text("Partiyalar mavjud emas")
-                .font(.headline)
+    private var emptyState: some View {
+        ContentUnavailableView {
+            Label("Partiyalar mavjud emas", systemImage: "shippingbox")
+        } description: {
             Text("Yetkazib beruvchidan yangi partiya oching va qurilmalarni qabul qiling.")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-            Button {
-                isShowingCreateSheet = true
-            } label: {
+        } actions: {
+            Button { isShowingCreateSheet = true } label: {
                 Label("Yangi partiya ochish", systemImage: "plus")
             }
             .buttonStyle(.borderedProminent)
-            .padding(.top, 8)
-            Spacer()
+            .controlSize(.large)
         }
     }
+}
 
-    private func bannerView(text: String, color: Color) -> some View {
-        Text(text)
-            .font(.caption)
-            .foregroundStyle(color)
-            .padding(.horizontal, 16)
-            .padding(.vertical, 6)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(color.opacity(0.1))
+/// One batch row: supplier, location, arrival date, device count and tracking number.
+private struct BatchRow: View {
+    let batch: BatchSummary
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(alignment: .firstTextBaseline) {
+                Text(batch.supplier.name).font(.headline)
+                Spacer()
+                StockBadge(text: batch.location.name)
+            }
+            HStack {
+                if let date = batch.arrivalDate {
+                    Label(date, systemImage: "calendar")
+                }
+                Spacer()
+                if let count = batch.itemCount {
+                    Text("\(count) ta qurilma").monospacedDigit()
+                }
+            }
+            .font(.subheadline)
+            .foregroundStyle(.secondary)
+            if let track = batch.trackingNumber, !track.isEmpty {
+                Label("Trek: \(track)", systemImage: "number")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .padding(.vertical, 4)
+        .accessibilityElement(children: .combine)
     }
 }

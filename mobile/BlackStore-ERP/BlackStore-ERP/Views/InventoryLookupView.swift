@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Inventory lookup view for browsing in-stock devices with branch availability (PRD FR-12).
+/// Searchable list of in-stock devices with a branch filter; can add a device to the cart (PRD FR-12).
 public struct InventoryLookupView: View {
     @Environment(\.dismiss) private var dismiss
     @StateObject private var viewModel = InventoryLookupViewModel()
@@ -10,162 +10,128 @@ public struct InventoryLookupView: View {
         self.onAddToCart = onAddToCart
     }
 
+    /// Changes whenever a filter changes, so the debounced fetch re-runs.
+    private var filterKey: String {
+        "\(viewModel.searchText)|\(viewModel.selectedLocation?.id ?? -1)"
+    }
+
     public var body: some View {
         NavigationStack {
-            VStack(spacing: 0) {
-                if !viewModel.locations.isEmpty {
-                    locationFilterPicker
+            content
+                .safeAreaInset(edge: .top, spacing: 0) {
+                    if !viewModel.locations.isEmpty { locationFilterBar }
                 }
+                .navigationTitle("Ombor")
+                .navigationBarTitleDisplayMode(.inline)
+                .searchable(text: $viewModel.searchText, prompt: "Model, IMEI yoki seriya raqami")
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("Yopish") { dismiss() }
+                    }
+                }
+                .task { await viewModel.fetchLocations() }
+                .task(id: filterKey) {
+                    // Debounce typing so we don't hit the server on every keystroke.
+                    try? await Task.sleep(for: .milliseconds(300))
+                    guard !Task.isCancelled else { return }
+                    await viewModel.fetchItems()
+                    // A newer keystroke cancelled this fetch; its "cancelled" error is not real.
+                    if Task.isCancelled { viewModel.errorMessage = nil }
+                }
+        }
+        .presentationDetents([.large])
+        .presentationDragIndicator(.visible)
+    }
 
-                if viewModel.isLoading && viewModel.items.isEmpty {
-                    Spacer()
-                    ProgressView("Yuklanmoqda...")
-                    Spacer()
-                } else if viewModel.items.isEmpty {
-                    emptyState
-                } else {
-                    itemsList
-                }
+    @ViewBuilder
+    private var content: some View {
+        if viewModel.isLoading && viewModel.items.isEmpty {
+            ProgressView("Yuklanmoqda…")
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else if let err = viewModel.errorMessage, viewModel.items.isEmpty {
+            ContentUnavailableView {
+                Label("Yuklab bo'lmadi", systemImage: "wifi.exclamationmark")
+            } description: {
+                Text(err)
+            } actions: {
+                Button("Qayta urinish") { Task { await viewModel.fetchItems() } }
+                    .buttonStyle(.borderedProminent)
             }
-            .navigationTitle("Ombor (Mavjud tovarlar)")
-            .navigationBarTitleDisplayMode(.inline)
-            .searchable(text: $viewModel.searchText, prompt: "Model, IMEI yoki Seriya raqami...")
-            .onChange(of: viewModel.searchText) {
-                Task { await viewModel.fetchItems() }
+        } else if viewModel.items.isEmpty {
+            if viewModel.searchText.isEmpty {
+                ContentUnavailableView("Omborda tovarlar topilmadi", systemImage: "shippingbox")
+            } else {
+                ContentUnavailableView.search(text: viewModel.searchText)
             }
-            .onChange(of: viewModel.selectedLocation) {
-                Task { await viewModel.fetchItems() }
-            }
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Yopish") { dismiss() }
-                }
-            }
-            .task {
-                await viewModel.fetchLocations()
-                await viewModel.fetchItems()
-            }
+        } else {
+            itemsList
         }
     }
 
-    private var locationFilterPicker: some View {
+    private var locationFilterBar: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
-                FilterChip(
-                    title: "Barchasi",
-                    isSelected: viewModel.selectedLocation == nil
-                ) {
+                StockFilterChip(title: "Barchasi", isSelected: viewModel.selectedLocation == nil) {
                     viewModel.selectedLocation = nil
                 }
-
                 ForEach(viewModel.locations) { loc in
-                    FilterChip(
-                        title: loc.name,
-                        isSelected: viewModel.selectedLocation?.id == loc.id
-                    ) {
+                    StockFilterChip(title: loc.name, isSelected: viewModel.selectedLocation?.id == loc.id) {
                         viewModel.selectedLocation = loc
                     }
                 }
             }
-            .padding(.horizontal)
+            .padding(.horizontal, 16)
             .padding(.vertical, 8)
         }
-        .background(Color(.secondarySystemBackground))
+        .background(.bar)
     }
 
     private var itemsList: some View {
         List(viewModel.items) { item in
-            VStack(alignment: .leading, spacing: 8) {
-                HStack(alignment: .top) {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(item.productModel.name)
-                            .font(.headline)
-
-                        Text(item.primaryIdentifier)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-
-                    Spacer()
-
-                    if let price = item.salePrice, let p = Double(price) {
-                        Text(APIConfig.formatMoney(p))
-                            .font(.headline)
-                            .foregroundStyle(.blue)
-                    }
+            InventoryItemRow(item: item, onAdd: onAddToCart.map { add in
+                {
+                    add(item)
+                    HapticManager.success()
+                    dismiss()
                 }
-
-                HStack(spacing: 6) {
-                    if let loc = item.location {
-                        badgeView(text: loc.name, color: .purple)
-                    }
-
-                    badgeView(text: item.condition, color: .orange)
-
-                    Spacer()
-
-                    if let onAddToCart = onAddToCart {
-                        Button {
-                            onAddToCart(item)
-                            HapticManager.success()
-                            dismiss()
-                        } label: {
-                            Label("Kassaga", systemImage: "cart.badge.plus")
-                                .font(.caption)
-                        }
-                        .buttonStyle(.borderedProminent)
-                        .controlSize(.small)
-                    }
-                }
-            }
-            .padding(.vertical, 4)
+            })
         }
-        .listStyle(.plain)
-        .refreshable {
-            await viewModel.fetchItems()
-        }
-    }
-
-    private func badgeView(text: String, color: Color) -> some View {
-        Text(text)
-            .font(.caption2)
-            .padding(.horizontal, 6)
-            .padding(.vertical, 2)
-            .background(color.opacity(0.12))
-            .foregroundStyle(color)
-            .clipShape(Capsule())
-    }
-
-    private var emptyState: some View {
-        VStack(spacing: 12) {
-            Spacer()
-            Image(systemName: "shippingbox")
-                .font(.system(size: 48))
-                .foregroundStyle(.secondary)
-            Text("Omborda tovarlar topilmadi")
-                .font(.headline)
-                .foregroundStyle(.secondary)
-            Spacer()
-        }
+        .listStyle(.insetGrouped)
+        .refreshable { await viewModel.fetchItems() }
     }
 }
 
-/// Simple filter chip component.
-private struct FilterChip: View {
-    let title: String
-    let isSelected: Bool
-    let action: () -> Void
+/// One in-stock device: model, identifier, price, branch, condition and optional "add to cart".
+private struct InventoryItemRow: View {
+    let item: Item
+    let onAdd: (() -> Void)?
 
     var body: some View {
-        Button(action: action) {
-            Text(title)
-                .font(.caption)
-                .fontWeight(isSelected ? .semibold : .regular)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 6)
-                .background(isSelected ? Color.accentColor : Color(.systemBackground))
-                .foregroundStyle(isSelected ? Color.white : Color.primary)
-                .clipShape(Capsule())
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(alignment: .firstTextBaseline) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(item.productModel.name).font(.headline)
+                    Text(item.primaryIdentifier).font(.caption.monospaced()).foregroundStyle(.secondary)
+                }
+                Spacer()
+                if let price = item.salePrice, let p = Double(price) {
+                    Text(APIConfig.formatMoney(p)).font(.headline).monospacedDigit()
+                }
+            }
+            HStack(spacing: 6) {
+                if let loc = item.location {
+                    StockBadge(text: loc.name)
+                }
+                StockBadge(text: item.condition, color: .secondary)
+                Spacer()
+                if let onAdd {
+                    Button(action: onAdd) {
+                        Label("Kassaga", systemImage: "cart.badge.plus")
+                    }
+                    .buttonStyle(.borderedProminent)
+                }
+            }
         }
+        .padding(.vertical, 4)
     }
 }
