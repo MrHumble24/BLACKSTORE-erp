@@ -1,20 +1,25 @@
 import SwiftUI
 import Charts
 
-/// Daily Sales and Profit lines on one money axis (web ProfitTrendsChart); Sales has a 12 % area,
-/// the previous period's Sales is a dashed grey line, cost appears only with view_cost.
-/// Touch-and-hold then drag shows a crosshair with a value readout.
+/// Daily Sales and Profit lines on one money axis (web ProfitTrendsChart, without its second axis and
+/// running total); Sales has a 12 % area, the previous period's Sales is a dashed light-blue line,
+/// cost a dashed grey line only with view_cost. Touch-and-hold then drag shows a crosshair readout.
 struct ProfitTrendsChart: View {
     let points: [TrendPoint]
-    let canViewCost: Bool
+    let hasPrevious: Bool
+    let showCost: Bool
     @State private var selected: TrendPoint?
 
     private static let height: CGFloat = 220
-    private var hasPrevious: Bool { points.contains { $0.previousSales != nil } }
-    private var showCost: Bool { canViewCost && points.contains { $0.cost != nil } }
+
+    init(data: ProfitChartData, canViewCost: Bool) {
+        points = data.trend
+        hasPrevious = data.trendHasPrevious
+        showCost = canViewCost && data.trendHasCost
+    }
 
     var body: some View {
-        ChartSection(title: "Savdo va foyda", caption: "Kunlik savdo va yalpi foyda") {
+        ChartSection(title: "Daromad va foyda dinamikasi", caption: "Kunlik sotuvlar va yalpi foyda o'sishi") {
             if points.isEmpty {
                 ChartEmpty(height: Self.height)
             } else {
@@ -25,27 +30,27 @@ struct ProfitTrendsChart: View {
     }
 
     private var legend: [LegendItem] {
-        var items = [LegendItem(label: "Savdo", color: ChartPalette.sales),
-                     LegendItem(label: "Foyda", color: ChartPalette.profit)]
-        if showCost { items.append(LegendItem(label: "Tannarx", color: ChartPalette.neutral)) }
-        if hasPrevious { items.append(LegendItem(label: "O'tgan davr", color: Color(.tertiaryLabel), dashed: true)) }
+        var items = [LegendItem(label: "Sotuvlar", color: ChartPalette.sales)]
+        if hasPrevious { items.append(LegendItem(label: "Oldingi davr", color: ChartPalette.previous, dashed: true)) }
+        if showCost { items.append(LegendItem(label: "Tannarx", color: ChartPalette.neutral, dashed: true)) }
+        items.append(LegendItem(label: "Yalpi foyda", color: ChartPalette.profit))
         return items
     }
 
     private var chart: some View {
         Chart {
             ForEach(points) { point in
-                AreaMark(x: .value("Kun", point.date, unit: .day), y: .value("Savdo", point.sales))
+                AreaMark(x: .value("Kun", point.date, unit: .day), y: .value("Sotuvlar", point.sales))
                     .interpolationMethod(.monotone)
                     .foregroundStyle(ChartPalette.sales.opacity(0.12))
-                line(point.date, point.sales, series: "Savdo", color: ChartPalette.sales)
-                line(point.date, point.profit, series: "Foyda", color: ChartPalette.profit)
-                if showCost, let cost = point.cost {
-                    line(point.date, cost, series: "Tannarx", color: ChartPalette.neutral)
-                }
+                line(point.date, point.sales, series: "Sotuvlar", color: ChartPalette.sales)
                 if let previous = point.previousSales {
-                    line(point.date, previous, series: "O'tgan davr", color: Color(.tertiaryLabel), dash: [4, 3])
+                    line(point.date, previous, series: "Oldingi davr", color: ChartPalette.previous, dash: [4, 3])
                 }
+                if showCost, let cost = point.cost {
+                    line(point.date, cost, series: "Tannarx", color: ChartPalette.neutral, dash: [5, 4])
+                }
+                line(point.date, point.profit, series: "Yalpi foyda", color: ChartPalette.profit)
             }
             if let selected { crosshair(selected) }
         }
@@ -79,16 +84,16 @@ struct ProfitTrendsChart: View {
             .annotation(position: .top, spacing: 4, overflowResolution: .init(x: .fit(to: .chart), y: .fit(to: .chart))) {
                 TrendReadout(point: point, showCost: showCost)
             }
-        PointMark(x: .value("Kun", point.date, unit: .day), y: .value("Savdo", point.sales))
+        PointMark(x: .value("Kun", point.date, unit: .day), y: .value("Sotuvlar", point.sales))
             .foregroundStyle(ChartPalette.sales).symbolSize(64)
-        PointMark(x: .value("Kun", point.date, unit: .day), y: .value("Foyda", point.profit))
+        PointMark(x: .value("Kun", point.date, unit: .day), y: .value("Yalpi foyda", point.profit))
             .foregroundStyle(ChartPalette.profit).symbolSize(64)
     }
 
     private var accessibilitySummary: String {
         let sales = points.reduce(0) { $0 + $1.sales }
         let profit = points.reduce(0) { $0 + $1.profit }
-        return "Savdo \(points.count) kun, jami \(APIConfig.formatMoney(sales)); foyda \(APIConfig.formatMoney(profit))"
+        return "Sotuvlar \(points.count) kun, jami \(APIConfig.formatMoney(sales)); yalpi foyda \(APIConfig.formatMoney(profit))"
     }
 }
 
@@ -102,7 +107,7 @@ private struct CrosshairGesture: View {
         GeometryReader { geo in
             Rectangle().fill(.clear).contentShape(Rectangle())
                 .gesture(
-                    LongPressGesture(minimumDuration: 0.2)
+                    LongPressGesture(minimumDuration: 0.35)
                         .sequenced(before: DragGesture(minimumDistance: 0))
                         .onChanged { value in
                             guard case .second(true, let drag?) = value, let plot = proxy.plotFrame else { return }
@@ -123,10 +128,10 @@ private struct TrendReadout: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 3) {
             Text(point.date.formatted(.dateTime.day().month(.wide))).font(.caption.weight(.semibold))
-            row("Savdo", point.sales, ChartPalette.sales)
-            row("Foyda", point.profit, ChartPalette.profit)
+            row("Sotuvlar", point.sales, ChartPalette.sales)
+            if let previous = point.previousSales { row("Oldingi davr", previous, ChartPalette.previous) }
             if showCost, let cost = point.cost { row("Tannarx", cost, ChartPalette.neutral) }
-            if let previous = point.previousSales { row("O'tgan davr", previous, Color(.tertiaryLabel)) }
+            row("Yalpi foyda", point.profit, ChartPalette.profit)
         }
         .padding(8)
         .background(Color(.tertiarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 10))
@@ -151,12 +156,12 @@ private struct TrendDescriptor: AXChartDescriptorRepresentable {
     func makeChartDescriptor() -> AXChartDescriptor {
         let values = points.map(\.sales)
         let x = AXCategoricalDataAxisDescriptor(title: "Kun", categoryOrder: points.map { $0.date.formatted(date: .abbreviated, time: .omitted) })
-        let y = AXNumericDataAxisDescriptor(title: "Savdo", range: (values.min() ?? 0)...(values.max() ?? 0), gridlinePositions: []) {
+        let y = AXNumericDataAxisDescriptor(title: "Sotuvlar", range: (values.min() ?? 0)...(values.max() ?? 0), gridlinePositions: []) {
             APIConfig.formatMoney($0)
         }
-        let series = AXDataSeriesDescriptor(name: "Savdo", isContinuous: true, dataPoints: points.map {
+        let series = AXDataSeriesDescriptor(name: "Sotuvlar", isContinuous: true, dataPoints: points.map {
             AXDataPoint(x: $0.date.formatted(date: .abbreviated, time: .omitted), y: $0.sales)
         })
-        return AXChartDescriptor(title: "Savdo va foyda", summary: nil, xAxis: x, yAxis: y, additionalAxes: [], series: [series])
+        return AXChartDescriptor(title: "Daromad va foyda dinamikasi", summary: nil, xAxis: x, yAxis: y, additionalAxes: [], series: [series])
     }
 }

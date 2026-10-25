@@ -20,10 +20,11 @@ nonisolated struct ShareSlice: Identifiable, Equatable {
     var id: String { name }
 }
 
-/// One ranked bar row.
+/// One ranked row: a sales bar and a profit bar.
 nonisolated struct RankRow: Identifiable, Equatable {
     let name: String
-    let value: Double
+    let sales: Double
+    let profit: Double
     var id: String { name }
 }
 
@@ -63,19 +64,31 @@ nonisolated enum ProfitCharts {
         return (part / whole * 1000).rounded() / 10
     }
 
-    /// The last `points` values, for the KPI sparklines.
-    static func sparkline(_ values: [Double], points: Int = 7) -> [Double] {
-        Array(values.suffix(points))
+    /// Gross margin percent, only when there were sales (a zero or negative base has no margin).
+    static func grossMargin(_ totals: ProfitTotals?) -> Double? {
+        guard let totals, totals.salesDouble > 0 else { return nil }
+        return margin(totals.profitDouble, of: totals.salesDouble)
     }
 
-    /// Short axis/label figure without currency: 950, 12.3K, 1.2M, −4.5K.
+    /// Short axis/label figure without currency: 950, 12.3K, 1.2M, -4.5K. The suffix is chosen after
+    /// rounding, so 999 950 reads "1M", not "1000K".
     static func compact(_ value: Double) -> String {
-        let size = abs(value)
-        let sign = value < 0 ? "-" : ""
-        let (scaled, suffix): (Double, String) =
-            size >= 1_000_000 ? (size / 1_000_000, "M") : size >= 1_000 ? (size / 1_000, "K") : (size, "")
-        let text = suffix.isEmpty || scaled >= 100 ? String(format: "%.0f", scaled) : String(format: "%.1f", scaled)
-        return sign + text.replacingOccurrences(of: ".0", with: "") + suffix
+        let suffixes = ["", "K", "M", "B"]
+        var scaled = abs(value)
+        var step = 0
+        while step < suffixes.count - 1 && shown(scaled, step) >= 1000 {
+            scaled /= 1000
+            step += 1
+        }
+        let decimals = step == 0 || shown(scaled, step) >= 100 ? 0 : 1
+        var text = String(format: "%.\(decimals)f", scaled)
+        if text.hasSuffix(".0") { text.removeLast(2) }
+        return (value < 0 && text != "0" ? "-" : "") + text + suffixes[step]
+    }
+
+    /// `scaled` rounded the way `compact` prints it: whole units, or one decimal below 100 with a suffix.
+    private static func shown(_ scaled: Double, _ step: Int) -> Double {
+        step == 0 || scaled >= 100 ? scaled.rounded() : (scaled * 10).rounded() / 10
     }
 
     /// Gross profit → − expenses → + other income → net, matching `netProfit = profit − expenses + otherIncome`.
@@ -91,25 +104,32 @@ nonisolated enum ProfitCharts {
         }
     }
 
-    /// Positive values largest first; past `maxSlices` the rest fold into one `otherName` slice.
+    /// Positive values largest first, shares as whole percents. Up to `maxSlices` + 1 groups show as
+    /// they are; more fold the tail after `maxSlices` into one `otherName` slice (web ProfitShareDonut).
     static func slices(_ items: [(name: String, value: Double)], maxSlices: Int = 5, otherName: String) -> [ShareSlice] {
         let sorted = items.filter { $0.value > 0 }.sorted { $0.value > $1.value }
         let total = sorted.reduce(0) { $0 + $1.value }
         guard total > 0 else { return [] }
-        var kept = Array(sorted.prefix(maxSlices))
-        if sorted.count > maxSlices {
-            kept.append((otherName, sorted.dropFirst(maxSlices).reduce(0) { $0 + $1.value }))
-        }
+        let folds = sorted.count > maxSlices + 1
+        var kept = folds ? Array(sorted.prefix(maxSlices)) : sorted
+        if folds { kept.append((otherName, sorted.dropFirst(maxSlices).reduce(0) { $0 + $1.value })) }
         return kept.enumerated().map { index, item in
-            let isOther = sorted.count > maxSlices && index == maxSlices
-            return ShareSlice(name: item.name, value: item.value, share: (item.value / total * 1000).rounded() / 10,
-                              colorIndex: isOther ? nil : index)
+            ShareSlice(name: item.name, value: item.value, share: (item.value / total * 100).rounded(),
+                       colorIndex: folds && index == maxSlices ? nil : index)
         }
     }
 
-    /// Non-zero rows sorted descending, at most `limit`.
-    static func ranked(_ items: [(name: String, value: Double)], limit: Int = 8) -> [RankRow] {
-        items.filter { $0.value != 0 }.sorted { $0.value > $1.value }.prefix(limit).map { RankRow(name: $0.name, value: $0.value) }
+    /// A group's display name; the server sends an empty name for accessories (web parity).
+    static func groupName(_ name: String) -> String {
+        name.isEmpty ? "Aksessuarlar" : name
+    }
+
+    /// Groups sorted by sales, at most `limit` rows, each with its sales and profit (web ProfitRankChart).
+    static func ranked(_ groups: [ProfitGroup], limit: Int = 7) -> [RankRow] {
+        groups.map { RankRow(name: groupName($0.name), sales: $0.salesDouble, profit: $0.profitDouble) }
+            .sorted { $0.sales > $1.sales }
+            .prefix(limit)
+            .map { $0 }
     }
 
     /// Opacity 0.2–1.0 by share of the busiest cell; 0 for an empty one.
@@ -141,9 +161,11 @@ nonisolated enum ProfitCharts {
         }
     }
 
-    /// The point whose day is closest to `date` (for the crosshair).
+    /// The day under a crosshair at `date`. Day-unit marks are drawn at the middle of their day while
+    /// points hold local midnight, so the touch is moved back 12 h before picking the closest day.
     static func nearest(_ points: [TrendPoint], to date: Date) -> TrendPoint? {
-        points.min { abs($0.date.timeIntervalSince(date)) < abs($1.date.timeIntervalSince(date)) }
+        let target = date.addingTimeInterval(-12 * 3600)
+        return points.min { abs($0.date.timeIntervalSince(target)) < abs($1.date.timeIntervalSince(target)) }
     }
 
     /// Server trend days are "yyyy-MM-dd"; read as local midnight so axis labels show the same day.

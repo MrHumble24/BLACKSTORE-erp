@@ -1,10 +1,12 @@
 import SwiftUI
 import Charts
 
-/// Top of the report (web ProfitKpiBand): net profit hero, then six stat tiles in a 2-column grid,
-/// each with the change vs the previous period; Sales and Profit carry a 7-day sparkline.
+/// Top of the report (web ProfitKpiBand): net profit card with its period trace, then six stat tiles
+/// in a 2-column grid. Each money tile shows the previous period's amount (or its margin note) and
+/// the change; Sales and Profit carry a sparkline over the whole period.
 struct ProfitKpiBand: View {
     let report: ProfitReportResponse
+    let data: ProfitChartData
     let isLoading: Bool
     @Environment(\.dynamicTypeSize) private var typeSize
 
@@ -41,12 +43,15 @@ struct ProfitKpiBand: View {
                 .lineLimit(1)
             HStack(spacing: 10) {
                 if let netMargin = ProfitCharts.margin(totals.netProfitDouble, of: totals.salesDouble) {
-                    Text("Sof marja \(ChartFormat.percent(netMargin))").foregroundStyle(.secondary)
+                    Text("Sof rentabellik \(ChartFormat.percent(netMargin))").foregroundStyle(.secondary)
                 }
                 DeltaLabel(change: change(\.netProfitDouble))
             }
             .font(.footnote)
             .monospacedDigit()
+            if data.profitSpark.count > 1 {
+                Sparkline(values: data.profitSpark, color: ChartPalette.sales, height: 56, filled: true)
+            }
         }
         .padding(.vertical, 6)
         .accessibilityElement(children: .combine)
@@ -56,27 +61,33 @@ struct ProfitKpiBand: View {
         ProfitCharts.percentChange(current: totals[keyPath: key], previous: previous?[keyPath: key])
     }
 
+    /// The previous period's amount, shown under a tile that has no note (web Stat).
+    private func previousText(_ key: KeyPath<ProfitTotals, Double>) -> String? {
+        guard let value = previous?[keyPath: key], value != 0 else { return nil }
+        return APIConfig.formatMoney(value)
+    }
+
     private var tiles: [KpiTile.Model] {
-        let trends = report.dailyTrends
         let summary = report.summary
-        let grossMargin = ProfitCharts.margin(totals.profitDouble, of: totals.salesDouble)
-        let returnRate = summary.flatMap { ProfitCharts.margin(Double($0.returnCount), of: Double($0.transactions)) } ?? 0
+        let grossMargin = ProfitCharts.grossMargin(totals)
+        let returnRate = summary.flatMap { ProfitCharts.margin(Double($0.returnCount), of: Double($0.transactions)) }
         return [
-            .init(label: "Savdo", value: APIConfig.formatMoney(totals.salesDouble), change: change(\.salesDouble),
-                  spark: ProfitCharts.sparkline(trends.map(\.salesDouble)), sparkColor: ChartPalette.sales),
+            .init(label: "Sotuvlar", value: APIConfig.formatMoney(totals.salesDouble), change: change(\.salesDouble),
+                  note: previousText(\.salesDouble), spark: data.salesSpark, sparkColor: ChartPalette.sales),
             .init(label: "Yalpi foyda", value: APIConfig.formatMoney(totals.profitDouble), change: change(\.profitDouble),
-                  note: grossMargin.map { "Marja \(ChartFormat.percent($0))" },
-                  spark: ProfitCharts.sparkline(trends.map(\.profitDouble)), sparkColor: ChartPalette.profit),
-            .init(label: "Chiqimlar", value: APIConfig.formatMoney(totals.expensesDouble),
-                  change: change(\.expensesDouble), goodWhenUp: false),
+                  note: grossMargin.map { "Marja \(ChartFormat.percent($0))" } ?? previousText(\.profitDouble),
+                  spark: data.profitSpark, sparkColor: ChartPalette.profit),
+            .init(label: "Xarajatlar", value: APIConfig.formatMoney(totals.expensesDouble),
+                  change: change(\.expensesDouble), goodWhenUp: false, note: previousText(\.expensesDouble)),
             .init(label: "Tranzaksiyalar", value: "\(summary?.transactions ?? 0)"),
             .init(label: "Sotilgan dona", value: "\(summary?.unitsSold ?? 0)"),
-            .init(label: "Qaytarish ulushi", value: ChartFormat.percent(returnRate)),
+            // Web shows a bare "0%" when there were no transactions.
+            .init(label: "Qaytarish ulushi", value: returnRate.map { ChartFormat.percent($0) } ?? "0%"),
         ]
     }
 }
 
-/// One stat tile: label, figure, margin note and delta, optional sparkline.
+/// One stat tile: label, figure, note (margin or previous amount) and delta, optional sparkline.
 struct KpiTile: View {
     struct Model: Identifiable {
         let label: String
@@ -105,24 +116,41 @@ struct KpiTile: View {
             }
             .font(.caption)
             .monospacedDigit()
-            if tile.spark.count > 1 { sparkline }
+            if tile.spark.count > 1 {
+                Sparkline(values: tile.spark, color: tile.sparkColor, height: 28, filled: false).padding(.top, 4)
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .accessibilityElement(children: .combine)
     }
+}
 
-    private var sparkline: some View {
-        Chart(Array(tile.spark.enumerated()), id: \.offset) { point in
+/// Axis-free trace of a series; `filled` adds the soft area the net-profit card uses.
+struct Sparkline: View {
+    let values: [Double]
+    let color: Color
+    let height: CGFloat
+    let filled: Bool
+
+    var body: some View {
+        let floor = values.min() ?? 0
+        Chart(Array(values.enumerated()), id: \.offset) { point in
+            if filled {
+                AreaMark(x: .value("Kun", point.offset), yStart: .value("Asos", floor),
+                         yEnd: .value("Qiymat", point.element))
+                    .interpolationMethod(.monotone)
+                    .foregroundStyle(LinearGradient(colors: [color.opacity(0.2), color.opacity(0)],
+                                                    startPoint: .top, endPoint: .bottom))
+            }
             LineMark(x: .value("Kun", point.offset), y: .value("Qiymat", point.element))
                 .interpolationMethod(.monotone)
                 .lineStyle(StrokeStyle(lineWidth: 2, lineCap: .round))
-                .foregroundStyle(tile.sparkColor)
+                .foregroundStyle(color)
         }
         .chartXAxis(.hidden)
         .chartYAxis(.hidden)
         .chartYScale(domain: .automatic(includesZero: false))
-        .frame(height: 28)
-        .padding(.top, 4)
+        .frame(height: height)
         .accessibilityHidden(true)
     }
 }

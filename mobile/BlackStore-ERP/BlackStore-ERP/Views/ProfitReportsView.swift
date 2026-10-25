@@ -25,26 +25,26 @@ public struct ProfitReportsView: View {
 
     @ViewBuilder
     private var content: some View {
-        if let report = viewModel.report {
-            reportList(report)
+        if let report = viewModel.report, let data = viewModel.chartData {
+            reportList(report, data)
                 .refreshable { await viewModel.fetchReport() }
         } else if let err = viewModel.errorMessage {
             ErrorState(message: err) { await viewModel.fetchReport() }
         } else {
             // First load: the real layout with placeholder figures, redacted.
-            reportList(.placeholder)
+            reportList(.placeholder, ProfitChartData(report: .placeholder))
                 .redacted(reason: .placeholder)
                 .allowsHitTesting(false)
         }
     }
 
-    private func reportList(_ report: ProfitReportResponse) -> some View {
+    private func reportList(_ report: ProfitReportResponse, _ data: ProfitChartData) -> some View {
         List {
-            ProfitKpiBand(report: report, isLoading: viewModel.isLoading)
+            ProfitKpiBand(report: report, data: data, isLoading: viewModel.isLoading)
             if let err = viewModel.errorMessage {
                 Section { InlineMessage(text: err, font: .footnote) }
             }
-            ProfitChartsSections(report: report, canViewCost: canViewCost)
+            ProfitChartsSections(report: report, data: data, canViewCost: canViewCost)
             if !report.lowMargin.isEmpty {
                 ProfitLowMarginSection(items: report.lowMargin)
             }
@@ -70,14 +70,15 @@ public struct ProfitReportsView: View {
         Section {
             if canViewCost, let cost = totals.cost { MoneyRow("Tannarx", Double(cost) ?? 0) }
             MoneyRow("Yalpi foyda", totals.profitDouble)
-            MoneyRow("Chiqimlar", totals.expensesDouble)
-            MoneyRow("Boshqa kirimlar", totals.otherIncomeDouble)
+            MoneyRow("Qaytarilgan tovarlar", Double(totals.refunded) ?? 0)
+            MoneyRow("Xarajatlar", totals.expensesDouble)
+            MoneyRow("Boshqa daromadlar", totals.otherIncomeDouble)
             MoneyRow("Do'kon ulushi", totals.businessShareDouble)
             MoneyRow("Investorlar ulushi", totals.investorShareDouble)
         } header: {
             Text("Foyda taqsimoti")
         } footer: {
-            Text("Sof foyda = yalpi foyda − chiqimlar + foydaga qo'shiladigan kirimlar.")
+            Text("Sof foyda = yalpi foyda − xarajatlar + boshqa daromadlar.")
         }
     }
 
