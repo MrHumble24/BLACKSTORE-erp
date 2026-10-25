@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { formatDate } from '@/shared/lib';
 import { SaleStatusBadge, type Sale } from '@/entities/sale';
 import { SaleActions } from './SaleActions';
+import { SaleConfirmStatus } from './SaleConfirmStatus';
 
 interface SaleHeaderProps {
   sale: Sale;
@@ -34,6 +35,7 @@ export function SaleHeader({ sale, onRefresh }: SaleHeaderProps) {
             </span>
           )}
         </div>
+        <SaleConfirmStatus sale={sale} />
       </div>
       <SaleActions sale={sale} onRefresh={onRefresh} />
     </div>

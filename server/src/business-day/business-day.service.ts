@@ -4,33 +4,15 @@ import { AuditService } from '../audit/audit.service';
 import type { PublicUser } from '../common/auth-user';
 import { PaginationQueryDto } from '../common/pagination-query.dto';
 import { PrismaService } from '../prisma/prisma.service';
+import { loadEvents, buildEvents } from './business-day.events';
+import {
+  confirmedSaleSelect, daySelect, DayWindow, DbClient, DrawerWindow, ledgerSelect, lockOpenDay, openDay, saleSelect,
+  toDay, toLedgerRow, toReturnRow, Tx, walkInSelect, windowRange,
+} from './business-day.mappers';
 import { computeExpected } from './business-day.reconcile';
+import { loadPendingSales, loadSaleMoney, splitSaleMoney, toPendingSaleRow, toSaleRow } from './business-day.sale-gate';
 import { CloseDayDto, FlagInputDto } from './dto/close-day.dto';
 import { UpdateBusinessDayDto } from './dto/update-business-day.dto';
-
-type Tx = Prisma.TransactionClient;
-type DbClient = PrismaService | Tx;
-
-// Window rows: everything the reconciliation (drawer math) and the review lists need in one pass.
-const paymentSelect = { id: true, amount: true, method: true } satisfies Prisma.SalePaymentSelect;
-const ledgerSelect = { id: true, category: true, amount: true, inCash: true, type: true, status: true } satisfies Prisma.LedgerEntrySelect;
-const saleSelect = { id: true, total: true, createdAt: true, seller: { select: { id: true, name: true } } } satisfies Prisma.SaleSelect;
-const returnSelect = {
-  id: true,
-  refundAmount: true,
-  cashRefund: true,
-  reason: true,
-  user: { select: { id: true, name: true } },
-  saleItem: { select: { productModel: { select: { name: true } }, item: { select: { identifiers: { select: { value: true }, take: 1 } } } } },
-} satisfies Prisma.ReturnSelect;
-
-// Frozen snapshot fields returned for a closed day.
-const daySelect = {
-  id: true, openedAt: true, closedAt: true, status: true, note: true,
-  expectedCash: true, countedCash: true, cashVariance: true,
-  expectedCard: true, countedCard: true, cardVariance: true,
-  closedBy: { select: { id: true, name: true } },
-} satisfies Prisma.BusinessDaySelect;
 
 /** Daily close / reconciliation (F13). Owner-only (close_day); anti-fraud drawer counting with flags. */
 @Injectable()
@@ -40,33 +22,50 @@ export class BusinessDayService {
     private readonly audit: AuditService,
   ) {}
 
-  /** The current OPEN day with live expected cash/card and the review lists for its window. */
+  /** The current OPEN day with live expected cash/card, its breakdown, the review lists and the events feed (F13, F30). */
   async getCurrent() {
     const day = await this.openDayOrThrow(this.prisma);
-    const win = await this.loadWindow(this.prisma, day.openedAt);
-    const { expectedCash, expectedCard, paymentsCash, paymentsCard } = computeExpected(win);
+    const [win, extra, pending] = await Promise.all([
+      this.loadDayWindow(day.openedAt), loadEvents(this.prisma, day.openedAt), loadPendingSales(this.prisma),
+    ]);
+    const e = computeExpected(win);
     return {
       day: { id: day.id, openedAt: day.openedAt.toISOString() },
-      expectedCash: expectedCash.toFixed(2),
-      expectedCard: expectedCard.toFixed(2),
-      payments: { cash: paymentsCash.toFixed(2), card: paymentsCard.toFixed(2) },
-      sales: win.sales.map((s) => ({ id: s.id, seller: s.seller, total: s.total.toFixed(2), time: s.createdAt.toISOString() })),
-      returns: win.returns.map(toReturnRow),
+      expectedCash: e.expectedCash.toFixed(2),
+      expectedCard: e.expectedCard.toFixed(2),
+      payments: { cash: e.paymentsCash.toFixed(2), card: e.paymentsCard.toFixed(2) },
+      breakdown: {
+        paymentsCash: e.paymentsCash.toFixed(2),
+        paymentsCard: e.paymentsCard.toFixed(2),
+        cashIncome: e.cashIncome.toFixed(2),
+        cashExpense: e.cashExpense.toFixed(2),
+        cashRefunds: e.cashRefunds.toFixed(2),
+        walkInPurchases: e.walkInPurchases.toFixed(2),
+        pendingWalkInPurchases: e.pendingWalkInPurchases.toFixed(2),
+        pendingSalesCash: pending.cash.toFixed(2),
+        pendingSalesCard: pending.card.toFixed(2),
+      },
+      sales: win.sales.map(toSaleRow),
+      pendingSales: pending.rows.map(toPendingSaleRow),
+      pendingSalesCount: pending.count,
+      returns: win.windowReturns.map(toReturnRow),
       expenses: win.ledger.filter((l) => l.type === 'EXPENSE').map(toLedgerRow),
       income: win.ledger.filter((l) => l.type === 'INCOME').map(toLedgerRow),
+      events: buildEvents(win, extra),
     };
   }
 
   /**
    * Closes the current day in ONE transaction: freezes the expected/counted/variance snapshot,
    * records flags, auto-opens the next day, and audits the close, the auto-open and every flag.
-   * The updateMany-expects-1-row guard makes a concurrent double-close fail cleanly.
+   * The OPEN-row lock (first statement, no retry) serializes the close with walk-in pay/unpay (F32)
+   * and with a second close: the loser waits, then finds no OPEN row and gets a 409.
    */
   async close(dto: CloseDayDto, actor: PublicUser) {
     return this.prisma.$transaction(async (tx) => {
-      const day = await this.openDayOrThrow(tx);
+      const day = await lockOpenDay(tx, { retry: false });
       const closedAt = new Date();
-      const expected = computeExpected(await this.loadWindow(tx, day.openedAt, closedAt));
+      const expected = computeExpected(await this.loadDrawer(tx, day.openedAt, closedAt));
 
       const countedCash = new Prisma.Decimal(dto.countedCash);
       const countedCard = new Prisma.Decimal(dto.countedCard);
@@ -83,7 +82,7 @@ export class BusinessDayService {
         cardVariance: countedCard.minus(expected.expectedCard),
       };
 
-      // Atomic single-close: only the first updateMany sees status=OPEN; a racing close gets count 0.
+      // Belt and braces behind the lock: never overwrite a day that is no longer OPEN.
       const { count } = await tx.businessDay.updateMany({ where: { id: day.id, status: DayStatus.OPEN }, data: snapshot });
       if (count !== 1) throw new ConflictException('The day is already closed');
 
@@ -161,21 +160,41 @@ export class BusinessDayService {
 
   /** The single OPEN day; the partial unique index guarantees there is at most one. */
   private async openDayOrThrow(client: DbClient) {
-    const day = await client.businessDay.findFirst({ where: { status: DayStatus.OPEN }, select: { id: true, openedAt: true } });
+    const day = await openDay(client);
     if (!day) throw new ConflictException('No open business day');
     return day;
   }
 
-  /** Loads all records in the half-open window [openedAt, closedAt) keyed on the immutable createdAt. */
-  private async loadWindow(client: DbClient, openedAt: Date, closedAt?: Date) {
-    const createdAt = { gte: openedAt, ...(closedAt ? { lt: closedAt } : {}) };
-    const [payments, ledger, sales, returns] = await Promise.all([
-      client.salePayment.findMany({ where: { createdAt }, select: paymentSelect }),
-      client.ledgerEntry.findMany({ where: { createdAt }, select: ledgerSelect }),
-      client.sale.findMany({ where: { createdAt }, select: saleSelect, orderBy: { id: 'desc' } }),
-      client.return.findMany({ where: { createdAt }, select: returnSelect, orderBy: { id: 'desc' } }),
+  /**
+   * Drawer rows of the half-open window [openedAt, closedAt): ledger keyed on the immutable createdAt,
+   * walk-in payouts on the server-set paidAt (F32), sale payments and cash refunds on
+   * max(createdAt, sale.confirmedAt) (F33). Also returns the sale money recorded in the window for the feed.
+   */
+  private async loadDrawer(client: DbClient, openedAt: Date, closedAt?: Date) {
+    const range = windowRange(openedAt, closedAt);
+    const [money, ledger, walkInPayouts] = await Promise.all([
+      loadSaleMoney(client, openedAt, closedAt),
+      client.ledgerEntry.findMany({ where: { createdAt: range }, select: ledgerSelect }),
+      client.purchaseLine.findMany({ where: { paidAt: range, walkInSellerId: { not: null } }, select: walkInSelect }),
     ]);
-    return { payments, ledger, sales, returns };
+    return { ...splitSaleMoney(money, openedAt, closedAt), ledger, walkInPayouts } satisfies DrawerWindow;
+  }
+
+  /**
+   * The open day's drawer rows plus the informational lists: sales, sales confirmed today (F33),
+   * walk-ins bought today, every unpaid walk-in line.
+   */
+  private async loadDayWindow(openedAt: Date): Promise<DayWindow> {
+    const range = windowRange(openedAt);
+    const walkIn = { walkInSellerId: { not: null } };
+    const [drawer, sales, confirmedSales, walkInPurchases, pendingWalkIn] = await Promise.all([
+      this.loadDrawer(this.prisma, openedAt),
+      this.prisma.sale.findMany({ where: { createdAt: range }, select: saleSelect, orderBy: { id: 'desc' } }),
+      this.prisma.sale.findMany({ where: { confirmedAt: range }, select: confirmedSaleSelect }),
+      this.prisma.purchaseLine.findMany({ where: { createdAt: range, ...walkIn }, select: walkInSelect }),
+      this.prisma.purchaseLine.findMany({ where: { paidAt: null, ...walkIn }, select: { unitPrice: true, quantity: true } }),
+    ]);
+    return { ...drawer, sales, confirmedSales, walkInPurchases, pendingWalkIn };
   }
 
   /** Persists the owner's flags for the closed day. */
@@ -187,37 +206,4 @@ export class BusinessDayService {
       await this.audit.log({ userId: actor.id, action: 'create', entity: 'DayCloseFlag', entityId: row.id, after: row }, tx);
     }
   }
-}
-
-type WindowReturn = Prisma.ReturnGetPayload<{ select: typeof returnSelect }>;
-type WindowLedger = Prisma.LedgerEntryGetPayload<{ select: typeof ledgerSelect }>;
-type ClosedDay = Prisma.BusinessDayGetPayload<{ select: typeof daySelect }>;
-
-/** Return review row: a human label for the returned line plus the cash/debt split. */
-function toReturnRow(r: WindowReturn) {
-  const label = r.saleItem.productModel?.name ?? r.saleItem.item?.identifiers[0]?.value ?? 'Device';
-  return { id: r.id, item: label, refundAmount: r.refundAmount.toFixed(2), cashRefund: r.cashRefund.toFixed(2), reason: r.reason, user: r.user };
-}
-
-/** Expense/income review row. */
-function toLedgerRow(l: WindowLedger) {
-  return { id: l.id, category: l.category, amount: l.amount.toFixed(2), inCash: l.inCash };
-}
-
-/** Closed-day snapshot as decimal strings (frozen values, never recomputed). */
-function toDay(d: ClosedDay) {
-  return {
-    id: d.id,
-    openedAt: d.openedAt.toISOString(),
-    closedAt: d.closedAt?.toISOString() ?? null,
-    status: d.status,
-    note: d.note,
-    closedBy: d.closedBy,
-    expectedCash: d.expectedCash?.toFixed(2) ?? null,
-    countedCash: d.countedCash?.toFixed(2) ?? null,
-    cashVariance: d.cashVariance?.toFixed(2) ?? null,
-    expectedCard: d.expectedCard?.toFixed(2) ?? null,
-    countedCard: d.countedCard?.toFixed(2) ?? null,
-    cardVariance: d.cardVariance?.toFixed(2) ?? null,
-  };
 }

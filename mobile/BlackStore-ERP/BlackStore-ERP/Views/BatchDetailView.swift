@@ -52,7 +52,7 @@ public struct BatchDetailView: View {
                 }
             }
             .sheet(isPresented: $isShowingLabels) { BatchLabelsSheet(batchId: batchId) }
-            .sheet(isPresented: $isShowingCamera) {
+            .sheet(isPresented: $isShowingCamera, onDismiss: { feedback = nil }) {
                 ScannerSheet(title: "IMEI skanerlash", count: sessionScanCount, feedback: feedback) { code in
                     submitDevice(code: code)
                 }

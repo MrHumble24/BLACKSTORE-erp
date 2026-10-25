@@ -32,7 +32,7 @@ function PartnerRow({ partner }: PartnerRowProps) {
       className="cursor-pointer hover:bg-control-gray/40 transition-colors"
     >
       <TableCell className="font-medium text-xs text-ink">{partner.name}</TableCell>
-      <TableCell className="font-mono text-xs text-slate">{partner.phone}</TableCell>
+      <TableCell className="font-mono text-xs text-slate">{partner.phone || '—'}</TableCell>
       <TableCell className="text-xs text-slate">{partner.marketLocation || '—'}</TableCell>
       <TableCell className="text-right font-mono text-xs">{partner.held}</TableCell>
       <TableCell className="text-right font-mono text-xs text-slate">

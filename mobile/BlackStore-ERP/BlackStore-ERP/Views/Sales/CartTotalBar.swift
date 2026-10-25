@@ -19,8 +19,11 @@ struct CartTotalBar: View {
             .accessibilityElement(children: .combine)
             Spacer(minLength: 0)
             Button(action: onCheckout) {
-                Label("To'lovga o'tish", systemImage: "creditcard")
-                    .font(.headline)
+                HStack(spacing: 8) {
+                    Image(systemName: "creditcard")
+                    Text("To'lovga o'tish")
+                }
+                .font(.headline)
             }
             .buttonStyle(.borderedProminent)
             .controlSize(.large)

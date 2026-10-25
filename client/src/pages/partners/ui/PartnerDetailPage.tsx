@@ -24,7 +24,7 @@ function PartnerDetailHeader({ partner, onHandover }: PartnerDetailHeaderProps) 
     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-hairline-silver/70 pb-4">
       <div>
         <h1 className="text-xl font-bold tracking-tight text-ink">{partner.name}</h1>
-        <p className="text-xs text-slate font-mono mt-0.5">{partner.phone}</p>
+        {partner.phone && <p className="text-xs text-slate font-mono mt-0.5">{partner.phone}</p>}
       </div>
       <Button onClick={onHandover} className="gap-1.5 h-8 text-xs">
         <Send className="h-3.5 w-3.5" />

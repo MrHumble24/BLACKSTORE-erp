@@ -17,6 +17,12 @@ export class QueryAccessoryStockDto extends PaginationQueryDto {
   @Min(1)
   categoryId?: number;
 
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  productModelId?: number;
+
   // Narrow the list by stock level; default ALL (no filter).
   @IsOptional()
   @IsIn(STOCK_LEVELS)

@@ -20,9 +20,48 @@ public struct CustomerItem: Codable, Identifiable, Hashable {
     public var displayDebt: String? {
         hasDebt ? APIConfig.formatMoney(debtBalanceDouble) : nil
     }
+
+    /// User-friendly formatted phone number (e.g. +998 90 377-42-41).
+    public var formattedPhone: String {
+        CustomerPhoneFormatter.format(phone)
+    }
 }
 
 public typealias Customer = CustomerItem
+
+/// Helper to format phone strings consistently.
+public enum CustomerPhoneFormatter {
+    public static func format(_ raw: String) -> String {
+        let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        let digits = trimmed.filter(\.isNumber)
+        guard digits.hasPrefix("998") else {
+            return trimmed
+        }
+        let local = Array(digits.dropFirst(3))
+        guard !local.isEmpty else { return "+998" }
+
+        var parts: [String] = ["+998"]
+        let opEnd = min(2, local.count)
+        parts.append(String(local[0..<opEnd]))
+
+        if local.count > 2 {
+            let midEnd = min(5, local.count)
+            parts.append(String(local[2..<midEnd]))
+        }
+        if local.count > 5 {
+            let nextEnd = min(7, local.count)
+            parts.append(String(local[5..<nextEnd]))
+        }
+        if local.count > 7 {
+            let lastEnd = min(9, local.count)
+            parts.append(String(local[7..<lastEnd]))
+        }
+        if local.count > 9 {
+            parts.append(String(local[9...]))
+        }
+        return parts.joined(separator: " ")
+    }
+}
 
 /// Telegram invite link response (F23).
 public struct TelegramInviteLinkResponse: Codable {
@@ -52,6 +91,10 @@ public struct CustomerDetail: Codable, Identifiable {
 
     public var displayDebt: String {
         APIConfig.formatMoney(debtDouble)
+    }
+
+    public var formattedPhone: String {
+        CustomerPhoneFormatter.format(phone)
     }
 }
 

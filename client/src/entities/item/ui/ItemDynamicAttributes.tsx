@@ -3,27 +3,7 @@ import type { FieldErrors } from 'react-hook-form';
 import { Input, Label, SelectField } from '@/shared/ui';
 import type { CategoryAttribute } from '@/entities/category';
 import type { ItemFormValues } from '../model/item.schema';
-
-const COMMON_COLOR_OPTIONS = [
-  'Natural Titanium',
-  'Desert Titanium',
-  'Black Titanium',
-  'White Titanium',
-  'Space Black',
-  'Silver',
-  'Gold',
-  'Deep Purple',
-  'Midnight',
-  'Starlight',
-  'Blue',
-  'Black',
-  'White',
-  'Pink',
-  'Green',
-  'Yellow',
-  'Red',
-  'Purple',
-];
+import { COMMON_COLOR_OPTIONS } from '../model/attribute-options';
 
 interface FieldProps {
   attr: CategoryAttribute;

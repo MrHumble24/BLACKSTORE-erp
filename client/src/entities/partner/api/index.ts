@@ -6,7 +6,12 @@ import type {
   PartnerReport,
   CreatePartnerPayload,
   UpdatePartnerPayload,
+  PartnerTransactionsFilters,
+  PartnerTransactionsPage,
 } from '../model/types';
+
+/** Rows per page of the partner transactions feed. */
+export const PARTNER_TRANSACTIONS_PAGE_SIZE = 20;
 
 export const partnerKeys = {
   all: ['partners'] as const,
@@ -15,6 +20,8 @@ export const partnerKeys = {
     [...partnerKeys.lists(), { search, page, pageSize }] as const,
   details: () => [...partnerKeys.all, 'detail'] as const,
   detail: (id: number | string) => [...partnerKeys.details(), String(id)] as const,
+  transactions: (filters: PartnerTransactionsFilters, page: number) =>
+    [...partnerKeys.all, 'transactions', filters, page] as const,
 };
 
 /** Fetch paginated list of partner reports with optional name/phone search. */
@@ -44,6 +51,19 @@ export function usePartner(id: number | string) {
       return data;
     },
     enabled: Boolean(id),
+  });
+}
+
+/** Fetch one page of the all-partners transactions feed (handovers, sales, returns, payments, refunds) in a date range. */
+export function usePartnerTransactions(filters: PartnerTransactionsFilters, page: number) {
+  return useQuery({
+    queryKey: partnerKeys.transactions(filters, page),
+    queryFn: async () => {
+      const { data } = await api.get<PartnerTransactionsPage>('/partners/transactions', {
+        params: { ...filters, page, pageSize: PARTNER_TRANSACTIONS_PAGE_SIZE },
+      });
+      return data;
+    },
   });
 }
 

@@ -1,6 +1,6 @@
 import { SaleStatus } from '@prisma/client';
 import { Type } from 'class-transformer';
-import { IsEnum, IsInt, IsISO8601, IsOptional, Min } from 'class-validator';
+import { IsEnum, IsIn, IsInt, IsISO8601, IsOptional, Min } from 'class-validator';
 import { PaginationQueryDto } from '../../common/pagination-query.dto';
 
 /** Filters for the paginated sales list; `to` is inclusive of that day (applied in the service). */
@@ -35,4 +35,9 @@ export class QuerySalesDto extends PaginationQueryDto {
   @IsOptional()
   @IsISO8601()
   to?: string;
+
+  // F33: true = confirmed at a close, false = waiting for confirmation.
+  @IsOptional()
+  @IsIn(['true', 'false'])
+  confirmed?: 'true' | 'false';
 }

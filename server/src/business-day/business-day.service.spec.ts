@@ -10,6 +10,7 @@ const actor = { id: 9 } as PublicUser;
 // A tx whose window queries return nothing, so expected* is zero and the maths is driven by counted*.
 function buildTx(overrides: Record<string, unknown> = {}) {
   return {
+    $queryRaw: jest.fn().mockResolvedValue([{ id: 1 }]), // lockOpenDay: SELECT ... FOR UPDATE
     businessDay: {
       findFirst: jest.fn().mockResolvedValue({ id: 1, openedAt: new Date('2026-10-24T00:00:00Z') }),
       updateMany: jest.fn().mockResolvedValue({ count: 1 }),
@@ -34,6 +35,7 @@ function buildTx(overrides: Record<string, unknown> = {}) {
     ledgerEntry: { findMany: jest.fn().mockResolvedValue([]) },
     sale: { findMany: jest.fn().mockResolvedValue([]) },
     return: { findMany: jest.fn().mockResolvedValue([]) },
+    purchaseLine: { findMany: jest.fn().mockResolvedValue([]) },
     ...overrides,
   };
 }
@@ -59,6 +61,10 @@ describe('BusinessDayService.close (single-open-day invariant)', () => {
     expect(tx.businessDay.updateMany.mock.calls[0][0].where).toEqual({ id: 1, status: DayStatus.OPEN });
     expect(tx.businessDay.create).toHaveBeenCalledTimes(1); // next day opened
     expect(audit.log).toHaveBeenCalledTimes(2); // close + auto-open, no flags
+    // The OPEN-day row lock is the first statement, before the window is read (F32).
+    const lockOrder = tx.$queryRaw.mock.invocationCallOrder[0];
+    expect(lockOrder).toBeLessThan(tx.purchaseLine.findMany.mock.invocationCallOrder[0]);
+    expect(lockOrder).toBeLessThan(tx.businessDay.findUniqueOrThrow.mock.invocationCallOrder[0]);
   });
 
   it('fails cleanly when a concurrent close already closed the day (updateMany matches 0 rows)', async () => {
@@ -67,7 +73,7 @@ describe('BusinessDayService.close (single-open-day invariant)', () => {
         findFirst: jest.fn().mockResolvedValue({ id: 1, openedAt: new Date() }),
         updateMany: jest.fn().mockResolvedValue({ count: 0 }), // the other close won the race
         create: jest.fn(),
-        findUniqueOrThrow: jest.fn(),
+        findUniqueOrThrow: jest.fn().mockResolvedValue({ id: 1, openedAt: new Date() }),
       },
     });
     const { service } = build(tx);
@@ -75,10 +81,16 @@ describe('BusinessDayService.close (single-open-day invariant)', () => {
     expect(tx.businessDay.create).not.toHaveBeenCalled(); // no second next-day opened
   });
 
+  it('a close that lost the lock race gets no row, does not retry and never updates (no second day closed)', async () => {
+    const tx = buildTx({ $queryRaw: jest.fn().mockResolvedValue([]) }); // the winner already closed the locked row
+    const { service } = build(tx);
+    await expect(service.close({ countedCash: '100', countedCard: '0' }, actor)).rejects.toThrow('The day is already closed');
+    expect(tx.$queryRaw).toHaveBeenCalledTimes(1); // no retry onto the freshly opened day
+    expect(tx.businessDay.updateMany).not.toHaveBeenCalled();
+  });
+
   it('rejects closing when there is no open day', async () => {
-    const tx = buildTx({
-      businessDay: { findFirst: jest.fn().mockResolvedValue(null), updateMany: jest.fn(), create: jest.fn(), findUniqueOrThrow: jest.fn() },
-    });
+    const tx = buildTx({ $queryRaw: jest.fn().mockResolvedValue([]) }); // no OPEN row to lock
     const { service } = build(tx);
     await expect(service.close({ countedCash: '100', countedCard: '0' }, actor)).rejects.toThrow(ConflictException);
   });

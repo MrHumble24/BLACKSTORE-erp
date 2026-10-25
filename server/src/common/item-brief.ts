@@ -12,4 +12,12 @@ export const itemBriefSelect = {
   location: { select: { id: true, name: true } },
 } satisfies Prisma.ItemSelect;
 
+/** Human label for an item line: model name, else first identifier, else "Device". */
+export function itemLabel(
+  productModel: { name: string } | null | undefined,
+  identifiers: { value: string }[] | undefined,
+): string {
+  return productModel?.name ?? identifiers?.[0]?.value ?? 'Device';
+}
+
 export type ItemBrief = Prisma.ItemGetPayload<{ select: typeof itemBriefSelect }>;

@@ -3,6 +3,7 @@ import { ItemStatus, Prisma, ReturnResult, SaleStatus } from '@prisma/client';
 import { AuditService } from '../audit/audit.service';
 import type { PublicUser } from '../common/auth-user';
 import { hasPermission } from '../common/permissions';
+import { openDayStart } from '../business-day/business-day.mappers';
 import { ItemsService } from '../items/items.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateReturnDto } from './dto/create-return.dto';
@@ -63,9 +64,9 @@ export class SaleReturnsService {
         { userId: actor.id, action: 'return', entity: 'Sale', entityId: saleId, before: sale, after },
         tx,
       );
-      return after;
+      return { after, openedAt: await openDayStart(tx) };
     });
-    return toSale(detail, hasPermission(actor, 'view_cost'));
+    return toSale(detail.after, hasPermission(actor, 'view_cost'), detail.openedAt);
   }
 
   /** Device returns are always 1; accessories may return up to what is left (sold − already returned). */

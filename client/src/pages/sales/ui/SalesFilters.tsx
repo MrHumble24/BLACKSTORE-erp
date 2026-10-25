@@ -44,6 +44,12 @@ function useSalesFilterOptions() {
     { value: 'RETURNED', label: t('sales.status.RETURNED') },
   ];
 
+  const confirmedOptions = [
+    { value: '', label: t('sales.filterAll') },
+    { value: 'false', label: t('sales.statusWaiting') },
+    { value: 'true', label: t('sales.statusConfirmed') },
+  ];
+
   const locationOptions = [
     { value: '', label: t('sales.filterAllLocations') },
     ...locations.map((loc) => ({ value: String(loc.id), label: loc.name })),
@@ -54,7 +60,7 @@ function useSalesFilterOptions() {
     ...(customerPage?.items ?? []).map((c) => ({ value: String(c.id), label: `${c.name} (${c.phone})` })),
   ];
 
-  return { statusOptions, locationOptions, customerOptions };
+  return { statusOptions, confirmedOptions, locationOptions, customerOptions };
 }
 
 interface SalesFiltersProps {
@@ -65,7 +71,7 @@ interface SalesFiltersProps {
 /** Filter bar for sales list with quick debt filter and customer/location/status/date selectors. */
 export function SalesFilters({ filters, onFilterChange }: SalesFiltersProps) {
   const { t } = useTranslation();
-  const { statusOptions, locationOptions, customerOptions } = useSalesFilterOptions();
+  const { statusOptions, confirmedOptions, locationOptions, customerOptions } = useSalesFilterOptions();
   const isDebtsOnly = filters.status === 'DEBT';
 
   return (
@@ -82,13 +88,20 @@ export function SalesFilters({ filters, onFilterChange }: SalesFiltersProps) {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2 items-end">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-2 items-end">
         <SelectField
           label={t('sales.filterStatus')}
           value={filters.status ?? ''}
           onValueChange={(val: string) => onFilterChange({ ...filters, status: (val as SaleStatus) || undefined })}
           options={statusOptions}
           placeholder={t('sales.filterStatus')}
+        />
+        <SelectField
+          label={t('sales.filterConfirmation')}
+          value={filters.confirmed === undefined ? '' : String(filters.confirmed)}
+          onValueChange={(val: string) => onFilterChange({ ...filters, confirmed: val ? val === 'true' : undefined })}
+          options={confirmedOptions}
+          placeholder={t('sales.filterConfirmation')}
         />
         <SelectField
           label={t('sales.filterLocation')}

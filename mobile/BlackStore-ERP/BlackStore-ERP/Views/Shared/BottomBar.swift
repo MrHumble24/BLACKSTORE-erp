@@ -14,7 +14,10 @@ struct PrimaryButton: View {
                 if isBusy {
                     ProgressView()
                 } else if let systemImage {
-                    Label(title, systemImage: systemImage)
+                    HStack(spacing: 8) {
+                        Image(systemName: systemImage)
+                        Text(title)
+                    }
                 } else {
                     Text(title)
                 }

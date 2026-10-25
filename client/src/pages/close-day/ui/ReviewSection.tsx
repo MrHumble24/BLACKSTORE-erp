@@ -1,72 +1,12 @@
-import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ChevronRight, Flag } from 'lucide-react';
-import { Card, Input } from '@/shared/ui';
+import { Receipt, RotateCcw, ShoppingBag, TrendingUp } from 'lucide-react';
+import { Badge, Card } from '@/shared/ui';
 import { cn, money } from '@/shared/lib';
-import { useSale } from '@/entities/sale';
+import { SaleConfirmBadge, useSale } from '@/entities/sale';
 import type { CurrentBusinessDay, FlagRefType } from '@/entities/business-day';
 import type { CloseDayForm } from '../model/useCloseDayForm';
-import { CARD } from './constants';
-
-/**
- * A review row the owner can flag as suspicious with a short reason (collected for the close
- * payload). When `detail` is given, the row's main area expands/collapses to reveal it on click.
- */
-function FlaggableRow({
-  refType, refId, form, children, detail,
-}: {
-  refType: FlagRefType;
-  refId: number;
-  form: CloseDayForm;
-  children: React.ReactNode;
-  detail?: React.ReactNode;
-}) {
-  const { t } = useTranslation();
-  const reason = form.reasonOf(refType, refId);
-  const flagged = reason.trim() !== '';
-  const [flagOpen, setFlagOpen] = useState(flagged);
-  const [expanded, setExpanded] = useState(false);
-
-  return (
-    <div className={cn('rounded-xl px-3 py-2', flagged && 'bg-launch-orange/5 ring-1 ring-launch-orange/30')}>
-      <div className="flex items-center gap-2">
-        {detail ? (
-          <button
-            type="button"
-            onClick={() => setExpanded((e) => !e)}
-            aria-expanded={expanded}
-            className="flex min-w-0 flex-1 items-center gap-1.5 text-left"
-          >
-            <ChevronRight className={cn('h-3.5 w-3.5 shrink-0 text-slate/40 transition-transform', expanded && 'rotate-90')} />
-            <div className="min-w-0 flex-1">{children}</div>
-          </button>
-        ) : (
-          <div className="min-w-0 flex-1">{children}</div>
-        )}
-        <button
-          type="button"
-          onClick={() => setFlagOpen((o) => !o)}
-          aria-label={t('closeDay.flag')}
-          className={cn(
-            'shrink-0 rounded-full p-1.5 transition-colors',
-            flagged ? 'text-launch-orange' : 'text-slate/50 hover:bg-control-gray/60 hover:text-slate',
-          )}
-        >
-          <Flag className="h-3.5 w-3.5" fill={flagged ? 'currentColor' : 'none'} />
-        </button>
-      </div>
-      {expanded && detail && <div className="mt-2">{detail}</div>}
-      {flagOpen && (
-        <Input
-          value={reason}
-          onChange={(e) => form.setFlag(refType, refId, e.target.value)}
-          placeholder={t('closeDay.flagReason')}
-          className="mt-2 h-8 text-xs"
-        />
-      )}
-    </div>
-  );
-}
+import { CARD, NUM } from './constants';
+import { FlaggableRow } from './FlaggableRow';
 
 /** Lazy sale detail (line items + payment breakdown), fetched only when a sale row is expanded. */
 function SaleDetailPanel({ saleId }: { saleId: number }) {
@@ -75,70 +15,110 @@ function SaleDetailPanel({ saleId }: { saleId: number }) {
   if (isLoading) return <p className="px-1 text-[11px] text-slate/70">{t('common.loading')}</p>;
   if (!data) return null;
   return (
-    <div className="space-y-1.5 rounded-lg bg-studio-mist/30 p-2.5">
+    <div className="space-y-2 rounded-xl border border-hairline-silver/50 bg-studio-mist/40 p-3 dark:bg-control-gray/25">
       <div className="space-y-1">
         {data.items.map((it) => {
           const code = it.item?.identifiers[0]?.value;
           return (
-            <div key={it.id} className="flex items-baseline justify-between gap-3 text-[11px]">
-              <span className="min-w-0 truncate text-ink">
-                {it.productModel.name}{it.quantity > 1 ? ` ×${it.quantity}` : ''}{code ? ` · ${code}` : ''}
+            <div key={it.id} className="flex items-center justify-between gap-3 text-xs">
+              <span className="min-w-0 truncate font-medium text-ink">
+                {it.productModel.name}
+                {it.quantity > 1 ? ` ×${it.quantity}` : ''}
+                {code ? <span className="ml-1 text-[11px] font-normal text-slate">({code})</span> : ''}
               </span>
-              <span className="shrink-0 tabular-nums text-slate">{money(it.unitPrice)}</span>
+              <span className={cn('shrink-0 font-sf-pro-display tabular-nums text-slate', NUM)}>{money(it.unitPrice)}</span>
             </div>
           );
         })}
       </div>
-      <div className="space-y-0.5 border-t border-hairline-silver/40 pt-1.5">
+      <div className="flex flex-wrap items-center gap-2 border-t border-hairline-silver/40 pt-2 text-[11px]">
         {data.payments.map((p) => (
-          <div key={p.id} className="flex items-baseline justify-between gap-3 text-[11px] text-slate/80">
-            <span>{p.method === 'CASH' ? t('closeDay.methodCash') : t('closeDay.methodCard')}</span>
-            <span className="tabular-nums">{money(p.amount)}</span>
-          </div>
+          <span key={p.id} className="inline-flex items-center gap-1 rounded-md bg-card px-2 py-0.5 border border-hairline-silver/60 text-slate">
+            <span>{p.method === 'CASH' ? t('closeDay.methodCash') : t('closeDay.methodCard')}:</span>
+            <span className="font-semibold text-ink font-sf-pro-display tabular-nums">{money(p.amount)}</span>
+          </span>
         ))}
       </div>
     </div>
   );
 }
 
-/** One review card: a titled, scrollable list with a count chip and an empty state. */
-function ReviewTile({ title, count, children }: { title: string; count: number; children: React.ReactNode }) {
-  const { t } = useTranslation();
+interface ReviewTileProps {
+  icon: React.ReactNode;
+  iconBg: string;
+  title: string;
+  count: number;
+  totalSum?: number;
+  emptyText: string;
+  /** Optional header button shown beside the count chip (e.g. Confirm all). */
+  action?: React.ReactNode;
+  children: React.ReactNode;
+}
+
+/** One review card (also used by the waiting tiles): a titled, scrollable list with a count/sum chip and an empty state. */
+export function ReviewTile({ icon, iconBg, title, count, totalSum, emptyText, action, children }: ReviewTileProps) {
   return (
-    <Card className={cn(CARD, 'flex flex-col p-5')}>
-      <div className="mb-3 flex items-center justify-between">
-        <h3 className="text-[13px] font-semibold tracking-[-0.01em] text-ink">{title}</h3>
-        <span className="rounded-full bg-control-gray px-2 py-0.5 text-[11px] font-medium tabular-nums text-slate">{count}</span>
+    <Card className={cn(CARD, 'flex flex-col p-6')}>
+      <div className="mb-3.5 flex items-center justify-between">
+        <div className="flex items-center gap-2.5">
+          <div className={cn('flex h-8 w-8 items-center justify-center rounded-xl', iconBg)}>
+            {icon}
+          </div>
+          <h3 className="font-sf-pro-display text-[15px] font-semibold tracking-[-0.01em] text-ink">{title}</h3>
+        </div>
+        <div className="flex items-center gap-2">
+          <Badge variant="outline" className="border-hairline-silver/60 bg-control-gray/40 text-[11px] font-medium tabular-nums text-slate">
+            {count > 0 && totalSum != null ? `${count} · ${money(totalSum.toFixed(2))}` : count}
+          </Badge>
+          {action}
+        </div>
       </div>
       {count === 0 ? (
-        <p className="py-3 text-center text-[12px] text-slate/70">{t('closeDay.noneToday')}</p>
+        <div className="flex flex-1 items-center justify-center py-8 text-center">
+          <p className="text-xs text-slate/70">{emptyText}</p>
+        </div>
       ) : (
-        <div className="-mx-1 max-h-72 space-y-0.5 overflow-y-auto pr-1">{children}</div>
+        <div className="-mx-1 max-h-72 space-y-1 overflow-y-auto pr-1">{children}</div>
       )}
     </Card>
   );
 }
 
 /** Right-aligned amount with a secondary line (seller, reason, cash/bank, …). */
-function RowBody({ primary, secondary, amount, amountClass }: { primary: string; secondary?: string; amount: string; amountClass?: string }) {
+export function RowBody({ primary, secondary, amount, amountClass }: { primary: string; secondary?: string; amount: string; amountClass?: string }) {
   return (
     <div className="flex items-baseline justify-between gap-3">
       <div className="min-w-0">
-        <p className="truncate text-[13px] text-ink">{primary}</p>
+        <p className="truncate text-xs font-medium text-ink">{primary}</p>
         {secondary && <p className="truncate text-[11px] text-slate/80">{secondary}</p>}
       </div>
-      <span className={cn('shrink-0 text-[13px] font-semibold tabular-nums', amountClass ?? 'text-ink')}>{amount}</span>
+      <span className={cn('shrink-0 font-sf-pro-display text-xs font-semibold tabular-nums tracking-[-0.01em]', amountClass ?? 'text-ink')}>
+        {amount}
+      </span>
     </div>
   );
 }
 
 function SalesTile({ data, form }: { data: CurrentBusinessDay; form: CloseDayForm }) {
   const { t } = useTranslation();
+  const total = data.sales.reduce((sum, s) => sum + Number(s.total || 0), 0);
   return (
-    <ReviewTile title={t('closeDay.sales')} count={data.sales.length}>
+    <ReviewTile
+      icon={<ShoppingBag className="h-4 w-4 text-apple-blue dark:text-apple-blue" />}
+      iconBg="bg-apple-blue/15 dark:bg-apple-blue/25"
+      title={t('closeDay.sales')}
+      count={data.sales.length}
+      totalSum={total}
+      emptyText={t('closeDay.noSalesToday')}
+    >
       {data.sales.map((s) => (
         <FlaggableRow key={s.id} refType="SALE" refId={s.id} form={form} detail={<SaleDetailPanel saleId={s.id} />}>
-          <RowBody primary={`#${s.id}`} secondary={s.seller?.name ?? t('closeDay.unknownSeller')} amount={money(s.total)} />
+          <div className="flex items-center gap-2">
+            <div className="min-w-0 flex-1">
+              <RowBody primary={`#${s.id}`} secondary={s.seller?.name ?? t('closeDay.unknownSeller')} amount={money(s.total)} />
+            </div>
+            <SaleConfirmBadge confirmedAt={s.confirmedAt} />
+          </div>
         </FlaggableRow>
       ))}
     </ReviewTile>
@@ -147,15 +127,23 @@ function SalesTile({ data, form }: { data: CurrentBusinessDay; form: CloseDayFor
 
 function ReturnsTile({ data, form }: { data: CurrentBusinessDay; form: CloseDayForm }) {
   const { t } = useTranslation();
+  const total = data.returns.reduce((sum, r) => sum + Number(r.refundAmount || 0), 0);
   return (
-    <ReviewTile title={t('closeDay.returns')} count={data.returns.length}>
+    <ReviewTile
+      icon={<RotateCcw className="h-4 w-4 text-destructive" />}
+      iconBg="bg-destructive/15 dark:bg-destructive/25"
+      title={t('closeDay.returns')}
+      count={data.returns.length}
+      totalSum={total}
+      emptyText={t('closeDay.noReturnsToday')}
+    >
       {data.returns.map((r) => (
         <FlaggableRow key={r.id} refType="RETURN" refId={r.id} form={form}>
           <RowBody
             primary={r.item}
             secondary={`${t('closeDay.cashBack')} ${money(r.cashRefund)} · ${r.reason || '—'}`}
             amount={money(r.refundAmount)}
-            amountClass="text-destructive"
+            amountClass="text-destructive font-bold"
           />
         </FlaggableRow>
       ))}
@@ -164,17 +152,28 @@ function ReturnsTile({ data, form }: { data: CurrentBusinessDay; form: CloseDayF
 }
 
 function LedgerTile({
-  title, rows, refType, form, amountClass,
+  title, icon, iconBg, rows, refType, form, amountClass, emptyText,
 }: {
   title: string;
+  icon: React.ReactNode;
+  iconBg: string;
   rows: CurrentBusinessDay['expenses'];
   refType: FlagRefType;
   form: CloseDayForm;
   amountClass: string;
+  emptyText: string;
 }) {
   const { t } = useTranslation();
+  const total = rows.reduce((sum, r) => sum + Number(r.amount || 0), 0);
   return (
-    <ReviewTile title={title} count={rows.length}>
+    <ReviewTile
+      icon={icon}
+      iconBg={iconBg}
+      title={title}
+      count={rows.length}
+      totalSum={total}
+      emptyText={emptyText}
+    >
       {rows.map((e) => (
         <FlaggableRow key={e.id} refType={refType} refId={e.id} form={form}>
           <RowBody
@@ -193,11 +192,30 @@ function LedgerTile({
 export function ReviewSection({ data, form }: { data: CurrentBusinessDay; form: CloseDayForm }) {
   const { t } = useTranslation();
   return (
-    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+    <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
       <SalesTile data={data} form={form} />
       <ReturnsTile data={data} form={form} />
-      <LedgerTile title={t('closeDay.expenses')} rows={data.expenses} refType="EXPENSE" form={form} amountClass="text-launch-orange" />
-      <LedgerTile title={t('closeDay.income')} rows={data.income} refType="INCOME" form={form} amountClass="text-emerald-600" />
+      <LedgerTile
+        title={t('closeDay.expenses')}
+        icon={<Receipt className="h-4 w-4 text-launch-orange dark:text-launch-orange" />}
+        iconBg="bg-launch-orange/15 dark:bg-launch-orange/25"
+        rows={data.expenses}
+        refType="EXPENSE"
+        form={form}
+        amountClass="text-launch-orange font-bold"
+        emptyText={t('closeDay.noExpensesToday')}
+      />
+      <LedgerTile
+        title={t('closeDay.income')}
+        icon={<TrendingUp className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />}
+        iconBg="bg-emerald-500/15 dark:bg-emerald-500/25"
+        rows={data.income}
+        refType="INCOME"
+        form={form}
+        amountClass="text-emerald-600 dark:text-emerald-400 font-bold"
+        emptyText={t('closeDay.noIncomeToday')}
+      />
     </div>
   );
 }
+

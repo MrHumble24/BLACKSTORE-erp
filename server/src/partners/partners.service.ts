@@ -71,7 +71,7 @@ export class PartnersService {
       const partner = await tx.partner.create({
         data: {
           name: dto.name.trim(),
-          phone: dto.phone.trim(),
+          phone: dto.phone?.trim() || null,
           marketLocation: dto.marketLocation?.trim() ?? null,
           note: dto.note ?? null,
         },
@@ -94,7 +94,7 @@ export class PartnersService {
         where: { id },
         data: {
           name: dto.name?.trim(),
-          phone: dto.phone?.trim(),
+          phone: dto.phone === undefined ? undefined : dto.phone?.trim() || null, // iOS sends "" to clear
           marketLocation: dto.marketLocation === null ? null : dto.marketLocation?.trim(),
           note: dto.note,
         },

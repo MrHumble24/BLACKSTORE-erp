@@ -1,4 +1,5 @@
 import { Prisma } from '@prisma/client';
+import { lineTotal } from '../common/money';
 
 /** One query that loads everything the Item response needs (no N+1 on lists). */
 export const itemSelect = {
@@ -49,5 +50,32 @@ export function toItem(row: ItemRow, canViewCost: boolean) {
     purchasePrice: row.purchasePrice.toFixed(2),
     extraCost: row.extraCost.toFixed(2),
     cost: cost.toFixed(2),
+  };
+}
+
+/** Latest walk-in line of a device, for the device panel (F32); view_cost viewers only. */
+export const walkInLineSelect = {
+  id: true,
+  unitPrice: true,
+  quantity: true,
+  paidAt: true,
+  walkInSeller: { select: { name: true } },
+  paidBy: { select: { id: true, name: true } },
+} satisfies Prisma.PurchaseLineSelect;
+
+export type WalkInLineRow = Prisma.PurchaseLineGetPayload<{ select: typeof walkInLineSelect }>;
+
+/**
+ * Device-panel walk-in summary: seller, amount paid and payout status (F32).
+ * canUndo mirrors the unpay rule: paid inside the current OPEN day (openDayAt null = no open day).
+ */
+export function toWalkIn(l: WalkInLineRow, openDayAt: Date | null) {
+  return {
+    lineId: l.id,
+    sellerName: l.walkInSeller?.name ?? '',
+    amount: lineTotal(l).toFixed(2),
+    paidAt: l.paidAt?.toISOString() ?? null,
+    paidBy: l.paidBy,
+    canUndo: l.paidAt != null && openDayAt != null && l.paidAt >= openDayAt,
   };
 }

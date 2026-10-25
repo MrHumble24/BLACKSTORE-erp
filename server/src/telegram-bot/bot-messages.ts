@@ -18,12 +18,12 @@ export interface DebtorLine {
 /** Shop name header shared by the customer replies. */
 const header = (shopName: string): string => `<b>${escapeHtml(shopName)}</b>`;
 
-/** Owner's top debtors plus the grand total over ALL debtors (`count` of them); empty → "no debtors". */
-export function buildDebtorsText(top: DebtorLine[], total: string, count: number): string {
+/** Owner's full debtors list plus the grand total over ALL debtors (`count` of them); empty → "no debtors". */
+export function buildDebtorsText(debtors: DebtorLine[], total: string, count: number): string {
   if (count === 0) return "✅ Qarzdor yo'q";
   return [
     '<b>Qarzdorlar</b>',
-    ...top.map((d) => `• ${escapeHtml(d.name)} — ${money(d.amount)}`),
+    ...debtors.map((d) => `• ${escapeHtml(d.name)} — ${money(d.amount)}`),
     '',
     `Jami: ${money(total)} (${count} mijoz)`,
   ].join('\n');

@@ -1,76 +1,66 @@
-import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Button, Card } from '@/shared/ui';
-import { cn } from '@/shared/lib';
-import { useCurrentBusinessDay, variance, VarianceBadge } from '@/entities/business-day';
+import { CalendarClock, Clock, History } from 'lucide-react';
+import { Tabs, TabsList, TabsTrigger, TabsContent, Badge } from '@/shared/ui';
+import { formatDate, formatTime } from '@/shared/lib';
+import { useCurrentBusinessDay } from '@/entities/business-day';
 import { ClosedDaysTable } from '@/widgets/closed-days';
-import { useCloseDayForm } from '../model/useCloseDayForm';
-import { CARD } from './constants';
-import { ReconcileHero } from './ReconcileHero';
-import { ReviewSection } from './ReviewSection';
-import { CloseConfirmDialog } from './CloseConfirmDialog';
+import { CurrentDayTab } from './CurrentDayTab';
 
-/** Centered message card for the loading and error states. */
-function StateCard({ children }: { children: React.ReactNode }) {
-  return <Card className={cn(CARD, 'p-10 text-center text-sm text-slate')}>{children}</Card>;
-}
-
-/** The owner's daily close: count the drawers, review the day's money, flag anything off, then lock it. */
+/** The owner's daily close: a Current tab (the open day) and a History tab (closed days). */
 export function CloseDayPage() {
   const { t } = useTranslation();
-  const { data, isLoading, isError } = useCurrentBusinessDay();
-  const form = useCloseDayForm();
-  const [confirmOpen, setConfirmOpen] = useState(false);
+  const { data } = useCurrentBusinessDay();
 
   return (
-    <div className="space-y-6 pb-4">
-      <div className="space-y-1">
-        <h1 className="font-sf-pro-display text-2xl font-semibold tracking-tight text-ink md:text-3xl">
-          {t('closeDay.title')}
-        </h1>
-        <p className="text-xs text-slate">
-          {data
-            ? t('closeDay.openedAt', { time: new Date(data.day.openedAt).toLocaleString() })
-            : t('closeDay.subtitle')}
-        </p>
+    <div className="space-y-6 pb-6">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div className="space-y-1">
+          <div className="flex items-center gap-3">
+            <h1 className="font-sf-pro-display text-2xl font-semibold tracking-tight text-ink md:text-3xl">
+              {t('closeDay.title')}
+            </h1>
+            {data && (
+              <Badge variant="outline" className="gap-1.5 border-emerald-500/25 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                {t('closeDay.statusOpen')}
+              </Badge>
+            )}
+          </div>
+          <div className="flex items-center gap-2 text-xs text-slate">
+            {data ? (
+              <>
+                <Clock className="h-3.5 w-3.5 opacity-70" />
+                <span>
+                  {t('closeDay.openedAt', { time: `${formatDate(data.day.openedAt)} ${formatTime(data.day.openedAt)}` })}
+                </span>
+              </>
+            ) : (
+              <span>{t('closeDay.subtitle')}</span>
+            )}
+          </div>
+        </div>
       </div>
 
-      {isLoading && <StateCard>{t('common.loading')}</StateCard>}
-      {isError && <StateCard>{t('closeDay.loadError')}</StateCard>}
-
-      {data && (
-        <>
-          <ReconcileHero data={data} form={form} />
-          <ReviewSection data={data} form={form} />
-
-          <div className="sticky bottom-0 z-10 -mx-4 border-t border-hairline-silver/70 bg-gallery-white/85 px-4 py-3 backdrop-blur sm:mx-0 sm:rounded-2xl sm:border">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div className="flex items-center gap-2">
-                <span className="text-[12px] text-slate">{t('closeDay.cashDrawer')}</span>
-                <VarianceBadge diff={variance(form.countedCash, data.expectedCash)} />
-                <span className="ml-2 text-[12px] text-slate">{t('closeDay.card')}</span>
-                <VarianceBadge diff={variance(form.countedCard, data.expectedCard)} />
-              </div>
-              <Button type="button" disabled={!form.canClose} onClick={() => setConfirmOpen(true)}>
-                {t('closeDay.closeDay')}
-              </Button>
-            </div>
-          </div>
-
-          <CloseConfirmDialog
-            open={confirmOpen}
-            onOpenChange={setConfirmOpen}
-            data={data}
-            form={form}
-            onClosed={form.reset}
-          />
-        </>
-      )}
-
-      <section className="space-y-3 pt-2">
-        <h2 className="font-sf-pro-display text-lg font-semibold tracking-tight text-ink">{t('closeDay.history')}</h2>
-        <ClosedDaysTable />
-      </section>
+      {/* forceMount on Current keeps the typed counts and flags alive while the owner peeks at History. */}
+      <Tabs defaultValue="current" className="space-y-6">
+        <TabsList className="bg-control-gray/50 p-1 dark:bg-control-gray/30">
+          <TabsTrigger value="current" className="gap-2 px-4">
+            <CalendarClock className="h-4 w-4" />
+            {t('closeDay.tabCurrent')}
+          </TabsTrigger>
+          <TabsTrigger value="history" className="gap-2 px-4">
+            <History className="h-4 w-4" />
+            {t('closeDay.tabHistory')}
+          </TabsTrigger>
+        </TabsList>
+        <TabsContent value="current" forceMount className="data-[state=inactive]:hidden">
+          <CurrentDayTab />
+        </TabsContent>
+        <TabsContent value="history">
+          <ClosedDaysTable />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
+

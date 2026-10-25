@@ -12,7 +12,7 @@ interface PartnerFormFieldsProps {
   onNoteChange: (v: string) => void;
 }
 
-/** Form fields for partner name, phone, market location and optional note. */
+/** Form fields for partner name, optional phone, market location and optional note. */
 export function PartnerFormFields({
   name,
   phone,
@@ -36,11 +36,10 @@ export function PartnerFormFields({
       />
       <TextField
         id="partner-phone"
-        label={t('partners.phone')}
+        label={t('partners.phoneOptional')}
         value={phone}
         onChange={(e) => onPhoneChange(e.target.value)}
         placeholder={t('common.phonePlaceholder')}
-        required
       />
       <TextField
         id="partner-market"

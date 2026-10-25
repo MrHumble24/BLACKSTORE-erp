@@ -20,7 +20,10 @@ struct BulkAddCodesSections: View {
         Section {
             editor
             Button(action: onScan) {
-                Label("Kamera bilan skanerlash", systemImage: "barcode.viewfinder")
+                HStack(spacing: 8) {
+                    Image(systemName: "barcode.viewfinder")
+                    Text("Kamera bilan skanerlash")
+                }
             }
         } header: {
             Text("Kodlar")

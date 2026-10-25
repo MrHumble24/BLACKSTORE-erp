@@ -15,6 +15,7 @@ import { ItemIdentifiersCard } from './ItemIdentifiersCard';
 import { ItemOwnershipCard } from './ItemOwnershipCard';
 import { ItemPricingCard } from './ItemPricingCard';
 import { ItemTransfersCard } from './ItemTransfersCard';
+import { ItemWalkInCard } from './ItemWalkInCard';
 
 function useItemPermissions(status?: string) {
   const hasPermission = useAuthStore((state) => state.hasPermission);
@@ -120,6 +121,7 @@ export function ItemDetailsPage() {
           <ItemIdentifiersCard item={item} canAddIdentifier={canEdit} canPrintLabel={canReceiveBatch} onAddIdentifier={() => setIdentifierOpen(true)} />
           <ItemOwnershipCard item={item} />
           <ItemPricingCard item={item} canViewCost={canViewCost} canManagePrices={canManagePrices} onEditPrices={() => setPricesOpen(true)} />
+          {item.walkIn && <ItemWalkInCard walkIn={item.walkIn} />}
           <ItemTransfersCard itemId={item.id} />
         </div>
       </div>

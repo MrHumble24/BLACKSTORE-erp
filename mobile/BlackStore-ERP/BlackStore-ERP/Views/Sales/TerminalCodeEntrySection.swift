@@ -12,25 +12,54 @@ struct TerminalCodeEntrySection: View {
 
     var body: some View {
         Section {
-            HStack(spacing: 8) {
-                TextField("IMEI / Shtrix-kod / S/N", text: $code)
-                    .textInputAutocapitalization(.characters)
-                    .autocorrectionDisabled()
-                    .submitLabel(.done)
-                    .onSubmit(submit)
-                Button(action: submit) {
-                    if cartViewModel.isScanning {
-                        ProgressView()
-                    } else {
-                        Text("Qo'shish")
+            VStack(spacing: 12) {
+                HStack(spacing: 8) {
+                    TextField("IMEI / Shtrix-kod / S/N", text: $code)
+                        .textInputAutocapitalization(.characters)
+                        .autocorrectionDisabled()
+                        .submitLabel(.done)
+                        .onSubmit(submit)
+
+                    if !code.isEmpty {
+                        Button {
+                            code = ""
+                        } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundStyle(.secondary)
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("Tozalash")
                     }
+
+                    Button {
+                        open(.scanner)
+                    } label: {
+                        Image(systemName: "barcode.viewfinder")
+                            .font(.title3)
+                    }
+                    .buttonStyle(.borderless)
+                    .frame(minWidth: 32, minHeight: 32)
+                    .accessibilityLabel("Kamerada skanerlash")
+
+                    Button(action: submit) {
+                        if cartViewModel.isScanning {
+                            ProgressView()
+                        } else {
+                            Text("Qo'shish")
+                        }
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .disabled(!canSubmit)
                 }
-                .buttonStyle(.borderedProminent)
-                .disabled(!canSubmit)
+                .frame(minHeight: 44)
+
+                feedback
+
+                Divider()
+
+                quickActions
             }
-            .frame(minHeight: 44)
-            feedback
-            quickActions
+            .padding(.vertical, 4)
         } header: {
             header
         } footer: {

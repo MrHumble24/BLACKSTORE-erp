@@ -43,6 +43,7 @@ function build(sale: unknown) {
       update: jest.fn(),
     },
     return: { create: jest.fn() },
+    businessDay: { findFirst: jest.fn().mockResolvedValue(null) },
     item: { update: jest.fn(), findMany: jest.fn().mockResolvedValue([]) },
     accessoryStock: { update: jest.fn() },
   };

@@ -51,7 +51,7 @@ public struct CustomerDetailView: View {
 
     private func contactSection(_ customer: CustomerDetail) -> some View {
         Section("Shaxsiy ma'lumotlar") {
-            LabeledContent("Telefon", value: customer.phone)
+            LabeledContent("Telefon", value: customer.formattedPhone)
             if let note = customer.note, !note.isEmpty {
                 Text(note).font(.subheadline).foregroundStyle(.secondary)
             }

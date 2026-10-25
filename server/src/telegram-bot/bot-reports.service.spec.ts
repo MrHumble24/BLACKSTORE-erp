@@ -30,7 +30,7 @@ describe('BotReportsService', () => {
     expect(await service.lowStock()).toBe("✅ Kam qolgan tovar yo'q");
   });
 
-  it('debtors: sums per customer, sorts desc, top 10, total over all', async () => {
+  it('debtors: lists all debtors, sorts desc, total over all', async () => {
     const rows = Array.from({ length: 11 }, (_, i) => ({
       customer: { id: i + 1, name: `C${i + 1}` },
       ...debtSale(100 + i),
@@ -40,9 +40,9 @@ describe('BotReportsService', () => {
     sale.findMany.mockResolvedValue(rows);
     const text = await service.debtors();
     const lines = text.split('\n').filter((l) => l.startsWith('•'));
-    expect(lines).toHaveLength(10);
+    expect(lines).toHaveLength(11); // every debtor listed, not just the top 10
     expect(lines[0]).toBe('• C1 — $450.00');
-    expect(text).not.toContain('C2 —'); // smallest (101) dropped from the top 10
+    expect(text).toContain('C2 —'); // smallest debtor now included
     expect(text).toContain('Jami: $1 505.00 (11 mijoz)');
     expect(sale.findMany.mock.calls[0][0].where).toEqual({ status: 'DEBT', customerId: { not: null } });
   });

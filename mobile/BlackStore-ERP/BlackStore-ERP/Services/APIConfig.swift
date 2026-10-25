@@ -80,6 +80,7 @@ public enum APIConfig {
         formatter.minimumFractionDigits = 2
         formatter.maximumFractionDigits = 2
         formatter.groupingSeparator = " "
+        formatter.decimalSeparator = "."
         return formatter
     }()
 }

@@ -79,6 +79,7 @@ Seven workflows cover the daily work. The item status flow (In stock → At part
 2. Staff enter the sale price (not below the minimum), payment type and optional warranty.
 3. Paid in full by cash or card → **Sold**. Not fully paid → **Debt**, and a customer (name, phone) is required.
 4. A receipt is printed or sent.
+5. The Admin confirms each sale, on the daily close page or on the sale page; only then do its cash and card count in the drawer (F33). Status, debt and profit are already final before that.
 
 **W3. Collect a debt**
 
@@ -95,7 +96,7 @@ Seven workflows cover the daily work. The item status flow (In stock → At part
 **W5. Buy from a walk-in person**
 
 1. Staff scan or type the IMEI. The system warns if it was in stock or sold before.
-2. Staff enter the seller's name and phone, the price paid and the condition.
+2. Staff enter the seller's name and phone, the price agreed and the condition. The shop may pay the seller later; the Admin confirms the payout (on the daily close or the device page) and only then does the cash count as gone (F32).
 3. The device becomes **In stock** and can be sold like any other item.
 
 **W6. Transfer stock**
@@ -161,7 +162,7 @@ Each requirement is done when its acceptance criteria pass. The last column link
 | FR-23 | Returns | A return puts the item back In stock or Defective and corrects stock, debt and investor profit | #20 |
 | FR-24 | Receipts | Each sale can be printed or sent as a receipt | #22 |
 | FR-25 | Walk-in purchase | Buying from a person saves their name and phone and adds the device to stock; a known IMEI shows a warning | #5 |
-| FR-26 | Consignment | Handover sets a minimum price per item and an optional deadline; partner report shows held, sold-unpaid, total owed and overdue items | #23 |
+| FR-26 | Consignment | Handover sets a minimum price per item and an optional deadline; partner report shows held, sold-unpaid, total owed and overdue items. The partners page also has a *Transactions* tab: handovers, reported sales, returns, payments and refunds across all partners for today, this week (Monday to today) or custom dates. Partner phone is optional (F29) | #23 |
 
 ### Finance, users and system
 
@@ -183,10 +184,10 @@ These rules decide every number the system shows. Example used below: an iPhone 
 | BR-2 | Item profit = sale price − item cost | $1,200 − $1,030 = $170 |
 | BR-3 | Investor share (percent) = profit × investor %; business keeps the rest | Investor A $119, business $51 |
 | BR-4 | Investor share (fixed per item) = profit − fixed amount; business keeps the fixed amount | Fixed $30 → Investor A $140, business $30 |
-| BR-5 | Net profit = all item profits in the period − *confirmed* expenses in the period + other income in the period that Admin marked as counting in profit (e.g. repair fees). Waiting and excluded expenses are shown separately and never subtracted; the daily close expects only confirmed cash expenses gone from the drawer (F27) | — |
+| BR-5 | Net profit = all item profits in the period − *confirmed* expenses in the period + other income in the period that Admin marked as counting in profit (e.g. repair fees). Waiting and excluded expenses are shown separately and never subtracted; the daily close expects only confirmed cash expenses gone from the drawer (F27) and also expects walk-in purchase payouts gone from it only once the Admin has confirmed the payout, on the day of confirmation (W5, F30, F32); likewise a sale's cash and card payments are expected in the drawer only once the Admin has confirmed the sale at the close (F33), which changes nothing about the sale's status, debt or profit; the close screen lists every event of the open day with its drawer effect, with closed days in a History tab | — |
 | BR-6 | Profit is counted when the item becomes **Sold**, not when it is handed to a partner or sold on debt | Item at partner = $0 profit yet |
 | BR-7 | Cost, owner, profit split and consignment minimum price are copied onto the sale when it happens; later changes don't alter past sales | Split changed to 60% next month → this sale stays 70% |
-| BR-8 | Balances are calculated, never typed in: customer debt = sale total − payments − refunds; partner debt = minimum prices of sold items − payments; supplier balance = cost of items received − payments | — |
+| BR-8 | Balances are calculated, never typed in: customer debt = sale total − payments − refunds; partner debt = minimum prices of sold items − payments − refunds; supplier balance = cost of items received − payments | — |
 | BR-9 | Allowed status changes: In stock → At partner, Debt, Sold; At partner → In stock, Debt, Sold; Debt → Sold; Sold or Debt → Returned → In stock or Defective (a return on a debt sale also lowers the debt, FR-23); Sold → In stock only through a walk-in buy-back (W5: we buy our own sold device back from a customer). All others are blocked. There is no "Reserved" status (the shop does not reserve) and no "In transit" status: a transfer moves an item to the new location in one step (W6) | Sold → At partner is blocked |
 | BR-10 | Items at a partner still count as stock and keep their owner | — |
 | BR-11 | One currency for all amounts | — |

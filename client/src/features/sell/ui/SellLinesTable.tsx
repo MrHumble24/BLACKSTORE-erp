@@ -10,17 +10,19 @@ import {
   Input,
   Button,
 } from '@/shared/ui';
-import { formatMoney } from '@/shared/lib';
+import { formatMoney, isStrictlyPositiveMoney } from '@/shared/lib';
 import type { SellCartLine } from '../model/types';
 import { isBelowMinPrice } from '../lib/isBelowMinPrice';
 
 function SellLinePriceCell({
   unitPrice,
   isBelowMin,
+  isInvalid,
   onChange,
 }: {
   unitPrice: string;
   isBelowMin: boolean;
+  isInvalid: boolean;
   onChange: (val: string) => void;
 }) {
   const { t } = useTranslation();
@@ -34,7 +36,7 @@ function SellLinePriceCell({
           value={unitPrice}
           onChange={(e) => onChange(e.target.value)}
           className={`h-8 w-28 px-2.5 text-xs font-mono text-right rounded-lg border transition-colors ${
-            isBelowMin
+            isBelowMin || isInvalid
               ? 'border-launch-orange text-launch-orange bg-launch-orange/10 font-medium'
               : 'border-hairline-silver/80 bg-gallery-white text-ink focus:border-pricing-blue'
           }`}
@@ -66,6 +68,7 @@ function SellLineRow({
 }: SellLineRowProps) {
   const isDevice = line.type === 'device';
   const isBelowMin = isBelowMinPrice(line);
+  const isInvalid = !isStrictlyPositiveMoney(line.unitPrice);
 
   return (
     <TableRow className="border-b border-hairline-silver/40 hover:bg-studio-mist/40 transition-colors">
@@ -73,11 +76,12 @@ function SellLineRow({
       <TableCell className="px-3 py-2.5 font-mono text-xs text-slate whitespace-nowrap">{isDevice ? line.code : '—'}</TableCell>
       <TableCell className="px-3 py-2.5 text-slate text-xs whitespace-nowrap">{isDevice ? line.ownerName : '—'}</TableCell>
       <TableCell className="px-3 py-2.5 text-right font-mono text-xs text-slate whitespace-nowrap tabular-nums">
-        {isDevice ? formatMoney(line.minSalePrice) : '—'}
+        {line.purchasePrice ? formatMoney(line.purchasePrice) : '—'}
       </TableCell>
       <SellLinePriceCell
         unitPrice={line.unitPrice}
         isBelowMin={isBelowMin}
+        isInvalid={isInvalid}
         onChange={(val) => onUpdateLinePrice(index, val)}
       />
       <TableCell className="px-3 py-2.5 text-center font-mono text-xs whitespace-nowrap">
@@ -121,6 +125,7 @@ function SellLineCard({
   const { t } = useTranslation();
   const isDevice = line.type === 'device';
   const isBelowMin = isBelowMinPrice(line);
+  const isInvalid = !isStrictlyPositiveMoney(line.unitPrice);
 
   return (
     <div className="rounded-2xl border border-hairline-silver/70 bg-gallery-white p-3.5 space-y-3 shadow-none">
@@ -165,7 +170,7 @@ function SellLineCard({
             value={line.unitPrice}
             onChange={(e) => onUpdateLinePrice(index, e.target.value)}
             className={`h-9 text-xs font-mono rounded-xl border ${
-              isBelowMin
+              isBelowMin || isInvalid
                 ? 'border-launch-orange text-launch-orange bg-launch-orange/10 font-medium'
                 : 'border-hairline-silver/80 bg-gallery-white text-ink'
             }`}
@@ -175,9 +180,9 @@ function SellLineCard({
               {t('sell.belowMinPrice')}
             </span>
           )}
-          {isDevice && line.minSalePrice && (
+          {line.purchasePrice && (
             <span className="text-[10px] text-slate mt-0.5 block font-mono">
-              min: {formatMoney(line.minSalePrice)}
+              {t('sell.tableBasePrice')}: {formatMoney(line.purchasePrice)}
             </span>
           )}
         </div>
@@ -254,7 +259,7 @@ export function SellLinesTable({
               <TableHead className="px-3 py-2.5 min-w-[140px]">{t('sell.tableModel')}</TableHead>
               <TableHead className="px-3 py-2.5 min-w-[120px]">{t('sell.tableCode')}</TableHead>
               <TableHead className="px-3 py-2.5 min-w-[80px]">{t('sell.tableOwner')}</TableHead>
-              <TableHead className="px-3 py-2.5 min-w-[90px] text-right whitespace-nowrap">{t('sell.tableMinPrice')}</TableHead>
+              <TableHead className="px-3 py-2.5 min-w-[90px] text-right whitespace-nowrap">{t('sell.tableBasePrice')}</TableHead>
               <TableHead className="px-3 py-2.5 w-32 text-right whitespace-nowrap">{t('sell.tablePrice')}</TableHead>
               <TableHead className="px-3 py-2.5 w-16 text-center">{t('sell.tableQty')}</TableHead>
               <TableHead className="px-3 py-2.5 w-40">{t('sell.tableWarranty')}</TableHead>

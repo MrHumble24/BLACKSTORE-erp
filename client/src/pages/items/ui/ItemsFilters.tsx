@@ -12,10 +12,11 @@ import {
   Badge,
 } from '@/shared/ui';
 import { cn } from '@/shared/lib';
-import { useCategories } from '@/entities/category';
 import { useLocations } from '@/entities/location';
 import { useInvestors } from '@/entities/investor';
 import type { ItemFilters, ItemCondition, ItemSortBy, SortOrder } from '@/entities/item';
+import { FilterSelect } from './FilterSelect';
+import { CategoryModelVariantFilter } from './CategoryModelVariantFilter';
 
 interface ItemsFiltersProps {
   filters: ItemFilters;
@@ -23,41 +24,6 @@ interface ItemsFiltersProps {
 }
 
 const ALL_CONDITIONS: ItemCondition[] = ['NEW', 'USED', 'REFURBISHED'];
-
-interface FilterSelectProps {
-  value: string;
-  placeholder: string;
-  onChange: (value: string) => void;
-  options: { value: string; label: string }[];
-}
-
-function FilterSelect({ value, placeholder, onChange, options }: FilterSelectProps) {
-  const isFiltered = value !== 'ALL';
-
-  return (
-    <div className="w-full sm:w-auto">
-      <Select value={value} onValueChange={onChange}>
-        <SelectTrigger
-          className={cn(
-            'h-8 text-xs rounded-full border-hairline-silver/70 transition-colors w-full sm:w-auto sm:min-w-[9.5rem] [&>span]:truncate',
-            isFiltered
-              ? 'bg-studio-mist font-medium text-ink border-steel/60 dark:bg-white/[0.08]'
-              : 'bg-gallery-white text-slate dark:bg-white/[0.02]',
-          )}
-        >
-          <SelectValue placeholder={placeholder} />
-        </SelectTrigger>
-        <SelectContent>
-          {options.map((opt) => (
-            <SelectItem key={opt.value} value={opt.value}>
-              {opt.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </div>
-  );
-}
 
 function SearchFilterInput({
   initialValue,
@@ -186,18 +152,23 @@ function ActiveFilterReset({
 /** Filter controls toolbar for the items inventory table. */
 export function ItemsFilters({ filters, onChange }: ItemsFiltersProps) {
   const { t } = useTranslation();
-  const { data: categories = [] } = useCategories();
   const { data: locations = [] } = useLocations();
   const { data: investors = [] } = useInvestors();
 
-  const activeFiltersCount = [
-    Boolean(filters.search),
-    Boolean(filters.condition),
-    Boolean(filters.categoryId),
-    Boolean(filters.locationId),
-    Boolean(filters.investorId),
-    Boolean(filters.isUnpriced),
-  ].filter(Boolean).length;
+  const activeAttributesCount = filters.attributes
+    ? Object.keys(filters.attributes).length
+    : 0;
+
+  const activeFiltersCount =
+    [
+      Boolean(filters.search),
+      Boolean(filters.condition),
+      Boolean(filters.categoryId),
+      Boolean(filters.productModelId),
+      Boolean(filters.locationId),
+      Boolean(filters.investorId),
+      Boolean(filters.isUnpriced),
+    ].filter(Boolean).length + activeAttributesCount;
 
   const handleReset = () => {
     onChange({
@@ -217,17 +188,7 @@ export function ItemsFilters({ filters, onChange }: ItemsFiltersProps) {
             onSubmit={(val) => onChange({ ...filters, search: val || undefined })}
             placeholder={t('items.searchPlaceholder')}
           />
-          <FilterSelect
-            value={filters.categoryId ? String(filters.categoryId) : 'ALL'}
-            placeholder={t('items.allCategories')}
-            onChange={(val) =>
-              onChange({ ...filters, categoryId: val === 'ALL' ? undefined : Number(val) })
-            }
-            options={[
-              { value: 'ALL', label: t('items.allCategories') },
-              ...categories.map((c) => ({ value: String(c.id), label: c.name })),
-            ]}
-          />
+          <CategoryModelVariantFilter filters={filters} onChange={onChange} />
           <FilterSelect
             value={filters.condition ?? 'ALL'}
             placeholder={t('items.allConditions')}

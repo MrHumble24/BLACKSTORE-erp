@@ -27,7 +27,7 @@ export function HandoverHeaderFields({
 
   const partnerOptions = (partnersData?.items ?? []).map((p) => ({
     value: String(p.id),
-    label: `${p.name} (${p.phone})`,
+    label: p.phone ? `${p.name} (${p.phone})` : p.name,
   }));
 
   return (

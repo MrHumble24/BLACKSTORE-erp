@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { useSubmitWithError } from '@/shared/lib';
+import { useSubmitWithError, isStrictlyPositiveMoney } from '@/shared/lib';
 import { useCreateSale, type PaymentMethod, type Sale } from '@/entities/sale';
 import { useCreateCustomer } from '@/entities/customer';
 import type { SellCartLine } from '../model/types';
@@ -37,6 +37,8 @@ export function useSellSubmit({
 
   const handleSave = async () => {
     if (!locationId || lines.length === 0) return;
+    // Guard: never send a line without a valid price, whatever the UI state.
+    if (!lines.every((l) => isStrictlyPositiveMoney(l.unitPrice))) return;
 
     await runWithCatch(async () => {
       let finalCustomerId = customerId;

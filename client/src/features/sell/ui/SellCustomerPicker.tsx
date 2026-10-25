@@ -113,6 +113,7 @@ export interface SellCustomerPickerProps {
   onInlineCustomerChange: (data: InlineCustomer | null) => void;
   dueDate: string;
   onDueDateChange: (date: string) => void;
+  deviceItemIds: number[];
 }
 
 /** Customer selection for sales: either pick existing from search or fill inline. */
@@ -124,6 +125,7 @@ export function SellCustomerPicker({
   onInlineCustomerChange,
   dueDate,
   onDueDateChange,
+  deviceItemIds,
 }: SellCustomerPickerProps) {
   const [isInlineNew, setIsInlineNew] = useState(false);
 
@@ -155,9 +157,10 @@ export function SellCustomerPicker({
         <CustomerSearchSelect
           selectedCustomerId={selectedCustomerId}
           onSelectCustomer={onSelectCustomer}
+          deviceItemIds={deviceItemIds}
         />
       )}
-      <ConsignmentHint />
+      <ConsignmentHint deviceItemIds={deviceItemIds} />
       {isRequired && <DueDateField dueDate={dueDate} onChange={onDueDateChange} />}
     </div>
   );

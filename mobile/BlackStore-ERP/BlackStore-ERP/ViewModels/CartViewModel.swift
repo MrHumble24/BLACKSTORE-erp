@@ -53,16 +53,19 @@ public final class CartViewModel: ObservableObject {
         !lines.contains { $0.isBelowMinPrice }
     }
 
-    /// Looks up an item by scanned IMEI, Serial, or System Code, and adds it to the cart.
-    public func scanCode(_ code: String) async -> Bool {
+    /// Looks up an item by scanned IMEI, Serial, or System Code, adds it to the cart, and returns structured feedback.
+    public func scanCodeWithFeedback(_ code: String) async -> ScanFeedback {
         let cleanCode = code.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !cleanCode.isEmpty else { return false }
+        guard !cleanCode.isEmpty else {
+            return ScanFeedback(code: code, message: "Bo'sh kod kiritildi", isError: true)
+        }
 
         // Prevent duplicate scanning of the same device in one sale
         if lines.contains(where: { $0.identifierDisplay?.contains(cleanCode) == true }) {
-            errorMessage = "Bu mahsulot allaqachon savatchaga qo'shilgan."
+            let msg = "Bu mahsulot allaqachon savatchada mavjud."
+            errorMessage = msg
             HapticManager.warning()
-            return false
+            return ScanFeedback(code: cleanCode, message: msg, isError: true)
         }
 
         isScanning = true
@@ -72,31 +75,41 @@ public final class CartViewModel: ObservableObject {
             let item: Item = try await APIClient.shared.get("/items/by-code/\(cleanCode)")
 
             guard item.status == "IN_STOCK" else {
-                errorMessage = "Mahsulot sotuvda emas (holati: \(item.status))."
+                let msg = "Mahsulot sotuvda emas (holati: \(item.status))."
+                errorMessage = msg
                 isScanning = false
                 HapticManager.error()
-                return false
+                return ScanFeedback(code: cleanCode, message: msg, isError: true)
             }
 
             if lines.contains(where: { $0.itemId == item.id }) {
-                errorMessage = "Bu mahsulot allaqachon savatchada mavjud."
+                let msg = "Bu mahsulot allaqachon savatchada mavjud."
+                errorMessage = msg
                 isScanning = false
                 HapticManager.warning()
-                return false
+                return ScanFeedback(code: cleanCode, message: msg, isError: true)
             }
 
             let line = makeDeviceCartLine(from: item)
             lines.append(line)
             isScanning = false
             HapticManager.scanSuccess()
-            successMessage = "\(item.displayTitle) qo'shildi."
-            return true
+            let msg = "\(item.displayTitle) qo'shildi (\(APIConfig.formatMoney(line.unitPrice)))"
+            successMessage = msg
+            return ScanFeedback(code: cleanCode, message: msg, isError: false)
         } catch {
             isScanning = false
-            errorMessage = error.localizedDescription
+            let msg = error.localizedDescription
+            errorMessage = msg
             HapticManager.error()
-            return false
+            return ScanFeedback(code: cleanCode, message: msg, isError: true)
         }
+    }
+
+    /// Looks up an item by scanned IMEI, Serial, or System Code, and adds it to the cart.
+    public func scanCode(_ code: String) async -> Bool {
+        let fb = await scanCodeWithFeedback(code)
+        return !fb.isError
     }
 
     private func makeDeviceCartLine(from item: Item) -> CartLine {

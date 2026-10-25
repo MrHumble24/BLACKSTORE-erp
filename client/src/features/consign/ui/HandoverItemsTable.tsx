@@ -10,12 +10,8 @@ import {
   Input,
   Button,
 } from '@/shared/ui';
-import type { Item } from '@/entities/item';
-
-export interface HandoverLine {
-  item: Item;
-  minPrice: string;
-}
+import { formatMoney } from '@/shared/lib';
+import type { HandoverLine } from '../model/types';
 
 interface HandoverItemsTableProps {
   lines: HandoverLine[];
@@ -44,6 +40,9 @@ function HandoverTableRow({
       <TableCell className="font-medium text-ink">{line.item.productModel.name}</TableCell>
       <TableCell className="font-mono text-slate">{code}</TableCell>
       <TableCell className="text-slate">{line.item.investor.name}</TableCell>
+      <TableCell className="text-right font-mono text-xs text-slate whitespace-nowrap tabular-nums">
+        {line.item.purchasePrice ? formatMoney(line.item.purchasePrice) : '—'}
+      </TableCell>
       <TableCell className="text-right">
         <Input
           type="number"
@@ -96,7 +95,8 @@ export function HandoverItemsTable({
             <TableHead>{t('items.model')}</TableHead>
             <TableHead>{t('items.identifiers')}</TableHead>
             <TableHead>{t('reports.investor')}</TableHead>
-            <TableHead className="w-40 text-right">{t('consign.minPrice')}</TableHead>
+            <TableHead className="text-right whitespace-nowrap">{t('consign.basePrice')}</TableHead>
+            <TableHead className="w-36 text-right whitespace-nowrap">{t('consign.price')}</TableHead>
             <TableHead className="w-12" />
           </TableRow>
         </TableHeader>

@@ -97,7 +97,7 @@ private struct CustomerPickerRow: View {
         HStack {
             VStack(alignment: .leading, spacing: 4) {
                 Text(customer.name).font(.body.weight(.medium)).foregroundStyle(.primary)
-                Text(customer.phone).font(.caption).foregroundStyle(.secondary)
+                Text(customer.formattedPhone).font(.caption).foregroundStyle(.secondary)
             }
             Spacer(minLength: 8)
             if let debt = customer.displayDebt {

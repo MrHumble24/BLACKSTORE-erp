@@ -177,7 +177,7 @@ private struct DataScannerRepresentable: UIViewControllerRepresentable {
             lastScannedCode = code
             lastScanTime = now
 
-            HapticManager.scanSuccess()
+            HapticManager.selection()
             onCodeScanned(code)
         }
     }

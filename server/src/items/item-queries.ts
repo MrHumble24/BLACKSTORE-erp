@@ -8,7 +8,8 @@ import { Prisma } from '@prisma/client';
 import type { PublicUser } from '../common/auth-user';
 import { hasPermission } from '../common/permissions';
 import { itemSelect } from './item-shape';
-import { attributeDefSelect, LOCKED_STATUSES, validateAttributes } from './item-validation';
+import { attributeDefSelect, LOCKED_STATUSES, normalizeIdentifier, validateAttributes } from './item-validation';
+import type { QueryItemsDto } from './dto/query-items.dto';
 
 type Tx = Prisma.TransactionClient;
 
@@ -141,4 +142,39 @@ export async function syncLatestPurchaseLine(tx: Tx, itemId: number, unitPrice: 
       data: { unitPrice: new Prisma.Decimal(unitPrice) },
     });
   }
+}
+
+/** Builds the Prisma where clause for QueryItemsDto including category, model, and variant attribute filters. */
+export function buildItemWhere(query: QueryItemsDto): Prisma.ItemWhereInput {
+  const where: Prisma.ItemWhereInput = {
+    status: query.status,
+    condition: query.condition,
+    locationId: query.locationId,
+    investorId: query.investorId,
+    productModelId: query.productModelId,
+    productModel: query.categoryId ? { categoryId: query.categoryId } : undefined,
+    ...(query.isUnpriced ? { salePrice: null } : {}),
+  };
+  if (query.attributes && typeof query.attributes === 'object') {
+    const activeAttrs = Object.entries(query.attributes).filter(
+      ([, val]) => val !== undefined && val !== null && val !== '' && val !== 'ALL',
+    );
+    if (activeAttrs.length > 0) {
+      const attrFilters = activeAttrs.map(([key, val]) => ({
+        attributes: { path: [key], equals: val },
+      }));
+      where.AND = [
+        ...(Array.isArray(where.AND) ? where.AND : where.AND ? [where.AND] : []),
+        ...attrFilters,
+      ];
+    }
+  }
+  if (query.search) {
+    const term = query.search.trim();
+    where.OR = [
+      { identifiers: { some: { value: normalizeIdentifier(query.search) } } },
+      { productModel: { name: { contains: term, mode: 'insensitive' } } },
+    ];
+  }
+  return where;
 }

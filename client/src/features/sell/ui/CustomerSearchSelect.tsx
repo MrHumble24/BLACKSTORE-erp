@@ -6,6 +6,11 @@ import { Input, Button } from '@/shared/ui';
 import { useCustomers, useCustomer, type Customer } from '@/entities/customer';
 import { useAuthStore } from '@/entities/session';
 
+/** Handover link that carries the cart's device ids, so they need not be scanned again. */
+function consignmentHref(deviceItemIds: number[]) {
+  return deviceItemIds.length > 0 ? `/consignments/new?items=${deviceItemIds.join(',')}` : '/consignments/new';
+}
+
 interface SelectedCustomerCardProps {
   customerId: number;
   onClear: () => void;
@@ -47,10 +52,11 @@ interface SearchResultsProps {
   isLoading: boolean;
   customers: Customer[];
   canConsign: boolean;
+  deviceItemIds: number[];
   onSelect: (id: number) => void;
 }
 
-function SearchResults({ isLoading, customers, canConsign, onSelect }: SearchResultsProps) {
+function SearchResults({ isLoading, customers, canConsign, deviceItemIds, onSelect }: SearchResultsProps) {
   const { t } = useTranslation();
 
   if (isLoading) {
@@ -63,7 +69,7 @@ function SearchResults({ isLoading, customers, canConsign, onSelect }: SearchRes
         <p>{t('sell.noCustomersFound')}</p>
         {canConsign && (
           <Link
-            to="/consignments/new"
+            to={consignmentHref(deviceItemIds)}
             className="inline-flex items-center gap-1 text-apple-blue hover:underline font-medium text-[11px]"
           >
             <Handshake className="h-3 w-3 shrink-0" />
@@ -97,6 +103,7 @@ interface SearchDropdownProps {
   isLoading: boolean;
   customers: Customer[];
   canConsign: boolean;
+  deviceItemIds: number[];
   onSelect: (id: number) => void;
 }
 
@@ -106,6 +113,7 @@ function SearchDropdown({
   isLoading,
   customers,
   canConsign,
+  deviceItemIds,
   onSelect,
 }: SearchDropdownProps) {
   if (!isOpen) return null;
@@ -118,6 +126,7 @@ function SearchDropdown({
           isLoading={isLoading}
           customers={customers}
           canConsign={canConsign}
+          deviceItemIds={deviceItemIds}
           onSelect={onSelect}
         />
       </div>
@@ -150,12 +159,14 @@ function SearchInputRow({ value, onChange, onFocus, placeholder }: SearchInputRo
 export interface CustomerSearchSelectProps {
   selectedCustomerId: number | null;
   onSelectCustomer: (id: number | null) => void;
+  deviceItemIds: number[];
 }
 
 /** Dropdown customer search selector with zero-result partner redirection. */
 export function CustomerSearchSelect({
   selectedCustomerId,
   onSelectCustomer,
+  deviceItemIds,
 }: CustomerSearchSelectProps) {
   const { t } = useTranslation();
   const [search, setSearch] = useState('');
@@ -189,6 +200,7 @@ export function CustomerSearchSelect({
         isLoading={isLoading}
         customers={customerPage?.items ?? []}
         canConsign={canConsign}
+        deviceItemIds={deviceItemIds}
         onSelect={(id) => {
           onSelectCustomer(id);
           setIsOpen(false);
@@ -199,7 +211,7 @@ export function CustomerSearchSelect({
 }
 
 /** Subtle callout directing partner shop consignment handovers to /consignments/new. */
-export function ConsignmentHint() {
+export function ConsignmentHint({ deviceItemIds }: { deviceItemIds: number[] }) {
   const { t } = useTranslation();
   const canConsign = useAuthStore((s) => s.hasPermission('consign'));
   if (!canConsign) return null;
@@ -211,7 +223,7 @@ export function ConsignmentHint() {
         <span className="truncate">{t('sell.consignmentHint')}</span>
       </span>
       <Link
-        to="/consignments/new"
+        to={consignmentHref(deviceItemIds)}
         className="text-apple-blue hover:underline font-medium shrink-0 ml-2"
       >
         {t('sell.consignmentLink')}

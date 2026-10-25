@@ -30,6 +30,7 @@ function buildSaleQueryParams(filters: SaleFilters, page: number, pageSize: numb
   if (filters.locationId) params.locationId = String(filters.locationId);
   if (filters.from) params.from = filters.from;
   if (filters.to) params.to = filters.to;
+  if (filters.confirmed !== undefined) params.confirmed = String(filters.confirmed);
   return params;
 }
 

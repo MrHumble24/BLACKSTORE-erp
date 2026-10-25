@@ -7,6 +7,7 @@ import {
   SelectItem,
 } from '@/shared/ui';
 import { useCategories } from '@/entities/category';
+import { useProductModels } from '@/entities/product-model';
 import { useLocations } from '@/entities/location';
 import type { AccessoryStockFilters, StockLevel } from '@/entities/accessory-stock';
 
@@ -67,16 +68,32 @@ export function AccessoriesFilters({
   const nonSerializedCategories = categories.filter((c) => !c.isSerialized);
   const { data: locations = [] } = useLocations();
 
+  const { data: models = [] } = useProductModels(filters.categoryId, false);
+
   return (
     <div className="grid grid-cols-1 sm:flex sm:flex-wrap items-center gap-2.5 pt-1 w-full sm:w-auto">
       <FilterSelect
         value={filters.categoryId ? String(filters.categoryId) : ''}
         onChange={(val) =>
-          onChange({ ...filters, categoryId: val === 'ALL' ? undefined : Number(val) })
+          onChange({
+            ...filters,
+            categoryId: val === 'ALL' ? undefined : Number(val),
+            productModelId: undefined,
+          })
         }
         options={nonSerializedCategories.map((c) => ({ value: String(c.id), label: c.name }))}
         allLabel={t('accessories.allCategories')}
       />
+      {Boolean(filters.categoryId) && models.length > 0 && (
+        <FilterSelect
+          value={filters.productModelId ? String(filters.productModelId) : ''}
+          onChange={(val) =>
+            onChange({ ...filters, productModelId: val === 'ALL' ? undefined : Number(val) })
+          }
+          options={models.map((m) => ({ value: String(m.id), label: m.name }))}
+          allLabel={t('accessories.allModels')}
+        />
+      )}
       <FilterSelect
         value={filters.locationId ? String(filters.locationId) : ''}
         onChange={(val) =>

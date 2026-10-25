@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { isStrictlyPositiveMoney } from '@/shared/lib';
 import type { SellCartLine, DeviceCartLine, AccessoryCartLine } from '../model/types';
 import { isBelowMinPrice } from './isBelowMinPrice';
 
@@ -17,6 +18,12 @@ export function useSellCart() {
   const total = (totalCents / 100).toFixed(2);
 
   const hasPriceBelowMin = useMemo(() => lines.some(isBelowMinPrice), [lines]);
+
+  /** True when any line has an empty, zero or non-numeric price (server rejects these). */
+  const hasInvalidPrice = useMemo(
+    () => lines.some((l) => !isStrictlyPositiveMoney(l.unitPrice)),
+    [lines],
+  );
 
   const existingItemIds = useMemo(() => {
     return lines
@@ -40,6 +47,7 @@ export function useSellCart() {
     total,
     totalCents,
     hasPriceBelowMin,
+    hasInvalidPrice,
     existingItemIds,
     addDevice,
     addAccessory,

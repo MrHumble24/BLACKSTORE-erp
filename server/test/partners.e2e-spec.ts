@@ -19,6 +19,7 @@ describe('Partners & reports (e2e)', () => {
   let consignmentId = 0;
   let consignmentItemId = 0;
   let saleId = 0;
+  let noPhonePartnerId = 0;
 
   const now = new Date();
   const month = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
@@ -51,7 +52,7 @@ describe('Partners & reports (e2e)', () => {
     if (consignmentId) await prisma.consignmentItem.deleteMany({ where: { consignmentId } });
     if (saleId) await prisma.sale.deleteMany({ where: { id: saleId } });
     if (consignmentId) await prisma.consignment.deleteMany({ where: { id: consignmentId } });
-    if (partnerId) await prisma.partner.deleteMany({ where: { id: partnerId } });
+    await prisma.partner.deleteMany({ where: { id: { in: [partnerId, noPhonePartnerId] } } });
     await prisma.item.deleteMany({ where: { id: itemId } });
     await prisma.productModel.deleteMany({ where: { id: modelId } });
     await prisma.location.deleteMany({ where: { id: locationId } });
@@ -137,6 +138,41 @@ describe('Partners & reports (e2e)', () => {
     const agent = await admin();
     const res = await agent.get(`/api/reports/investors.xlsx?month=${month}`).expect(200);
     expect(res.headers['content-type']).toContain('spreadsheetml');
+  });
+
+  it('Staff creates a partner without a phone → 201, phone null; blank phone on edit stays null', async () => {
+    const agent = await staff();
+    const res = await agent.post('/api/partners').send({ name: 'No phone shop' }).expect(201);
+    const body = res.body as { id: number; phone: string | null };
+    noPhonePartnerId = body.id;
+    expect(body.phone).toBeNull();
+    const edited = await agent.patch(`/api/partners/${noPhonePartnerId}`).send({ phone: '' }).expect(200);
+    expect((edited.body as { phone: string | null }).phone).toBeNull();
+  });
+
+  it('Staff reads this run\'s partner transactions (route not swallowed by :id)', async () => {
+    const agent = await staff();
+    // Bracket only this file's writes (`now` is taken before beforeAll seeds), 1s slack for clock rounding.
+    const start = new Date(now.getTime() - 1000);
+    const end = new Date(Date.now() + 1000);
+    const res = await agent
+      .get('/api/partners/transactions')
+      .query({ from: start.toISOString(), to: end.toISOString(), pageSize: 100 })
+      .expect(200);
+    const body = res.body as {
+      items: Array<{ kind: string; partner: { id: number }; amount: string }>;
+      total: number;
+      page: number;
+      pageSize: number;
+      totals: Record<string, string>;
+    };
+    expect(body.page).toBe(1);
+    expect(JSON.stringify(res.body)).not.toMatch(/purchasePrice|extraCost|profit|investor/);
+    expect(Object.keys(body.totals).sort()).toEqual(['handedOver', 'paid', 'refunded', 'returned', 'sold']);
+    // HANDOVER sums the current minPrice (edited to 1600 above).
+    const ours = body.items.filter((t) => t.partner.id === partnerId).map((t) => `${t.kind}:${t.amount}`);
+    expect(ours).toEqual(expect.arrayContaining(['HANDOVER:1600.00', 'SOLD:1600.00', 'PAYMENT:1600.00']));
+    await agent.get('/api/partners/transactions').query({ from: end.toISOString(), to: start.toISOString() }).expect(400);
   });
 
   it('Staff cannot read the profit report (403)', async () => {

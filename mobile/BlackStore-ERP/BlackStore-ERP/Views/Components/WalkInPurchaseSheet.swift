@@ -5,6 +5,7 @@ public struct WalkInPurchaseSheet: View {
     @Environment(\.dismiss) private var dismiss
     @StateObject private var viewModel = WalkInPurchaseViewModel()
     @State private var isShowingScanner: Bool = false
+    @State private var scannerFeedback: ScanFeedback? = nil
     public let onPurchaseCompleted: (Item) -> Void
 
     public init(onPurchaseCompleted: @escaping (Item) -> Void) {
@@ -48,11 +49,28 @@ public struct WalkInPurchaseSheet: View {
                     Button("Bekor qilish") { dismiss() }
                 }
             }
-            .sheet(isPresented: $isShowingScanner) {
-                ScannerSheet(title: "Shtrix-kod / IMEI skaneri", onClose: { isShowingScanner = false }) { code in
-                    viewModel.identifierValue = code
-                    HapticManager.scanSuccess()
-                    isShowingScanner = false
+            .sheet(isPresented: $isShowingScanner, onDismiss: { scannerFeedback = nil }) {
+                ScannerSheet(
+                    title: "Shtrix-kod / IMEI skaneri",
+                    feedback: scannerFeedback,
+                    onClose: {
+                        scannerFeedback = nil
+                        isShowingScanner = false
+                    }
+                ) { code in
+                    let clean = code.trimmingCharacters(in: .whitespacesAndNewlines)
+                    if clean.isEmpty {
+                        scannerFeedback = ScanFeedback(code: code, message: "Bo'sh kod kiritildi", isError: true)
+                        HapticManager.error()
+                    } else {
+                        viewModel.identifierValue = clean
+                        scannerFeedback = ScanFeedback(code: clean, message: "\(viewModel.identifierType) qabul qilindi", isError: false)
+                        HapticManager.scanSuccess()
+                        Task {
+                            try? await Task.sleep(nanoseconds: 700_000_000)
+                            isShowingScanner = false
+                        }
+                    }
                 }
             }
             .task { await viewModel.loadInitialData() }

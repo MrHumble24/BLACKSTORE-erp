@@ -54,3 +54,4 @@ src/
 
 - Unit test each service's business rules (profit split, balances, status changes, minimum price) with Jest.
 - An e2e test for each critical flow (sell, collect debt, return) when the feature is done.
+- E2E runs on `<db>_test` (DATABASE_URL with `_test` appended), never the dev DB; `pretest:e2e` creates, migrates and seeds it automatically.

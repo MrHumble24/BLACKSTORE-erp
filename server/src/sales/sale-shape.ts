@@ -1,4 +1,5 @@
 import { Prisma } from '@prisma/client';
+import { canUndoConfirmation } from '../business-day/business-day.sale-gate';
 import { balanceOf, sumPaid, sumRefunded } from './sale-totals';
 
 // ── Selects ──────────────────────────────────────────────
@@ -13,6 +14,8 @@ export const saleSummarySelect = {
   customer: { select: { id: true, name: true, phone: true } },
   location: { select: { id: true, name: true } },
   seller: { select: { id: true, name: true } },
+  confirmedAt: true,
+  confirmedBy: { select: { id: true, name: true } },
   items: { select: { quantity: true } },
   payments: { select: { amount: true } },
   returns: { select: { refundAmount: true } },
@@ -29,6 +32,8 @@ export const saleDetailSelect = {
   customer: { select: { id: true, name: true, phone: true, telegramChatId: true } },
   location: { select: { id: true, name: true } },
   seller: { select: { id: true, name: true } },
+  confirmedAt: true,
+  confirmedBy: { select: { id: true, name: true } },
   items: {
     orderBy: { id: 'asc' },
     select: {
@@ -91,8 +96,11 @@ function money(row: { total: Prisma.Decimal; payments: { amount: Prisma.Decimal 
   };
 }
 
-/** SaleSummary for the list: totals from loaded amounts, itemCount = Σ line quantity. */
-export function toSaleSummary(row: SaleSummaryRow) {
+/**
+ * SaleSummary for the list: totals from loaded amounts, itemCount = Σ line quantity.
+ * openedAt is the OPEN day's start (null when none): a confirmation can be undone only inside it (F33).
+ */
+export function toSaleSummary(row: SaleSummaryRow, openedAt: Date | null) {
   return {
     id: row.id,
     createdAt: row.createdAt.toISOString(),
@@ -103,6 +111,9 @@ export function toSaleSummary(row: SaleSummaryRow) {
     ...money(row),
     dueDate: row.dueDate?.toISOString() ?? null,
     itemCount: row.items.reduce((sum, i) => sum + i.quantity, 0),
+    confirmedAt: row.confirmedAt?.toISOString() ?? null,
+    confirmedBy: row.confirmedBy,
+    canUndo: canUndoConfirmation(row.confirmedAt, openedAt),
   };
 }
 
@@ -132,10 +143,15 @@ function toSaleItem(line: SaleItemRow, canViewCost: boolean) {
  * customer's deep link for the receipt page (null for walk-ins/linked customers); the caller mints it.
  * The customer's telegramChatId is used internally (receipt/link decision) but never returned.
  */
-export function toSale(row: SaleDetailRow, canViewCost: boolean, telegramInviteLink: string | null = null) {
+export function toSale(
+  row: SaleDetailRow,
+  canViewCost: boolean,
+  openedAt: Date | null,
+  telegramInviteLink: string | null = null,
+) {
   const c = row.customer;
   return {
-    ...toSaleSummary(row),
+    ...toSaleSummary(row, openedAt),
     customer: c ? { id: c.id, name: c.name, phone: c.phone } : null, // never leak telegramChatId
     telegramInviteLink,
     items: row.items.map((line) => toSaleItem(line, canViewCost)),

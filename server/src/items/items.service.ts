@@ -1,7 +1,7 @@
 import {
   BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException,
 } from '@nestjs/common';
-import { IdentifierType, ItemStatus, Prisma } from '@prisma/client';
+import { DayStatus, IdentifierType, ItemStatus, Prisma } from '@prisma/client';
 import { AuditService } from '../audit/audit.service';
 import type { PublicUser } from '../common/auth-user';
 import { hasPermission } from '../common/permissions';
@@ -13,12 +13,13 @@ import { UpdateItemPricesDto } from './dto/update-item-prices.dto';
 import { UpdateItemDto } from './dto/update-item.dto';
 import {
   assertIdentifiersFree,
+  buildItemWhere,
   loadContextAndAttributes,
   loadForEdit,
   syncLatestPurchaseLine,
 } from './item-queries';
 import { resolveItemOrderBy } from './item-sort';
-import { itemSelect, toItem } from './item-shape';
+import { itemSelect, toItem, toWalkIn, walkInLineSelect } from './item-shape';
 import {
   assertHasPrimaryIdentifier,
   assertIdentifierCaps,
@@ -51,21 +52,7 @@ export class ItemsService {
   /** Paginated, sorted list with optional filters and identifier/model search. */
   async findAll(query: QueryItemsDto, actor: PublicUser) {
     const canViewCost = hasPermission(actor, 'view_cost');
-    const where: Prisma.ItemWhereInput = {
-      status: query.status,
-      condition: query.condition,
-      locationId: query.locationId,
-      investorId: query.investorId,
-      productModel: query.categoryId ? { categoryId: query.categoryId } : undefined,
-      ...(query.isUnpriced ? { salePrice: null } : {}),
-    };
-    if (query.search) {
-      const term = query.search.trim();
-      where.OR = [
-        { identifiers: { some: { value: normalizeIdentifier(query.search) } } },
-        { productModel: { name: { contains: term, mode: 'insensitive' } } },
-      ];
-    }
+    const where = buildItemWhere(query);
     const [rows, total] = await this.prisma.$transaction([
       this.prisma.item.findMany({
         where,
@@ -84,11 +71,19 @@ export class ItemsService {
     };
   }
 
-  /** One item by id; 404 if missing. */
+  /** One item by id; 404 if missing. view_cost viewers also get the latest walk-in line (`walkIn`, F32). */
   async findOne(id: number, actor: PublicUser) {
-    const row = await this.prisma.item.findUnique({ where: { id }, select: itemSelect });
+    const canViewCost = hasPermission(actor, 'view_cost');
+    const [row, walkIn, openDay] = await Promise.all([
+      this.prisma.item.findUnique({ where: { id }, select: itemSelect }),
+      canViewCost
+        ? this.prisma.purchaseLine.findFirst({ where: { itemId: id, walkInSellerId: { not: null } }, orderBy: { id: 'desc' }, select: walkInLineSelect })
+        : null,
+      canViewCost ? this.prisma.businessDay.findFirst({ where: { status: DayStatus.OPEN }, select: { openedAt: true } }) : null,
+    ]);
     if (!row) throw new NotFoundException('Item not found');
-    return toItem(row, hasPermission(actor, 'view_cost'));
+    if (!canViewCost) return toItem(row, false);
+    return { ...toItem(row, true), walkIn: walkIn ? toWalkIn(walkIn, openDay?.openedAt ?? null) : null };
   }
 
   /** Scan lookup: find the item whose identifier equals the (normalized) code. */

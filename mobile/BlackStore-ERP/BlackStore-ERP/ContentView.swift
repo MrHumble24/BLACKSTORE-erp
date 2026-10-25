@@ -12,6 +12,8 @@ public struct ContentView: View {
         Group {
             if authViewModel.currentUser != nil {
                 MainTabView(authViewModel: authViewModel)
+            } else if authViewModel.isCheckingSession {
+                SplashScreenView()
             } else {
                 LoginView(authVM: authViewModel)
             }
@@ -29,5 +31,26 @@ public struct ContentView: View {
             DevPanelView(authVM: authViewModel)
         }
         #endif
+    }
+}
+
+/// Minimal branded splash view shown only while verifying an existing stored session without a cached profile.
+private struct SplashScreenView: View {
+    var body: some View {
+        VStack(spacing: 24) {
+            VStack(spacing: 8) {
+                Text("BLACKSTORE")
+                    .font(.largeTitle.bold())
+                    .tracking(2)
+                Text("Sales Terminal")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
+            ProgressView()
+                .controlSize(.regular)
+                .padding(.top, 8)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color(.systemBackground))
     }
 }

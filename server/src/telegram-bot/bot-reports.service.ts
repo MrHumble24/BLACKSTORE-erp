@@ -17,8 +17,6 @@ import {
   DebtorLine,
 } from './bot-messages';
 
-/** The owner's debtors list shows the biggest debts only; the total still covers everyone. */
-const TOP_DEBTORS = 10;
 /** Telegram caps a message at 4096 chars; 20 devices (uz + ru line each) stays well under it. */
 const WARRANTY_LIST_LIMIT = 20;
 
@@ -42,8 +40,9 @@ export class BotReportsService {
     return buildLowStockDigest(await lowStockLines(this.prisma)) ?? "✅ Kam qolgan tovar yo'q";
   }
 
-  /** Owner: customers by outstanding debt (summed over their DEBT sales), biggest first, top 10. */
+  /** Owner: every customer with outstanding debt (summed over their DEBT sales), biggest first. */
   async debtors(): Promise<string> {
+    // ponytail: one message (~4000 char clamp in safeSend); add paging/split only if a shop ever exceeds it.
     const sales = await this.prisma.sale.findMany({
       where: { status: SaleStatus.DEBT, customerId: { not: null } },
       select: { customer: { select: { id: true, name: true } }, ...debtSaleSelect },
@@ -60,8 +59,8 @@ export class BotReportsService {
       .filter((d) => d.owed.gt(0));
     owing.sort((a, b) => b.owed.comparedTo(a.owed));
     const total = owing.reduce((sum, d) => sum.plus(d.owed), ZERO);
-    const top: DebtorLine[] = owing.slice(0, TOP_DEBTORS).map((d) => ({ name: d.name, amount: d.owed.toFixed(2) }));
-    return buildDebtorsText(top, total.toFixed(2), owing.length);
+    const lines: DebtorLine[] = owing.map((d) => ({ name: d.name, amount: d.owed.toFixed(2) }));
+    return buildDebtorsText(lines, total.toFixed(2), owing.length);
   }
 
   /** Customer: their own total outstanding debt over every DEBT sale (returns already lower each balance). */

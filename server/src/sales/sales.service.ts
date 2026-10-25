@@ -5,6 +5,7 @@ import type { PublicUser } from '../common/auth-user';
 import { endOfDay, parseTodayOrFutureDate } from '../common/dates';
 import { hasPermission } from '../common/permissions';
 import { CustomerNotificationsService } from '../customer-notifications/customer-notifications.service';
+import { openDayStart } from '../business-day/business-day.mappers';
 import { assertActiveLocation } from '../items/item-queries';
 import { ItemsService } from '../items/items.service';
 import { PrismaService } from '../prisma/prisma.service';
@@ -40,26 +41,30 @@ export class SalesService {
       customerId: query.customerId,
       locationId: query.locationId,
       createdAt,
+      ...(query.confirmed && { confirmedAt: query.confirmed === 'true' ? { not: null } : null }),
     };
-    const [rows, total] = await this.prisma.$transaction([
-      this.prisma.sale.findMany({
-        where,
-        select: saleSummarySelect,
-        orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
-        skip: (query.page - 1) * query.pageSize,
-        take: query.pageSize,
-      }),
-      this.prisma.sale.count({ where }),
+    const [[rows, total], openedAt] = await Promise.all([
+      this.prisma.$transaction([
+        this.prisma.sale.findMany({
+          where,
+          select: saleSummarySelect,
+          orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+          skip: (query.page - 1) * query.pageSize,
+          take: query.pageSize,
+        }),
+        this.prisma.sale.count({ where }),
+      ]),
+      openDayStart(this.prisma),
     ]);
-    return { items: rows.map(toSaleSummary), total, page: query.page, pageSize: query.pageSize };
+    return { items: rows.map((r) => toSaleSummary(r, openedAt)), total, page: query.page, pageSize: query.pageSize };
   }
 
   /** One sale with its lines, payments and returns; 404 if missing. */
   async findOne(id: number, actor: PublicUser) {
     const row = await this.prisma.sale.findUnique({ where: { id }, select: saleDetailSelect });
     if (!row) throw new NotFoundException('Sale not found');
-    const inviteLink = await this.inviteLinkFor(row.customer, actor.id);
-    return toSale(row, hasPermission(actor, 'view_cost'), inviteLink);
+    const [inviteLink, openedAt] = await Promise.all([this.inviteLinkFor(row.customer, actor.id), openDayStart(this.prisma)]);
+    return toSale(row, hasPermission(actor, 'view_cost'), openedAt, inviteLink);
   }
 
   /**
@@ -121,7 +126,8 @@ export class SalesService {
     // Fire-and-forget bilingual receipt AFTER the transaction commits (never inside it, and never
     // awaited — sendSaleReceipt swallows every error, so a Telegram failure can't fail the sale).
     void this.notifications.sendSaleReceipt(detail);
-    return toSale(detail, hasPermission(actor, 'view_cost'));
+    // A new sale is never confirmed (F33), so canUndo is false whatever the open day.
+    return toSale(detail, hasPermission(actor, 'view_cost'), null);
   }
 
   /** Moves device items to SOLD/DEBT and lowers accessory stock for every built line. */

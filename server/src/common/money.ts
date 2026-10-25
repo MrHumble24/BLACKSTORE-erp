@@ -1,3 +1,5 @@
+import type { Prisma } from '@prisma/client';
+
 /** Decimal string with 1–10 integer digits and up to 2 decimals; fits Decimal(12,2) without overflow. */
 export const MONEY_REGEX = /^\d{1,10}(\.\d{1,2})?$/;
 
@@ -14,4 +16,9 @@ export const SIGNED_MONEY_REGEX = /^-?\d{1,10}(\.\d{1,2})?$/;
 export function money(amount: string): string {
   const [whole = '0', decimals = '00'] = Number(amount).toFixed(2).split('.');
   return `$${whole.replace(/\B(?=(\d{3})+(?!\d))/g, ' ')}.${decimals}`;
+}
+
+/** unitPrice × quantity of one purchase line, kept as a Decimal (no float drift). */
+export function lineTotal(l: { unitPrice: Prisma.Decimal; quantity: number }): Prisma.Decimal {
+  return l.unitPrice.times(l.quantity);
 }

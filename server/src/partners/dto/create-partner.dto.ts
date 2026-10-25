@@ -7,10 +7,10 @@ export class CreatePartnerDto {
   @MaxLength(120)
   name!: string;
 
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
   @MaxLength(40)
-  phone!: string;
+  phone?: string;
 
   @IsOptional()
   @IsString()

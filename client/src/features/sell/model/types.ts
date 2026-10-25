@@ -5,6 +5,7 @@ export interface DeviceCartLine {
   code: string;
   ownerName: string;
   minSalePrice: string | null;
+  purchasePrice?: string | null;
   unitPrice: string;
   warrantyUntil: string;
 }
@@ -15,6 +16,7 @@ export interface AccessoryCartLine {
   modelName: string;
   quantity: number;
   unitPrice: string;
+  purchasePrice?: string | null;
 }
 
 export type SellCartLine = DeviceCartLine | AccessoryCartLine;

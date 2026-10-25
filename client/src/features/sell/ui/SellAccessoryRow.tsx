@@ -40,6 +40,7 @@ function useAccessoryRowForm(
       modelName: selectedStock.productModel.name,
       quantity,
       unitPrice: unitPrice.trim(),
+      purchasePrice: selectedStock.avgCost ?? null,
     });
 
     setSelectedModelId('');

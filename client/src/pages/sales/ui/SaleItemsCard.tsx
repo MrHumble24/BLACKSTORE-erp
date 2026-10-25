@@ -14,14 +14,16 @@ import {
   TableCell,
 } from '@/shared/ui';
 import { formatMoney, formatDate } from '@/shared/lib';
+import { useAuthStore } from '@/entities/session';
 import type { SaleItem } from '@/entities/sale';
 
 interface SaleItemRowProps {
   line: SaleItem;
+  canViewCost: boolean;
   onReturn: (item: SaleItem) => void;
 }
 
-function SaleItemRow({ line, onReturn }: SaleItemRowProps) {
+function SaleItemRow({ line, canViewCost, onReturn }: SaleItemRowProps) {
   const { t } = useTranslation();
   return (
     <TableRow>
@@ -30,6 +32,11 @@ function SaleItemRow({ line, onReturn }: SaleItemRowProps) {
         {line.item?.identifiers[0]?.value ?? '—'}
       </TableCell>
       <TableCell className="text-center font-mono text-xs">{line.quantity}</TableCell>
+      {canViewCost && (
+        <TableCell className="text-right font-mono text-xs text-slate">
+          {line.unitCost ? formatMoney(line.unitCost) : '—'}
+        </TableCell>
+      )}
       <TableCell className="text-right font-mono text-xs">{formatMoney(line.unitPrice)}</TableCell>
       <TableCell className="text-right font-mono text-xs font-semibold">
         {formatMoney(Number(line.unitPrice) * line.quantity)}
@@ -62,9 +69,10 @@ interface SaleItemsCardProps {
   onReturn: (item: SaleItem) => void;
 }
 
-/** Card rendering table of sold items with individual return action triggers. */
+/** Card rendering table of sold items with unit cost (view_cost only) and return actions. */
 export function SaleItemsCard({ items, onReturn }: SaleItemsCardProps) {
   const { t } = useTranslation();
+  const canViewCost = useAuthStore((state) => state.hasPermission('view_cost'));
 
   return (
     <Card className="border-hairline-silver/70 shadow-sm">
@@ -78,6 +86,9 @@ export function SaleItemsCard({ items, onReturn }: SaleItemsCardProps) {
               <TableHead>{t('sell.tableModel')}</TableHead>
               <TableHead>{t('sell.tableCode')}</TableHead>
               <TableHead className="text-center">{t('sell.tableQty')}</TableHead>
+              {canViewCost && (
+                <TableHead className="text-right">{t('sales.unitCost')}</TableHead>
+              )}
               <TableHead className="text-right">{t('sales.unitPrice')}</TableHead>
               <TableHead className="text-right">{t('sales.total')}</TableHead>
               <TableHead>{t('sales.warrantyUntil')}</TableHead>
@@ -87,7 +98,12 @@ export function SaleItemsCard({ items, onReturn }: SaleItemsCardProps) {
           </TableHeader>
           <TableBody>
             {items.map((line) => (
-              <SaleItemRow key={line.id} line={line} onReturn={onReturn} />
+              <SaleItemRow
+                key={line.id}
+                line={line}
+                canViewCost={canViewCost}
+                onReturn={onReturn}
+              />
             ))}
           </TableBody>
         </Table>

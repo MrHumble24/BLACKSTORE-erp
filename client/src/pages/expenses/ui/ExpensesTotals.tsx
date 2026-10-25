@@ -1,19 +1,9 @@
 import { useTranslation } from 'react-i18next';
-import { formatMoney } from '@/shared/lib';
+import { TotalCard } from '@/shared/ui';
 import type { LedgerPage } from '@/entities/ledger';
 
 interface TotalsProps {
   totals: LedgerPage['totals'];
-}
-
-/** One totals card. */
-function TotalCard({ label, value, accent }: { label: string; value: string; accent?: string }) {
-  return (
-    <div className="rounded-[28px] border border-hairline-silver/70 bg-gallery-white p-5 space-y-1">
-      <p className="text-[11px] text-slate tracking-[-0.01em]">{label}</p>
-      <p className={`text-xl font-semibold tracking-tight ${accent ?? 'text-ink'}`}>{formatMoney(value)}</p>
-    </div>
-  );
 }
 
 /**

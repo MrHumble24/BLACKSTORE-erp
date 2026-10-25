@@ -58,6 +58,16 @@ export interface Item {
   purchasePrice?: string;
   extraCost?: string;
   cost?: string;
+  /** Latest walk-in purchase line (F32); present only for view_cost viewers. */
+  walkIn?: {
+    lineId: number;
+    sellerName: string;
+    amount: string;
+    paidAt: string | null;
+    paidBy: { id: number; name: string } | null;
+    /** True only while the payout is still inside the open day (closed days are frozen). */
+    canUndo: boolean;
+  } | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -111,6 +121,8 @@ export interface ItemFilters {
   condition?: ItemCondition;
   locationId?: number;
   categoryId?: number;
+  productModelId?: number;
+  attributes?: Record<string, string | number>;
   investorId?: number;
   search?: string;
   isUnpriced?: boolean;

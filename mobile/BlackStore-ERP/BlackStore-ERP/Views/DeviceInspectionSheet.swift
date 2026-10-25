@@ -8,6 +8,7 @@ public struct DeviceInspectionSheet: View {
 
     @State private var inputCode: String = ""
     @State private var isShowingCamera: Bool = false
+    @State private var scannerFeedback: ScanFeedback? = nil
     /// System-code-only item for the label sheet, set once the code is ready (or known to be missing).
     @State private var labelItem: Item?
     @State private var isPreparingLabel: Bool = false
@@ -37,11 +38,29 @@ public struct DeviceInspectionSheet: View {
                     }
                 }
             }
-            .sheet(isPresented: $isShowingCamera) {
-                ScannerSheet(title: "Kamerada skanerlash", onClose: { isShowingCamera = false }) { code in
-                    inputCode = code
-                    isShowingCamera = false
-                    Task { _ = await viewModel.lookup(code: code) }
+            .sheet(isPresented: $isShowingCamera, onDismiss: { scannerFeedback = nil }) {
+                ScannerSheet(
+                    title: "Kamerada skanerlash",
+                    feedback: scannerFeedback,
+                    onClose: {
+                        scannerFeedback = nil
+                        isShowingCamera = false
+                    }
+                ) { code in
+                    Task {
+                        inputCode = code
+                        if let item = await viewModel.lookup(code: code) {
+                            scannerFeedback = ScanFeedback(code: code, message: item.displayTitle, isError: false)
+                            try? await Task.sleep(nanoseconds: 700_000_000)
+                            isShowingCamera = false
+                        } else {
+                            scannerFeedback = ScanFeedback(
+                                code: code,
+                                message: viewModel.errorMessage ?? "Qurilma topilmadi",
+                                isError: true
+                            )
+                        }
+                    }
                 }
             }
             .sheet(item: $labelItem) { BarcodePrintSheet(item: $0) }

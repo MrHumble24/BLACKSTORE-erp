@@ -34,6 +34,7 @@ export class AccessoryStockService {
   async findAll(query: QueryAccessoryStockDto, actor: PublicUser) {
     const where: Prisma.AccessoryStockWhereInput = {
       locationId: query.locationId,
+      productModelId: query.productModelId,
       productModel: query.categoryId ? { categoryId: query.categoryId } : undefined,
     };
     await this.applyStockLevel(where, query.stockLevel);

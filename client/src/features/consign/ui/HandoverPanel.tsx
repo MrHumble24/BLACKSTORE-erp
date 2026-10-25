@@ -8,7 +8,9 @@ import { normalizeMoney, isStrictlyPositiveMoney, useSubmitWithError } from '@/s
 import { useItemByCode } from '@/entities/item';
 import { useCreateConsignment } from '@/entities/consignment';
 import { HandoverHeaderFields } from './HandoverHeaderFields';
-import { HandoverItemsTable, type HandoverLine } from './HandoverItemsTable';
+import { HandoverItemsTable } from './HandoverItemsTable';
+import type { HandoverLine } from '../model/types';
+import { usePrefillLines, parseItemIds } from '../model/usePrefillLines';
 
 function useHandoverScan(lines: HandoverLine[], setLines: React.Dispatch<React.SetStateAction<HandoverLine[]>>) {
   const { t } = useTranslation();
@@ -47,6 +49,8 @@ function useHandoverForm() {
   const [dueDate, setDueDate] = useState('');
   const [note, setNote] = useState('');
   const [lines, setLines] = useState<HandoverLine[]>([]);
+  const [prefillIds] = useState(() => parseItemIds(searchParams.get('items')));
+  const isPrefilling = usePrefillLines(prefillIds, setLines);
 
   const { scanValue, setScanValue, handleScan, isPending: isScanning } = useHandoverScan(lines, setLines);
   const createConsignment = useCreateConsignment();
@@ -57,7 +61,7 @@ function useHandoverForm() {
     if (!partnerId) return setError(t('consign.selectPartnerRequired'));
     if (lines.length === 0) return setError(t('consign.atLeastOneItemRequired'));
     if (!lines.every((l) => isStrictlyPositiveMoney(l.minPrice))) {
-      return setError(t('consign.minPriceRequiredAll'));
+      return setError(t('consign.priceRequiredAll'));
     }
     await runWithCatch(async () => {
       const res = await createConsignment.mutateAsync({
@@ -74,7 +78,7 @@ function useHandoverForm() {
   return {
     partnerId, setPartnerId, dueDate, setDueDate, note, setNote,
     scanValue, setScanValue, lines, setLines, error,
-    isPending: createConsignment.isPending || isScanning,
+    isPending: createConsignment.isPending || isScanning || isPrefilling,
     handleScan, handleSubmit,
   };
 }

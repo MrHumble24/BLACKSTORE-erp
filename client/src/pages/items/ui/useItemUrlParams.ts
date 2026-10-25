@@ -20,6 +20,16 @@ export function useItemUrlParams(): ItemUrlState {
     const status = (searchParams.get('status') as ItemStatus) || undefined;
     const condition = (searchParams.get('condition') as ItemCondition) || undefined;
     const categoryId = searchParams.get('categoryId') ? Number(searchParams.get('categoryId')) : undefined;
+    const productModelId = searchParams.get('productModelId') ? Number(searchParams.get('productModelId')) : undefined;
+    let attributes: Record<string, string | number> | undefined;
+    const rawAttrs = searchParams.get('attributes');
+    if (rawAttrs) {
+      try {
+        attributes = JSON.parse(rawAttrs);
+      } catch {
+        attributes = undefined;
+      }
+    }
     const locationId = searchParams.get('locationId') ? Number(searchParams.get('locationId')) : undefined;
     const investorId = searchParams.get('investorId') ? Number(searchParams.get('investorId')) : undefined;
     const search = searchParams.get('search') || undefined;
@@ -35,6 +45,8 @@ export function useItemUrlParams(): ItemUrlState {
         status,
         condition,
         categoryId,
+        productModelId,
+        attributes,
         locationId,
         investorId,
         search,
@@ -53,6 +65,10 @@ export function useItemUrlParams(): ItemUrlState {
       if (newFilters.status) next.set('status', newFilters.status);
       if (newFilters.condition) next.set('condition', newFilters.condition);
       if (newFilters.categoryId) next.set('categoryId', String(newFilters.categoryId));
+      if (newFilters.productModelId) next.set('productModelId', String(newFilters.productModelId));
+      if (newFilters.attributes && Object.keys(newFilters.attributes).length > 0) {
+        next.set('attributes', JSON.stringify(newFilters.attributes));
+      }
       if (newFilters.locationId) next.set('locationId', String(newFilters.locationId));
       if (newFilters.investorId) next.set('investorId', String(newFilters.investorId));
       if (newFilters.search) next.set('search', newFilters.search);

@@ -133,7 +133,9 @@ interface SellPaymentSectionProps {
   onDueDateChange: (d: string) => void;
   canManagePrices: boolean;
   hasPriceBelowMin: boolean;
+  hasInvalidPrice: boolean;
   hasLines: boolean;
+  deviceItemIds: number[];
   isPending: boolean;
   onSubmit: () => void;
   error: string | null;
@@ -150,6 +152,7 @@ function useSellPaymentState(props: SellPaymentSectionProps) {
   const isSaveDisabled =
     !props.hasLines ||
     props.isPending ||
+    props.hasInvalidPrice ||
     (props.hasPriceBelowMin && !props.canManagePrices) ||
     (isDebt && !hasCustomer);
 
@@ -189,9 +192,10 @@ export function SellPaymentSection(props: SellPaymentSectionProps) {
           onInlineCustomerChange={props.onInlineCustomerChange}
           dueDate={props.dueDate}
           onDueDateChange={props.onDueDateChange}
+          deviceItemIds={props.deviceItemIds}
         />
       </CardContent>
-      <CardFooter className="pt-2 pb-4">
+      <CardFooter className="pt-2 pb-4 flex-col gap-2">
         <Button
           type="button"
           onClick={props.onSubmit}
@@ -200,6 +204,11 @@ export function SellPaymentSection(props: SellPaymentSectionProps) {
         >
           {props.isPending ? t('common.loading') : t('sell.submit')}
         </Button>
+        {props.hasLines && props.hasInvalidPrice && (
+          <div className="w-full text-xs text-amber-700 dark:text-amber-300 font-medium bg-amber-500/10 p-2.5 rounded-xl border border-amber-500/30">
+            {t('sell.priceRequiredAll')}
+          </div>
+        )}
       </CardFooter>
     </Card>
   );

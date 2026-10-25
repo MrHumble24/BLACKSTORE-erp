@@ -143,15 +143,17 @@ model User {
   investor     Investor? @relation(fields: [investorId], references: [id])
   createdAt    DateTime  @default(now())
 
-  auditLogs     AuditLog[]
-  transfers     Transfer[]
-  sales         Sale[]
-  salePayments  SalePayment[]
-  returns       Return[]
-  consignments  Consignment[]
-  stockCounts   StockCount[]
-  ledgerEntries LedgerEntry[]
-  businessDays  BusinessDay[] // days this user closed
+  auditLogs      AuditLog[]
+  transfers      Transfer[]
+  sales          Sale[]
+  salePayments   SalePayment[]
+  returns        Return[]
+  consignments   Consignment[]
+  stockCounts    StockCount[]
+  ledgerEntries  LedgerEntry[]
+  businessDays   BusinessDay[] // days this user closed
+  walkInPayouts  PurchaseLine[] @relation("PurchaseLinePaidBy") // walk-in payouts this user confirmed (F32)
+  confirmedSales Sale[]         @relation("SaleConfirmedBy") // sales this user confirmed at the close (F33)
 
   issuedTelegramTokens    TelegramLinkToken[] // invite links this user handed out (F24)
   telegramLinkedCustomers Customer[]          @relation("CustomerTelegramLinkedBy")
@@ -383,6 +385,12 @@ model PurchaseLine {
   walkInSellerId Int?
   walkInSeller   WalkInSeller? @relation(fields: [walkInSellerId], references: [id])
 
+  // Walk-in lines only: when the Admin confirmed the seller was paid from the drawer (F32).
+  // null = payout not confirmed yet (not subtracted from expected cash).
+  paidAt   DateTime?
+  paidById Int?
+  paidBy   User?     @relation("PurchaseLinePaidBy", fields: [paidById], references: [id])
+
   createdAt DateTime @default(now())
 
   @@index([itemId])
@@ -486,6 +494,12 @@ model Sale {
   dueDate    DateTime? // for debt sales
   createdAt  DateTime   @default(now())
 
+  // Drawer gate only (F33): the sale's money counts in the drawer from confirmedAt on; null = waiting.
+  // Status, debt (BR-8) and profit (BR-6) never depend on it.
+  confirmedAt   DateTime?
+  confirmedById Int?
+  confirmedBy   User?     @relation("SaleConfirmedBy", fields: [confirmedById], references: [id], onDelete: SetNull)
+
   items    SaleItem[]
   payments SalePayment[]
   returns  Return[]
@@ -493,6 +507,7 @@ model Sale {
   @@index([status])
   @@index([createdAt])
   @@index([partnerId]) // partner debt aggregation and the /sales?partnerId filter (F07)
+  @@index([confirmedAt])
 }
 
 // One line of a sale: a device (itemId) OR accessories (productModelId + quantity)
@@ -559,7 +574,7 @@ model Return {
 model Partner {
   id             Int           @id @default(autoincrement())
   name           String
-  phone          String
+  phone          String? // optional since F29
   marketLocation String?
   note           String?
   consignments   Consignment[]

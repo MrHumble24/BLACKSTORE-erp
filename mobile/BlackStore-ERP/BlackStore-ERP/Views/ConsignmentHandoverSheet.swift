@@ -40,7 +40,7 @@ public struct ConsignmentHandoverSheet: View {
                     Button("Bekor qilish") { dismiss() }
                 }
             }
-            .sheet(isPresented: $isShowingScanner) {
+            .sheet(isPresented: $isShowingScanner, onDismiss: { feedback = nil }) {
                 ScannerSheet(title: "Skanerlash", count: handoverItems.count, feedback: feedback) { code in
                     lookupItem(code: code)
                 }
@@ -78,7 +78,10 @@ public struct ConsignmentHandoverSheet: View {
                 .disabled(scannedCode.trimmingCharacters(in: .whitespaces).isEmpty || isLookingUp)
             }
             Button { isShowingScanner = true } label: {
-                Label("Kamera bilan skanerlash", systemImage: "camera.viewfinder")
+                HStack(spacing: 8) {
+                    Image(systemName: "camera.viewfinder")
+                    Text("Kamera bilan skanerlash")
+                }
             }
             if let feedback {
                 InlineMessage(text: "\(feedback.code): \(feedback.message)", isError: feedback.isError)

@@ -11,7 +11,7 @@ import {
   TableEmptyRow,
 } from '@/shared/ui';
 import { formatMoney, formatDate } from '@/shared/lib';
-import { SaleStatusBadge, type SaleSummary } from '@/entities/sale';
+import { SaleConfirmBadge, SaleStatusBadge, type SaleSummary } from '@/entities/sale';
 
 interface SalesTableRowProps {
   sale: SaleSummary;
@@ -53,7 +53,10 @@ function SalesTableRow({ sale }: SalesTableRowProps) {
         <span className={isDebt ? 'text-launch-orange' : ''}>{formatMoney(sale.balance)}</span>
       </TableCell>
       <TableCell className="text-center">
-        <SaleStatusBadge status={sale.status} />
+        <div className="flex flex-col items-center gap-1">
+          <SaleStatusBadge status={sale.status} />
+          <SaleConfirmBadge confirmedAt={sale.confirmedAt} />
+        </div>
       </TableCell>
     </TableRow>
   );

@@ -9,29 +9,85 @@ public struct CustomersView: View {
 
     public var body: some View {
         NavigationStack {
-            content
-                .navigationTitle("Xaridorlar")
-                .navigationBarTitleDisplayMode(.inline) // inline: a pinned filter bar under a large title leaves a blank band
-                .searchable(text: $viewModel.searchText, prompt: "Ism yoki telefon raqami")
-                .safeAreaInset(edge: .top, spacing: 0) { filterPicker }
-                .task(id: reloadKey) { await reload() }
-                .toolbar {
-                    ToolbarItem(placement: .primaryAction) {
-                        Button {
-                            showingAddCustomerSheet = true
-                        } label: {
-                            Label("Yangi xaridor", systemImage: "person.crop.circle.badge.plus")
-                        }
-                    }
+            List {
+                filterSection
+                if let err = viewModel.errorMessage, !viewModel.customers.isEmpty {
+                    Section { InlineMessage(text: err, font: .footnote) }
                 }
-                .sheet(isPresented: $showingAddCustomerSheet) {
-                    CustomerPickerSheet { _ in
-                        Task { await viewModel.fetchCustomers() }
-                    }
-                    .presentationDetents([.large])
-                    .presentationDragIndicator(.visible)
-                }
+                listContent
+            }
+            .listStyle(.insetGrouped)
+            .navigationTitle("Xaridorlar")
+            .searchable(text: $viewModel.searchText, prompt: "Ism yoki telefon raqami")
+            .refreshable { await viewModel.fetchCustomers() }
+            .task(id: reloadKey) { await reload() }
+            .toolbar { toolbarContent }
+            .sheet(isPresented: $showingAddCustomerSheet) { addCustomerSheet }
         }
+    }
+
+    private var filterSection: some View {
+        Section {
+            Picker("Filtr", selection: $viewModel.filterDebtOnly) {
+                Text("Barchasi").tag(false)
+                Text("Qarzdorlar").tag(true)
+            }
+            .pickerStyle(.segmented)
+            .listRowBackground(Color.clear)
+            .listRowInsets(EdgeInsets())
+        }
+    }
+
+    @ViewBuilder
+    private var listContent: some View {
+        if viewModel.isLoading && viewModel.customers.isEmpty {
+            Section {
+                ProgressView("Xaridorlar yuklanmoqda...")
+                    .frame(maxWidth: .infinity, minHeight: 160)
+            }
+            .listRowBackground(Color.clear)
+        } else if let err = viewModel.errorMessage, viewModel.customers.isEmpty {
+            Section {
+                ErrorState(message: err) { await viewModel.fetchCustomers() }
+            }
+            .listRowBackground(Color.clear)
+        } else if viewModel.customers.isEmpty {
+            Section { emptyState }.listRowBackground(Color.clear)
+        } else {
+            customerRowsSection
+        }
+    }
+
+    private var customerRowsSection: some View {
+        Section {
+            ForEach(viewModel.customers) { customer in
+                NavigationLink {
+                    CustomerDetailView(customerId: customer.id)
+                } label: {
+                    CustomerRow(customer: customer)
+                }
+            }
+        }
+    }
+
+    @ToolbarContentBuilder
+    private var toolbarContent: some ToolbarContent {
+        ToolbarItem(placement: .primaryAction) {
+            Button {
+                showingAddCustomerSheet = true
+            } label: {
+                Label("Yangi xaridor", systemImage: "person.crop.circle.badge.plus")
+            }
+            .accessibilityLabel("Yangi xaridor qo'shish")
+        }
+    }
+
+    private var addCustomerSheet: some View {
+        CustomerPickerSheet { _ in
+            Task { await viewModel.fetchCustomers() }
+        }
+        .presentationDetents([.large])
+        .presentationDragIndicator(.visible)
     }
 
     /// Search text and filter together; any change reloads the list.
@@ -45,49 +101,6 @@ public struct CustomersView: View {
         await viewModel.fetchCustomers()
         // A newer keystroke cancelled this load; its "cancelled" error is not a real failure.
         if Task.isCancelled { viewModel.errorMessage = nil }
-    }
-
-    @ViewBuilder
-    private var content: some View {
-        if viewModel.isLoading && viewModel.customers.isEmpty {
-            LoadingState()
-        } else if let err = viewModel.errorMessage, viewModel.customers.isEmpty {
-            ErrorState(message: err) { await viewModel.fetchCustomers() }
-        } else if viewModel.customers.isEmpty {
-            emptyState
-        } else {
-            customerList
-        }
-    }
-
-    private var filterPicker: some View {
-        Picker("Filtr", selection: $viewModel.filterDebtOnly) {
-            Text("Barchasi").tag(false)
-            Text("Qarzdorlar").tag(true)
-        }
-        .pickerStyle(.segmented)
-        .padding(.horizontal)
-        .padding(.vertical, 8)
-        .background(.bar)
-    }
-
-    private var customerList: some View {
-        List {
-            if let err = viewModel.errorMessage {
-                Section { InlineMessage(text: err, font: .footnote) }
-            }
-            Section {
-                ForEach(viewModel.customers) { customer in
-                    NavigationLink {
-                        CustomerDetailView(customerId: customer.id)
-                    } label: {
-                        CustomerRow(customer: customer)
-                    }
-                }
-            }
-        }
-        .listStyle(.insetGrouped)
-        .refreshable { await viewModel.fetchCustomers() }
     }
 
     @ViewBuilder
@@ -119,7 +132,7 @@ private struct CustomerRow: View {
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(customer.name).font(.headline)
-                Text(customer.phone)
+                Text(customer.formattedPhone)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             }

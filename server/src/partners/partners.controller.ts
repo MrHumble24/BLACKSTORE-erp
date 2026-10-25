@@ -2,19 +2,30 @@ import { Body, Controller, Get, Param, ParseIntPipe, Patch, Post, Query } from '
 import type { PublicUser } from '../common/auth-user';
 import { CurrentUser, Permissions } from '../common/decorators';
 import { CreatePartnerDto } from './dto/create-partner.dto';
+import { QueryPartnerTransactionsDto } from './dto/query-partner-transactions.dto';
 import { QueryPartnersDto } from './dto/query-partners.dto';
 import { UpdatePartnerDto } from './dto/update-partner.dto';
+import { PartnerTransactionsService } from './partner-transactions.service';
 import { PartnersService } from './partners.service';
 
 /** HTTP for partner shops (FR-26); every route needs the `consign` permission. */
 @Controller('partners')
 @Permissions('consign')
 export class PartnersController {
-  constructor(private readonly partners: PartnersService) {}
+  constructor(
+    private readonly partners: PartnersService,
+    private readonly transactions: PartnerTransactionsService,
+  ) {}
 
   @Get()
   findAll(@Query() query: QueryPartnersDto) {
     return this.partners.findAll(query);
+  }
+
+  // Declared before :id so "transactions" is not parsed as an id.
+  @Get('transactions')
+  findTransactions(@Query() query: QueryPartnerTransactionsDto) {
+    return this.transactions.findAll(query);
   }
 
   @Get(':id')

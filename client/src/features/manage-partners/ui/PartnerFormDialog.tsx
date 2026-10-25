@@ -48,14 +48,19 @@ function usePartnerForm(partner: Partner | null | undefined, onClose: () => void
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !phone.trim()) return;
+    if (!name.trim()) return;
+    const trimmedPhone = phone.trim();
     const payload = {
       name: name.trim(),
-      phone: phone.trim(),
+      phone: trimmedPhone || undefined,
       marketLocation: marketLocation.trim() || undefined,
       note: note.trim() || undefined,
     };
-    submit(payload, partner ? { id: partner.id, payload } : undefined);
+    // Phone is optional: omitted on create when blank, sent as null on edit to clear it.
+    const update = partner
+      ? { id: partner.id, payload: { ...payload, phone: trimmedPhone || null } }
+      : undefined;
+    submit(payload, update);
   };
 
   return {

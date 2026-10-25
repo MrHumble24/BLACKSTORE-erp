@@ -15,6 +15,7 @@ public struct SalesTerminalView: View {
     @State private var activeSheet: TerminalSheet?
     @State private var completedSale: Sale?
     @State private var isConfirmingClear = false
+    @State private var scannerFeedback: ScanFeedback? = nil
 
     public init() {}
 
@@ -65,7 +66,12 @@ public struct SalesTerminalView: View {
             MessagePanel(title: "Savatcha bo'sh", systemImage: "cart",
                          message: "Shtrix-kodni skanerlang yoki ombordan tanlang.") {
                 Button { activeSheet = .scanner } label: {
-                    Label("Skanerlash", systemImage: "barcode.viewfinder")
+                    HStack(spacing: 8) {
+                        Image(systemName: "barcode.viewfinder")
+                            .font(.headline)
+                        Text("Skanerlash")
+                            .fontWeight(.semibold)
+                    }
                 }
                 .buttonStyle(.borderedProminent)
                 .controlSize(.large)
@@ -95,9 +101,18 @@ public struct SalesTerminalView: View {
     private func sheetContent(for sheet: TerminalSheet) -> some View {
         switch sheet {
         case .scanner:
-            ScannerSheet(title: "Shtrix-kod skaner", onClose: { activeSheet = nil }) { code in
+            ScannerSheet(
+                title: "Shtrix-kod skaner",
+                count: cartViewModel.totalUnitsCount,
+                feedback: scannerFeedback,
+                onClose: {
+                    scannerFeedback = nil
+                    activeSheet = nil
+                }
+            ) { code in
                 Task {
-                    if await cartViewModel.scanCode(code) { activeSheet = nil }
+                    let fb = await cartViewModel.scanCodeWithFeedback(code)
+                    scannerFeedback = fb
                 }
             }
         case .accessory:

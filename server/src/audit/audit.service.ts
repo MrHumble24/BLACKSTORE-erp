@@ -39,16 +39,13 @@ export class AuditService {
    * Pass the transaction client (tx) to write it inside the same transaction as the change.
    */
   async log(entry: AuditEntry, tx?: Prisma.TransactionClient): Promise<void> {
-    await (tx ?? this.prisma).auditLog.create({
-      data: {
-        userId: entry.userId,
-        action: entry.action,
-        entity: entry.entity,
-        entityId: entry.entityId,
-        before: toSafeJson(entry.before),
-        after: toSafeJson(entry.after),
-      },
-    });
+    await (tx ?? this.prisma).auditLog.create({ data: toAuditRow(entry) });
+  }
+
+  /** Saves many audit rows in one INSERT (same redaction as log); for batch actions inside one transaction. */
+  async logMany(entries: AuditEntry[], tx?: Prisma.TransactionClient): Promise<void> {
+    if (entries.length === 0) return;
+    await (tx ?? this.prisma).auditLog.createMany({ data: entries.map(toAuditRow) });
   }
 
   /** Read-only, paginated audit trail with exact-match filters (FR-30); newest first. */
@@ -72,6 +69,18 @@ export class AuditService {
     ]);
     return { items, total, page: query.page, pageSize: query.pageSize };
   }
+}
+
+/** One AuditLog insert row with redacted before/after. */
+function toAuditRow(entry: AuditEntry): Prisma.AuditLogCreateManyInput {
+  return {
+    userId: entry.userId,
+    action: entry.action,
+    entity: entry.entity,
+    entityId: entry.entityId,
+    before: toSafeJson(entry.before),
+    after: toSafeJson(entry.after),
+  };
 }
 
 function toSafeJson(

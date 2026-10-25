@@ -31,5 +31,6 @@ export interface AddAccessoryStockPayload {
 export interface AccessoryStockFilters {
   locationId?: number;
   categoryId?: number;
+  productModelId?: number;
   stockLevel?: StockLevel;
 }

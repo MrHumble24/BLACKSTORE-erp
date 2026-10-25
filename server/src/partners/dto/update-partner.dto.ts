@@ -8,13 +8,12 @@ export class UpdatePartnerDto {
   @MaxLength(120)
   name?: string;
 
-  @IsOptional()
+  // null clears the field (phone also clears on blank); undefined leaves it unchanged.
+  @ValidateIf((_o, v) => v !== undefined && v !== null)
   @IsString()
-  @IsNotEmpty()
   @MaxLength(40)
-  phone?: string;
+  phone?: string | null;
 
-  // null clears the field; undefined leaves it unchanged.
   @ValidateIf((_o, v) => v !== undefined && v !== null)
   @IsString()
   @MaxLength(120)

@@ -25,6 +25,7 @@ export function useAccessoryStock(filters: AccessoryStockFilters, page = 1, page
       };
       if (filters.locationId) params.locationId = String(filters.locationId);
       if (filters.categoryId) params.categoryId = String(filters.categoryId);
+      if (filters.productModelId) params.productModelId = String(filters.productModelId);
       if (filters.stockLevel && filters.stockLevel !== 'ALL') {
         params.stockLevel = filters.stockLevel;
       }

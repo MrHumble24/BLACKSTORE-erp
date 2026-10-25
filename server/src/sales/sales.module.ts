@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { CustomerNotificationsModule } from '../customer-notifications/customer-notifications.module';
 import { ItemsModule } from '../items/items.module';
 import { TelegramBotModule } from '../telegram-bot/telegram-bot.module';
+import { SaleConfirmationService } from './sale-confirmation.service';
 import { SalePaymentsService } from './sale-payments.service';
 import { SaleReturnsService } from './sale-returns.service';
 import { SalesController } from './sales.controller';
@@ -15,6 +16,6 @@ import { SalesService } from './sales.service';
 @Module({
   imports: [ItemsModule, TelegramBotModule, CustomerNotificationsModule],
   controllers: [SalesController],
-  providers: [SalesService, SalePaymentsService, SaleReturnsService],
+  providers: [SalesService, SalePaymentsService, SaleReturnsService, SaleConfirmationService],
 })
 export class SalesModule {}

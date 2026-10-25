@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, queryOptions } from '@tanstack/react-query';
 import { api } from '@/shared/api';
 import type {
   Item,
@@ -34,6 +34,10 @@ export function useItems(filters: ItemFilters, page = 1, pageSize = 20) {
       if (filters.condition) params.condition = filters.condition;
       if (filters.locationId) params.locationId = String(filters.locationId);
       if (filters.categoryId) params.categoryId = String(filters.categoryId);
+      if (filters.productModelId) params.productModelId = String(filters.productModelId);
+      if (filters.attributes && Object.keys(filters.attributes).length > 0) {
+        params.attributes = JSON.stringify(filters.attributes);
+      }
       if (filters.investorId) params.investorId = String(filters.investorId);
       if (filters.search) params.search = filters.search.trim();
       if (filters.isUnpriced) params.isUnpriced = 'true';
@@ -46,9 +50,9 @@ export function useItems(filters: ItemFilters, page = 1, pageSize = 20) {
   });
 }
 
-/** Fetch a single item by id. */
-export function useItem(id: number) {
-  return useQuery({
+/** Reusable query options for one item's detail (`GET /items/:id`); also used with `useQueries`. */
+export function itemQueryOptions(id: number) {
+  return queryOptions({
     queryKey: itemKeys.detail(id),
     queryFn: async () => {
       const { data } = await api.get<Item>(`/items/${id}`);
@@ -56,6 +60,11 @@ export function useItem(id: number) {
     },
     enabled: Boolean(id),
   });
+}
+
+/** Fetch a single item by id. */
+export function useItem(id: number) {
+  return useQuery(itemQueryOptions(id));
 }
 
 /** Mutation lookup hook used by the scan field to find an item by IMEI or Serial. */

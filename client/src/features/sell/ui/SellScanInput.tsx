@@ -54,6 +54,7 @@ function useScanLookup(
           code: trimmed,
           ownerName: item.investor.name,
           minSalePrice: item.minSalePrice,
+          purchasePrice: item.purchasePrice ?? null,
           unitPrice: item.salePrice ?? '',
           warrantyUntil: '',
         });

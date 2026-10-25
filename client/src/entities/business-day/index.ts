@@ -10,7 +10,11 @@ export { isMatch, variance } from './lib/variance';
 export { VarianceBadge } from './ui/VarianceBadge';
 export type {
   CurrentBusinessDay,
+  CashBreakdown,
+  DayEvent,
+  DayEventKind,
   OpenDaySaleRow,
+  PendingSaleRow,
   OpenDayReturnRow,
   OpenDayLedgerRow,
   DayCloseFlagInput,

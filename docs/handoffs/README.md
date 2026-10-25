@@ -25,6 +25,11 @@ One file per task handed to an agent. Paste the file's content as the first mess
 | F08 | English as a third language (client change request; worktree `.worktrees/F08-FE-01`) | NFR Language |
 | F27 | Expense confirmation: every expense waits for the Admin; only confirmed ones hit net profit and the daily close (client change request) | FR-27, FR-28, BR-5 |
 | F28 | Closed days history: list of closed business days on `/close-day`; Admin corrects counted cash/card and note later, expected values stay frozen (client change request) | F13, FR-30, BR-5 |
+| F29 | Partners page tabs: current partners vs a date-filtered transactions feed (handovers, sold, returned, payments); partner phone optional (client change request) | FR-26, W4, BR-8 |
+| F30 | Daily close: walk-in purchases leave the drawer; one feed of every event of the open day with drawer effects; Current / History tabs on `/close-day` (client change request) | F13, W5, FR-25, F27, F28 |
+| F31 | Sell page → consignment handover carries the scanned devices over instead of making the user scan them again (client change request, frontend only) | W4, FR-26 |
+| F32 | Walk-in payout confirmation: a walk-in purchase leaves the drawer only when the Admin confirms the payout (close-day page or device panel), on the day it is confirmed (client change request) | W5, FR-25, F13, F30 |
+| F33 | Sale confirmation: a sale's payments count in the drawer only once the Admin confirms the sale on the close-day page (or sale page); debt, profit and status unchanged (client change request) | F13, F30, F32, BR-6, BR-8 |
 
 ## Parallel tasks
 

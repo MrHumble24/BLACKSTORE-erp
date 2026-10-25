@@ -24,7 +24,7 @@ export function PartnerContactCard({ partner, onEdit }: PartnerContactCardProps)
       <CardContent className="p-4 space-y-2.5 text-xs">
         <div className="flex items-center gap-2 text-slate">
           <Phone className="h-3.5 w-3.5 shrink-0" />
-          <span className="font-mono text-ink">{partner.phone}</span>
+          <span className="font-mono text-ink">{partner.phone || '—'}</span>
         </div>
         <div className="flex items-center gap-2 text-slate">
           <MapPin className="h-3.5 w-3.5 shrink-0" />

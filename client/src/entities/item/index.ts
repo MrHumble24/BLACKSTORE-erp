@@ -1,5 +1,6 @@
 export * from './model/types';
 export * from './model/item.schema';
+export * from './model/attribute-options';
 export * from './lib/useScanErrorToast';
 export * from './api';
 export * from './ui/ItemStatusBadge';

@@ -1,6 +1,6 @@
 import { ItemCondition, ItemStatus } from '@prisma/client';
 import { Transform, Type } from 'class-transformer';
-import { IsBoolean, IsEnum, IsInt, IsOptional, IsString, MaxLength, Min } from 'class-validator';
+import { IsBoolean, IsEnum, IsInt, IsObject, IsOptional, IsString, MaxLength, Min } from 'class-validator';
 import { PaginationQueryDto } from '../../common/pagination-query.dto';
 
 export enum ItemSortBy {
@@ -38,6 +38,27 @@ export class QueryItemsDto extends PaginationQueryDto {
   @IsInt()
   @Min(1)
   categoryId?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  productModelId?: number;
+
+  @IsOptional()
+  @Transform(({ value }) => {
+    if (typeof value === 'object' && value !== null) return value;
+    if (typeof value === 'string') {
+      try {
+        return JSON.parse(value);
+      } catch {
+        return undefined;
+      }
+    }
+    return undefined;
+  })
+  @IsObject()
+  attributes?: Record<string, string | number>;
 
   @IsOptional()
   @Type(() => Number)

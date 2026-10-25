@@ -24,3 +24,5 @@ export * from './DateRangeInputs';
 export * from './sheet';
 export * from './popover';
 export * from './SearchableSelect';
+export * from './tabs';
+export * from './TotalCard';

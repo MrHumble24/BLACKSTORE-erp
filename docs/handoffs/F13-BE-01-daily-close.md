@@ -51,6 +51,7 @@ For the OPEN day, window = `createdAt >= openedAt AND createdAt < (closedAt or n
 - `expectedCash = Σ SalePayment.amount(method=CASH) + Σ LedgerEntry.amount(type=INCOME, inCash) −
   Σ LedgerEntry.amount(type=EXPENSE, inCash) − Σ Return.cashRefund`  (all within the window).
 - `expectedCard = Σ SalePayment.amount(method=CARD)`.
+- *F30 (Oct 2026): `expectedCash` also subtracts Σ walk-in purchase lines (`PurchaseLine.walkInSellerId` set, `unitPrice × quantity`, keyed on `createdAt`). See `F30-API-01-day-events.md`.*
 - (No card-refund path in v1 — returns are cash-back or debt-cancel only. Note it.)
 
 ## Endpoints

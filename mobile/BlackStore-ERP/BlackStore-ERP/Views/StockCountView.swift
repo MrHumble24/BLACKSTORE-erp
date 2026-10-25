@@ -28,7 +28,7 @@ public struct StockCountView: View {
         }
         .navigationTitle("Inventarizatsiya")
         .navigationBarTitleDisplayMode(.inline)
-        .sheet(isPresented: $isShowingScanner) {
+        .sheet(isPresented: $isShowingScanner, onDismiss: { feedback = nil }) {
             ScannerSheet(title: "Skanerlash", count: viewModel.recentScans.count, feedback: feedback) { code in
                 scan(code)
             }
@@ -82,7 +82,10 @@ public struct StockCountView: View {
             Section("Kod kiritish") {
                 manualEntryRow
                 Button { isShowingScanner = true } label: {
-                    Label("Kamera bilan skanerlash", systemImage: "camera.viewfinder")
+                    HStack(spacing: 8) {
+                        Image(systemName: "camera.viewfinder")
+                        Text("Kamera bilan skanerlash")
+                    }
                 }
                 if let feedback {
                     InlineMessage(text: "\(feedback.code): \(feedback.message)", isError: feedback.isError)

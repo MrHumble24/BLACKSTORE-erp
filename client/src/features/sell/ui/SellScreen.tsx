@@ -134,7 +134,9 @@ export function SellScreen() {
             onDueDateChange={form.setDueDate}
             canManagePrices={hasPermission('manage_prices')}
             hasPriceBelowMin={cart.hasPriceBelowMin}
+            hasInvalidPrice={cart.hasInvalidPrice}
             hasLines={cart.lines.length > 0}
+            deviceItemIds={cart.lines.flatMap((l) => (l.type === 'device' ? [l.itemId] : []))}
             isPending={form.isPending}
             onSubmit={() => form.setConfirmOpen(true)}
             error={form.error}

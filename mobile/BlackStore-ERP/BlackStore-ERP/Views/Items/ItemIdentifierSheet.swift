@@ -8,6 +8,7 @@ struct ItemIdentifierSheet: View {
     @State private var type: String
     @State private var value = ""
     @State private var isScanning = false
+    @State private var scannerFeedback: ScanFeedback? = nil
 
     init(viewModel: ItemDetailViewModel, types: [String]) {
         self.viewModel = viewModel
@@ -37,11 +38,28 @@ struct ItemIdentifierSheet: View {
             }
         }
         .formSheet(title: "Identifikator qo'shish", canSave: error == nil, isSaving: viewModel.isSaving, save: save)
-        .sheet(isPresented: $isScanning) {
-            ScannerSheet(title: "Kamerada skanerlash", onClose: { isScanning = false }) { code in
-                value = code
-                isScanning = false
-                HapticManager.scanSuccess()
+        .sheet(isPresented: $isScanning, onDismiss: { scannerFeedback = nil }) {
+            ScannerSheet(
+                title: "Kamerada skanerlash",
+                feedback: scannerFeedback,
+                onClose: {
+                    scannerFeedback = nil
+                    isScanning = false
+                }
+            ) { code in
+                let clean = code.trimmingCharacters(in: .whitespacesAndNewlines)
+                if let err = IdentifierRules.error(type: type, value: clean) {
+                    scannerFeedback = ScanFeedback(code: clean, message: err, isError: true)
+                    HapticManager.error()
+                } else {
+                    value = clean
+                    scannerFeedback = ScanFeedback(code: clean, message: "\(ItemText.identifierType(type)) qabul qilindi", isError: false)
+                    HapticManager.scanSuccess()
+                    Task {
+                        try? await Task.sleep(nanoseconds: 700_000_000)
+                        isScanning = false
+                    }
+                }
             }
         }
     }

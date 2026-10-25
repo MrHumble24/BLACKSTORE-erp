@@ -49,6 +49,12 @@ export interface SaleSummary {
   balance: string;
   dueDate: string | null;
   itemCount: number;
+  /** When the Admin confirmed the sale at the daily close (F33); null = still waiting. */
+  confirmedAt: string | null;
+  /** Who confirmed it; null for waiting sales and for sales migrated as already confirmed. */
+  confirmedBy: { id: number; name: string } | null;
+  /** True while the confirmation can still be undone (confirmed inside the open day). */
+  canUndo: boolean;
 }
 
 export interface Sale extends SaleSummary {
@@ -104,4 +110,6 @@ export interface SaleFilters {
   locationId?: number;
   from?: string;
   to?: string;
+  /** true = confirmed sales only, false = waiting only, undefined = all (F33). */
+  confirmed?: boolean;
 }
