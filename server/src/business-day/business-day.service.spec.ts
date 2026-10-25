@@ -1,5 +1,5 @@
-import { ConflictException } from '@nestjs/common';
-import { DayStatus } from '@prisma/client';
+import { BadRequestException, ConflictException, NotFoundException } from '@nestjs/common';
+import { DayStatus, Prisma } from '@prisma/client';
 import { AuditService } from '../audit/audit.service';
 import type { PublicUser } from '../common/auth-user';
 import { PrismaService } from '../prisma/prisma.service';
@@ -94,5 +94,88 @@ describe('BusinessDayService.close (single-open-day invariant)', () => {
       data: { businessDayId: 1, refType: 'RETURN', refId: 7, reason: 'fake return?' },
     });
     expect(audit.log).toHaveBeenCalledTimes(3); // close + auto-open + one flag
+  });
+});
+
+// A closed day with frozen expected values; counted/variance are what update() rewrites.
+const closedRow = (over: object = {}) => ({
+  id: 3,
+  openedAt: new Date('2026-10-23T00:00:00Z'),
+  closedAt: new Date('2026-10-23T20:00:00Z'),
+  status: DayStatus.CLOSED,
+  note: 'old',
+  closedBy: { id: 9, name: 'Owner' },
+  expectedCash: new Prisma.Decimal('1000'),
+  countedCash: new Prisma.Decimal('900'),
+  cashVariance: new Prisma.Decimal('-100'),
+  expectedCard: new Prisma.Decimal('500'),
+  countedCard: new Prisma.Decimal('500'),
+  cardVariance: new Prisma.Decimal('0'),
+  ...over,
+});
+
+describe('BusinessDayService.findClosed', () => {
+  it('lists CLOSED days newest first, paginated, as decimal strings', async () => {
+    const findMany = jest.fn().mockResolvedValue([closedRow()]);
+    const count = jest.fn().mockResolvedValue(1);
+    const prisma = { businessDay: { findMany, count } } as unknown as PrismaService;
+    const service = new BusinessDayService(prisma, {} as AuditService);
+
+    const page = await service.findClosed({ page: 2, pageSize: 10 });
+    expect(findMany.mock.calls[0][0]).toMatchObject({
+      where: { status: DayStatus.CLOSED },
+      orderBy: { closedAt: 'desc' },
+      skip: 10,
+      take: 10,
+    });
+    expect(count).toHaveBeenCalledWith({ where: { status: DayStatus.CLOSED } });
+    expect(page).toMatchObject({ total: 1, page: 2, pageSize: 10 });
+    expect(page.items[0]).toMatchObject({ expectedCash: '1000.00', cashVariance: '-100.00', closedAt: '2026-10-23T20:00:00.000Z' });
+  });
+});
+
+describe('BusinessDayService.update (closed day correction)', () => {
+  const buildUpdate = (found: unknown) => {
+    const update = jest.fn().mockImplementation(({ data }: { data: object }) => Promise.resolve(closedRow(data)));
+    const tx = { businessDay: { findUnique: jest.fn().mockResolvedValue(found), update } };
+    return { tx, ...build(tx as unknown as ReturnType<typeof buildTx>) };
+  };
+
+  it('recomputes both variances from the frozen expected values and audits before/after', async () => {
+    const { tx, service, audit } = buildUpdate(closedRow());
+    const res = await service.update(3, { countedCash: '1200', countedCard: '450.5', note: null }, actor);
+
+    const data = tx.businessDay.update.mock.calls[0][0].data;
+    expect(data.cashVariance.toFixed(2)).toBe('200.00'); // 1200 − 1000
+    expect(data.cardVariance.toFixed(2)).toBe('-49.50'); // 450.5 − 500
+    expect(data.note).toBeNull();
+    expect(data).not.toHaveProperty('expectedCash');
+    expect(res).toMatchObject({ countedCash: '1200.00', cashVariance: '200.00', expectedCash: '1000.00', note: null });
+    expect(audit.log).toHaveBeenCalledWith(
+      expect.objectContaining({ action: 'update', entity: 'BusinessDay', entityId: 3, before: closedRow(), after: expect.anything() }),
+      tx,
+    );
+  });
+
+  it('only touches the sent fields', async () => {
+    const { tx, service } = buildUpdate(closedRow());
+    await service.update(3, { note: 'fixed' }, actor);
+    expect(tx.businessDay.update.mock.calls[0][0].data).toEqual({ note: 'fixed' });
+  });
+
+  it('404 for an unknown day', async () => {
+    const { service } = buildUpdate(null);
+    await expect(service.update(3, { note: 'x' }, actor)).rejects.toThrow(NotFoundException);
+  });
+
+  it('409 for the OPEN day', async () => {
+    const { tx, service } = buildUpdate(closedRow({ status: DayStatus.OPEN }));
+    await expect(service.update(3, { countedCash: '1' }, actor)).rejects.toThrow(ConflictException);
+    expect(tx.businessDay.update).not.toHaveBeenCalled();
+  });
+
+  it('400 for an empty body', async () => {
+    const { service } = buildUpdate(closedRow());
+    await expect(service.update(3, {}, actor)).rejects.toThrow(BadRequestException);
   });
 });

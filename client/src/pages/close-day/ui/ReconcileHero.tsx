@@ -2,11 +2,9 @@ import { useTranslation } from 'react-i18next';
 import { Banknote, CreditCard } from 'lucide-react';
 import { Card, Input, Label } from '@/shared/ui';
 import { cn, money } from '@/shared/lib';
-import type { CurrentBusinessDay } from '@/entities/business-day';
+import { variance, VarianceBadge, type CurrentBusinessDay } from '@/entities/business-day';
 import type { CloseDayForm } from '../model/useCloseDayForm';
-import { variance } from '../model/useCloseDayForm';
 import { CARD, NUM } from './constants';
-import { VarianceBadge } from './VarianceBadge';
 
 interface CountCardProps {
   icon: React.ReactNode;

@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { cn, money } from '@/shared/lib';
-import { isMatch } from './constants';
+import { isMatch } from '../lib/variance';
 
 /**
  * Live reconciliation verdict: emerald "matches" at zero, destructive "short" when money is

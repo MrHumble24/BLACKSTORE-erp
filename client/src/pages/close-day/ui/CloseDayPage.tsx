@@ -2,10 +2,10 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button, Card } from '@/shared/ui';
 import { cn } from '@/shared/lib';
-import { useCurrentBusinessDay } from '@/entities/business-day';
-import { useCloseDayForm, variance } from '../model/useCloseDayForm';
+import { useCurrentBusinessDay, variance, VarianceBadge } from '@/entities/business-day';
+import { ClosedDaysTable } from '@/widgets/closed-days';
+import { useCloseDayForm } from '../model/useCloseDayForm';
 import { CARD } from './constants';
-import { VarianceBadge } from './VarianceBadge';
 import { ReconcileHero } from './ReconcileHero';
 import { ReviewSection } from './ReviewSection';
 import { CloseConfirmDialog } from './CloseConfirmDialog';
@@ -66,6 +66,11 @@ export function CloseDayPage() {
           />
         </>
       )}
+
+      <section className="space-y-3 pt-2">
+        <h2 className="font-sf-pro-display text-lg font-semibold tracking-tight text-ink">{t('closeDay.history')}</h2>
+        <ClosedDaysTable />
+      </section>
     </div>
   );
 }

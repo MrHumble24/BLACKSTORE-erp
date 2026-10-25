@@ -6,7 +6,3 @@ export const NUM = 'font-sf-pro-display tabular-nums tracking-[-0.02em] text-ink
 /** Card token shared by the close-day tiles (same hairline + radius as the report cards). */
 export const CARD = 'rounded-[28px] border border-hairline-silver/70 bg-card text-card-foreground';
 
-/** A difference under half a cent counts as a match (avoids float dust reading as a variance). */
-export function isMatch(diff: number | null): boolean {
-  return diff != null && Math.abs(diff) < 0.005;
-}

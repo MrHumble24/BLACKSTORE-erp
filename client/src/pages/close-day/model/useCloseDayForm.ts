@@ -1,20 +1,10 @@
 import { useMemo, useState } from 'react';
-import { isPositiveMoney, normalizeMoney } from '@/shared/lib';
+import { isPositiveMoney } from '@/shared/lib';
 import type { DayCloseFlagInput, FlagRefType } from '@/entities/business-day';
 
 /** Key a flag by its record so each sale/return/entry can be flagged at most once. */
 function flagKey(refType: FlagRefType, refId: number): string {
   return `${refType}:${refId}`;
-}
-
-/**
- * Variance = counted − expected, as a number; null while the count isn't a valid amount yet.
- * Blank is explicitly "not counted yet" — `isPositiveMoney('')` is true (Number('') === 0), so it
- * must be guarded, otherwise an empty field reads as a false "short" of the whole expected amount.
- */
-export function variance(counted: string, expected: string): number | null {
-  if (!counted.trim() || !isPositiveMoney(counted)) return null;
-  return Number(normalizeMoney(counted)) - Number(expected);
 }
 
 /**

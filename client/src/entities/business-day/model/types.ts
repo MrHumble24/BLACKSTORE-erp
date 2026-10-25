@@ -66,7 +66,7 @@ export interface ClosedDaySnapshot {
   id: number;
   openedAt: string;
   closedAt: string | null;
-  status: string;
+  status: 'OPEN' | 'CLOSED';
   note: string | null;
   closedBy: NamedRef | null;
   expectedCash: string | null;
@@ -75,4 +75,11 @@ export interface ClosedDaySnapshot {
   expectedCard: string | null;
   countedCard: string | null;
   cardVariance: string | null;
+}
+
+/** PATCH /business-day/:id body: corrects what was counted at close; expected values stay frozen. */
+export interface UpdateBusinessDayPayload {
+  countedCash?: string;
+  countedCard?: string;
+  note?: string | null;
 }

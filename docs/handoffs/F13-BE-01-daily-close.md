@@ -21,6 +21,9 @@ never float):
   Decimal?, countedCard Decimal?, cardVariance Decimal?, note String?, closedById Int?, closedBy
   User? }` with `enum DayStatus { OPEN, CLOSED }`. The expected/counted/variance values are an
   **immutable close-time snapshot** (BR-7 spirit) — frozen at close, never re-read as a live balance.
+  *F28 (Oct 2026, owner decision): the Admin may later correct `countedCash`, `countedCard` and `note`
+  of a CLOSED day via `PATCH /business-day/:id`; expected values stay frozen, variances are recomputed
+  server-side, every correction is audited (FR-30). See `F28-API-01-closed-days-history.md`.*
 - **Exactly one OPEN day** — add a partial unique index on `status` where `status = OPEN`
   (Prisma: `@@unique` won't do a partial; use a raw `CREATE UNIQUE INDEX ... WHERE status='OPEN'` in
   the migration). Seed the first OPEN `BusinessDay` in the migration (so there is always one).

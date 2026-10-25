@@ -25,3 +25,11 @@ export function formatDate(
 
 /** Date plus time (for the audit log timeline). */
 export const formatDateTime = (value: string | Date | null | undefined) => formatDate(value, true);
+
+/** Hours and minutes only, in the app language (same locale as formatDate). Returns '—' when missing. */
+export function formatTime(value: string | Date | null | undefined): string {
+  if (!value) return '—';
+  const date = typeof value === 'string' ? new Date(value) : value;
+  if (Number.isNaN(date.getTime())) return String(value);
+  return date.toLocaleTimeString(dateLocale(), { hour: '2-digit', minute: '2-digit' });
+}
