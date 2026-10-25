@@ -167,8 +167,8 @@ final class BulkAddViewModel: ObservableObject {
             return (BulkAddOutcome(device: device, status: .failed("Sozlamalar to'liq emas")), true)
         }
         do {
-            let _: Item = try await APIClient.shared.post("/items", body: body)
-            return (BulkAddOutcome(device: device, status: .added), false)
+            let item: Item = try await APIClient.shared.post("/items", body: body)
+            return (BulkAddOutcome(device: device, status: .added(itemId: item.id)), false)
         } catch {
             let status = (error as? APIError)?.statusCode
             let message = BulkAddFailure.message(statusCode: status, serverText: error.localizedDescription)

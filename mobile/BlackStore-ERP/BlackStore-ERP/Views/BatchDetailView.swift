@@ -17,6 +17,7 @@ public struct BatchDetailView: View {
     @State private var modelWarning: Bool = false
     @State private var feedback: ScanFeedback? = nil
     @State private var sessionScanCount: Int = 0
+    @State private var isShowingLabels: Bool = false
 
     public init(batchId: Int, parentVM: BatchesViewModel) {
         self.batchId = batchId
@@ -24,6 +25,8 @@ public struct BatchDetailView: View {
     }
 
     private var lines: [BatchLine] { detail?.lines ?? [] }
+    /// Labels are for devices only; accessory lines carry no item.
+    private var hasDevices: Bool { lines.contains { $0.item != nil } }
 
     public var body: some View {
         content
@@ -38,6 +41,17 @@ public struct BatchDetailView: View {
                 if selectedModel == nil { selectedModel = models.first }
             }
             .keyboardDoneBar()
+            // This screen is reached only from the receive_batch-gated batches list, so no extra check here.
+            .toolbar {
+                if hasDevices {
+                    ToolbarItem(placement: .primaryAction) {
+                        Button { isShowingLabels = true } label: {
+                            Label("Yorliqlar", systemImage: "printer")
+                        }
+                    }
+                }
+            }
+            .sheet(isPresented: $isShowingLabels) { BatchLabelsSheet(batchId: batchId) }
             .sheet(isPresented: $isShowingCamera) {
                 ScannerSheet(title: "IMEI skanerlash", count: sessionScanCount, feedback: feedback) { code in
                     submitDevice(code: code)

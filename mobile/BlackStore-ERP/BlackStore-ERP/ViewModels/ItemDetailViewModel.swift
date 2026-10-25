@@ -104,7 +104,7 @@ public final class ItemDetailViewModel: ObservableObject {
     public func generateSystemCode() async -> Bool {
         do {
             try await save("Tizim kodi yaratildi") {
-                let _: ItemIdentifier = try await APIClient.shared.post("/items/\(itemId)/system-code", body: [String: String]())
+                try await SystemCodeLabel.create(itemId: itemId)
             }
             return item?.hasSystemCode == true
         } catch {

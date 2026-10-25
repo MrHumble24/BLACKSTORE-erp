@@ -60,9 +60,14 @@ struct BulkAddResultsView: View {
         }
     }
 
+    /// An added row opens the new device's page; a failed row only shows why.
+    @ViewBuilder
     private func row(_ outcome: BulkAddOutcome) -> some View {
         switch outcome.status {
-        case .added: BulkCodeResultRow(code: codes(outcome.device), message: kinds(outcome.device), isError: false)
+        case .added(let itemId):
+            NavigationLink { ItemDetailView(itemId: itemId) } label: {
+                BulkCodeResultRow(code: codes(outcome.device), message: kinds(outcome.device), isError: false)
+            }
         case .failed(let message): BulkCodeResultRow(code: codes(outcome.device), message: message, isError: true)
         }
     }
