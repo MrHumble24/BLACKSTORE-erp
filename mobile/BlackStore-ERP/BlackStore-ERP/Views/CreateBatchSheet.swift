@@ -6,6 +6,7 @@ public struct CreateBatchSheet: View {
     @ObservedObject public var viewModel: BatchesViewModel
 
     @State private var selectedSupplier: Supplier? = nil
+    @State private var selectedInvestor: InvestorSummary? = nil
     @State private var selectedLocation: StoreLocation? = nil
     @State private var arrivalDate: Date = Date()
     @State private var trackingNumber: String = ""
@@ -16,7 +17,7 @@ public struct CreateBatchSheet: View {
     }
 
     private var isValid: Bool {
-        selectedSupplier != nil && selectedLocation != nil && !viewModel.isLoading
+        selectedSupplier != nil && selectedInvestor != nil && selectedLocation != nil && !viewModel.isLoading
     }
 
     public var body: some View {
@@ -55,6 +56,12 @@ public struct CreateBatchSheet: View {
                     Text(sup.name).tag(sup as Supplier?)
                 }
             }
+            Picker("Mulkdor / Investor", selection: $selectedInvestor) {
+                Text("Tanlanmagan").tag(nil as InvestorSummary?)
+                ForEach(viewModel.investors) { inv in
+                    Text("\(inv.name) (\(inv.code))").tag(inv as InvestorSummary?)
+                }
+            }
             Picker("Qabul ombori", selection: $selectedLocation) {
                 Text("Tanlanmagan").tag(nil as StoreLocation?)
                 ForEach(viewModel.locations) { loc in
@@ -64,7 +71,7 @@ public struct CreateBatchSheet: View {
         } header: {
             Text("Qayerdan va qayerga")
         } footer: {
-            Text("Mahsulot kimdan kelgani va qaysi omborga qabul qilinishi.")
+            Text("Yetkazib beruvchi, partiyani moliyalashtirgan investor va qabul ombori.")
         }
     }
 
@@ -78,22 +85,35 @@ public struct CreateBatchSheet: View {
         }
     }
 
-    /// Picks the first supplier and location so the common case needs no taps; clears stale errors.
+    /// Picks the first supplier, investor, and location so the common case needs no taps; clears stale errors.
     private func preselectDefaults() {
         viewModel.errorMessage = nil
         if selectedLocation == nil { selectedLocation = viewModel.locations.first }
         if selectedSupplier == nil { selectedSupplier = viewModel.suppliers.first }
+        if selectedInvestor == nil { selectedInvestor = viewModel.investors.first }
     }
 
     private func submitBatch() {
-        guard let sup = selectedSupplier, let loc = selectedLocation else { return }
+        guard let sup = selectedSupplier, let inv = selectedInvestor, let loc = selectedLocation else { return }
+
+        var finalNote: String? = nil
+        let cleanNote = note.trimmingCharacters(in: .whitespacesAndNewlines)
+        let cleanTrack = trackingNumber.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !cleanNote.isEmpty && !cleanTrack.isEmpty {
+            finalNote = "\(cleanNote) (Trek: \(cleanTrack))"
+        } else if !cleanTrack.isEmpty {
+            finalNote = "Trek: \(cleanTrack)"
+        } else if !cleanNote.isEmpty {
+            finalNote = cleanNote
+        }
+
         Task {
             let res = await viewModel.createBatch(
                 supplierId: sup.id,
+                investorId: inv.id,
                 locationId: loc.id,
                 arrivalDate: arrivalDate,
-                trackingNumber: trackingNumber,
-                note: note
+                note: finalNote
             )
             if res != nil {
                 HapticManager.success()

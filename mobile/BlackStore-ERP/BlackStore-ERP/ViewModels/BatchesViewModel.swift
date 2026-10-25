@@ -6,6 +6,7 @@ import Combine
 public final class BatchesViewModel: ObservableObject {
     @Published public var batches: [BatchSummary] = []
     @Published public var suppliers: [Supplier] = []
+    @Published public var investors: [InvestorSummary] = []
     @Published public var locations: [StoreLocation] = []
     @Published public var models: [ProductModel] = []
     @Published public var isLoading: Bool = false
@@ -14,14 +15,16 @@ public final class BatchesViewModel: ObservableObject {
 
     public init() {}
 
-    /// Loads initial reference data: suppliers, locations, models.
+    /// Loads initial reference data: suppliers, investors, locations, models.
     public func loadPrerequisites() async {
         async let fetchSuppliers: [Supplier] = (try? await APIClient.shared.get("/suppliers?all=true")) ?? []
+        async let fetchInvestors: [InvestorSummary] = (try? await APIClient.shared.get("/investors")) ?? []
         async let fetchLocations: [StoreLocation] = (try? await APIClient.shared.get("/locations")) ?? []
         async let fetchModels: [ProductModel] = (try? await APIClient.shared.get("/product-models")) ?? []
 
-        let (sups, locs, mods) = await (fetchSuppliers, fetchLocations, fetchModels)
+        let (sups, invs, locs, mods) = await (fetchSuppliers, fetchInvestors, fetchLocations, fetchModels)
         self.suppliers = sups
+        self.investors = invs
         self.locations = locs
         self.models = mods
     }
@@ -31,8 +34,12 @@ public final class BatchesViewModel: ObservableObject {
         isLoading = true
         errorMessage = nil
         do {
-            let list: [BatchSummary] = try await APIClient.shared.get("/batches?page=1&pageSize=50")
-            self.batches = list
+            if let response: BatchListResponse = try? await APIClient.shared.get("/batches?page=1&pageSize=50") {
+                self.batches = response.items
+            } else {
+                let list: [BatchSummary] = try await APIClient.shared.get("/batches?page=1&pageSize=50")
+                self.batches = list
+            }
             self.isLoading = false
         } catch {
             self.errorMessage = error.localizedDescription
@@ -45,14 +52,14 @@ public final class BatchesViewModel: ObservableObject {
         try await APIClient.shared.get("/batches/\(id)")
     }
 
-    /// Creates a new supplier batch header.
+    /// Creates a new supplier batch header (FR-16).
     public func createBatch(
         supplierId: Int,
+        investorId: Int,
         locationId: Int,
         arrivalDate: Date = Date(),
-        trackingNumber: String? = nil,
         note: String? = nil
-    ) async -> BatchDetail? {
+    ) async -> BatchSummary? {
         isLoading = true
         errorMessage = nil
 
@@ -62,14 +69,14 @@ public final class BatchesViewModel: ObservableObject {
 
         let payload = CreateBatchPayload(
             supplierId: supplierId,
+            investorId: investorId,
             locationId: locationId,
             arrivalDate: dateStr,
-            trackingNumber: trackingNumber?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false ? trackingNumber : nil,
             note: note?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false ? note : nil
         )
 
         do {
-            let created: BatchDetail = try await APIClient.shared.post("/batches", body: payload)
+            let created: BatchSummary = try await APIClient.shared.post("/batches", body: payload)
             self.successMessage = "Partiya muvaffaqiyatli ochildi"
             self.isLoading = false
             await fetchBatches()

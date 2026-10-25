@@ -1,47 +1,37 @@
 import Foundation
 
-/// Customer representation in BLACKSTORE CRM.
-nonisolated public struct Customer: Codable, Identifiable, Sendable {
+/// Customer record for sales and debt tracking (PRD FR-21).
+public struct CustomerItem: Codable, Identifiable, Hashable {
     public let id: Int
     public let name: String
     public let phone: String
-    public let balance: String?
-    public let debtBalance: String?
     public let note: String?
+    public let createdAt: String?
+    public let debtBalance: String?
 
-    public init(
-        id: Int,
-        name: String,
-        phone: String,
-        balance: String? = nil,
-        debtBalance: String? = nil,
-        note: String? = nil
-    ) {
-        self.id = id
-        self.name = name
-        self.phone = phone
-        self.balance = balance
-        self.debtBalance = debtBalance
-        self.note = note
+    public var debtBalanceDouble: Double {
+        Double(debtBalance ?? "0") ?? 0
     }
 
-    /// Formatted debt balance if customer owes money.
+    public var hasDebt: Bool {
+        debtBalanceDouble > 0
+    }
+
     public var displayDebt: String? {
-        guard let debt = debtBalance, let val = Double(debt), val > 0 else { return nil }
-        return APIConfig.formatMoney(val)
+        hasDebt ? APIConfig.formatMoney(debtBalanceDouble) : nil
     }
 }
 
-/// Paginated response container from GET /customers.
-nonisolated public struct CustomerListResponse: Codable, Sendable {
-    public let items: [Customer]
-    public let total: Int
-    public let page: Int
-    public let pageSize: Int
+public typealias Customer = CustomerItem
+
+/// Telegram invite link response (F23).
+public struct TelegramInviteLinkResponse: Codable {
+    public let link: String?
+    public let linked: Bool
 }
 
-/// Detailed customer representation returned by GET /customers/:id.
-nonisolated public struct CustomerDetail: Codable, Identifiable, Sendable {
+/// Detailed customer record including computed debt and Telegram link status.
+public struct CustomerDetail: Codable, Identifiable {
     public let id: Int
     public let name: String
     public let phone: String
@@ -50,21 +40,38 @@ nonisolated public struct CustomerDetail: Codable, Identifiable, Sendable {
     public let debt: String?
     public let telegramLinked: Bool?
     public let telegramLinkedAt: String?
+    public let telegramLinkedBy: String?
 
-    public var displayDebt: String {
-        guard let d = debt, let val = Double(d), val > 0 else { return "$0.00" }
-        return APIConfig.formatMoney(val)
+    public var debtDouble: Double {
+        Double(debt ?? "0") ?? 0
     }
 
     public var hasDebt: Bool {
-        guard let d = debt, let val = Double(d) else { return false }
-        return val > 0.01
+        debtDouble > 0
+    }
+
+    public var displayDebt: String {
+        APIConfig.formatMoney(debtDouble)
     }
 }
 
-/// Response returned by POST /customers/:id/telegram-link (PRD F23).
-nonisolated public struct TelegramInviteLinkResponse: Codable, Sendable {
-    public let link: String
+/// Paginated customers response container.
+public struct CustomerListResponse: Codable {
+    public let items: [CustomerItem]
+    public let total: Int
+    public let page: Int
+    public let pageSize: Int
 }
 
+/// Payload for creating or updating a customer.
+public struct CreateCustomerPayload: Codable {
+    public let name: String
+    public let phone: String
+    public let note: String?
 
+    public init(name: String, phone: String, note: String? = nil) {
+        self.name = name
+        self.phone = phone
+        self.note = note
+    }
+}

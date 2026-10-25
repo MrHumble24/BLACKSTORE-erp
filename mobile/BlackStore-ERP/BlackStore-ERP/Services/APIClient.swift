@@ -1,10 +1,28 @@
 import Foundation
 
-/// Structured API error model matching NestJS error response.
+/// Structured API error model matching NestJS error response (supports both array and single string message).
 public struct APIErrorResponse: Codable, Sendable {
-    public let message: [String]?
+    public let message: String?
     public let statusCode: Int?
     public let error: String?
+
+    enum CodingKeys: String, CodingKey {
+        case message, statusCode, error
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        statusCode = try? container.decode(Int.self, forKey: .statusCode)
+        error = try? container.decode(String.self, forKey: .error)
+
+        if let stringMsg = try? container.decode(String.self, forKey: .message) {
+            message = stringMsg
+        } else if let arrayMsg = try? container.decode([String].self, forKey: .message) {
+            message = arrayMsg.joined(separator: ", ")
+        } else {
+            message = nil
+        }
+    }
 }
 
 public enum APIError: LocalizedError, Sendable {
@@ -111,7 +129,7 @@ public final class APIClient: Sendable {
 
         guard (200...299).contains(response.statusCode) else {
             if let errResp = try? JSONDecoder().decode(APIErrorResponse.self, from: data) {
-                let msg = errResp.message?.joined(separator: ", ") ?? errResp.error ?? "Xatolik: \(response.statusCode)"
+                let msg = errResp.message ?? errResp.error ?? "Xatolik: \(response.statusCode)"
                 throw APIError.serverError(message: msg, statusCode: response.statusCode)
             }
             throw APIError.serverError(message: "Server xatosi: \(response.statusCode)", statusCode: response.statusCode)

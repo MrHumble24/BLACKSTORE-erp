@@ -31,7 +31,7 @@ public struct ConsignmentDetailView: View {
             ) { item in
                 saleDialogButtons(for: item)
             } message: { item in
-                Text("\(item.item.productModel.name) qanday to'landi?")
+                Text("\(item.item.displayTitle) qanday to'landi?")
             }
             .confirmationDialog(
                 "Omborga qaytarish",
@@ -44,7 +44,7 @@ public struct ConsignmentDetailView: View {
                 }
                 Button("Bekor qilish", role: .cancel) {}
             } message: { item in
-                Text("\(item.item.productModel.name) ni omborga qaytaramizmi?")
+                Text("\(item.item.displayTitle) ni omborga qaytaramizmi?")
             }
             .alert("Xatolik", isPresented: Binding(isPresent: $actionError), presenting: actionError) { _ in
                 Button("OK", role: .cancel) {}
@@ -152,7 +152,7 @@ private struct ConsignmentItemRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(alignment: .firstTextBaseline) {
-                Text(item.item.productModel.name).font(.headline)
+                Text(item.item.displayTitle).font(.headline)
                 Spacer()
                 StatusBadge(text: item.overdue ? "Muddati o'tgan" : item.status.title, tint: statusColor)
             }

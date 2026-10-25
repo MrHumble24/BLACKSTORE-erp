@@ -19,8 +19,11 @@ public struct ProfileView: View {
                     Section { ProfileUserCard(user: user) }
                 }
                 cashSection
+                contactsSection
                 stockSection
                 financeSection
+                catalogSection
+                adminSection
                 serverSection
                 #if DEBUG
                 developerSection
@@ -127,6 +130,65 @@ public struct ProfileView: View {
 
     private var trimmedServerURL: String {
         serverURL.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    /// Customers, suppliers and partner shops (other session's links, kept on merge).
+    private var contactsSection: some View {
+        Section("Kontragentlar va Nasiyalar") {
+            NavigationLink { CustomersView() } label: {
+                Label("Mijozlar & Nasiyalar", systemImage: "person.2.crop.square.stack.fill")
+            }
+            if authViewModel.currentUser?.hasPermission("manage_suppliers") == true {
+                NavigationLink { SuppliersView() } label: {
+                    Label("Yetkazib beruvchilar (Dubay/Gonkong)", systemImage: "airplane.departure")
+                }
+            }
+            NavigationLink { PartnersView() } label: {
+                Label("Hamkor do'konlar (Katalog)", systemImage: "storefront.fill")
+            }
+        }
+    }
+
+    /// Catalog settings, for manage_catalog only.
+    @ViewBuilder
+    private var catalogSection: some View {
+        if authViewModel.currentUser?.hasPermission("manage_catalog") == true {
+            Section("Katalog va sozlamalar") {
+                NavigationLink { LocationsManagementView() } label: {
+                    Label("Filiallar & Omborlar", systemImage: "building.2.fill")
+                }
+                NavigationLink { CategoriesManagementView() } label: {
+                    Label("Kategoriyalar", systemImage: "square.grid.2x2.fill")
+                }
+                NavigationLink { ReceiptSettingsView() } label: {
+                    Label("Chek sozlamalari", systemImage: "printer.fill")
+                }
+            }
+        }
+    }
+
+    /// System administration: users, audit log, backups, each by permission.
+    @ViewBuilder
+    private var adminSection: some View {
+        if let user = authViewModel.currentUser, user.hasPermission("manage_users") || user.hasPermission("view_audit_log") || user.hasPermission("manage_backups") {
+            Section("Tizim ma'muriyati") {
+                if user.hasPermission("manage_users") {
+                    NavigationLink { UsersManagementView() } label: {
+                        Label("Xodimlar boshqaruvi", systemImage: "person.3.fill")
+                    }
+                }
+                if user.hasPermission("view_audit_log") {
+                    NavigationLink { AuditLogView() } label: {
+                        Label("Audit jurnali (Xavfsizlik)", systemImage: "shield.lefthalf.filled")
+                    }
+                }
+                if user.hasPermission("manage_backups") {
+                    NavigationLink { BackupsView() } label: {
+                        Label("Zaxira nusxalari (Backups)", systemImage: "arrow.clockwise.icloud.fill")
+                    }
+                }
+            }
+        }
     }
 
     /// Server address field with Save, enabled only when the address changed.

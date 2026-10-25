@@ -54,6 +54,25 @@ nonisolated public struct StockCount: Codable, Identifiable, Sendable {
     }
 }
 
+/// Summary projection for paginated stock counts list.
+nonisolated public struct StockCountSummary: Codable, Identifiable, Sendable {
+    public let id: Int
+    public let startedAt: String?
+    public let finishedAt: String?
+    public let location: ItemLocation?
+    public let scannedCount: Int?
+
+    public var isFinished: Bool {
+        finishedAt != nil
+    }
+}
+
+/// Paginated stock count list container.
+nonisolated public struct StockCountListResponse: Codable, Sendable {
+    public let items: [StockCountSummary]
+    public let total: Int
+}
+
 /// Result returned by POST /stock-counts/:id/scans.
 nonisolated public struct StockCountScanResponse: Codable, Sendable {
     public let code: String

@@ -47,12 +47,29 @@ nonisolated public struct DailyTrend: Codable, Identifiable {
     public var profitDouble: Double { Double(profit) ?? 0 }
 }
 
+/// Item identifier projection within profit reports.
+nonisolated public struct ProfitReportItemSummary: Codable, Identifiable, Sendable {
+    public let id: Int
+    public let code: String?
+    public let model: String?
+
+    public init(id: Int, code: String? = nil, model: String? = nil) {
+        self.id = id
+        self.code = code
+        self.model = model
+    }
+
+    public var displayCode: String {
+        code ?? model ?? "#\(id)"
+    }
+}
+
 /// Flagged item with profit margin lower than target threshold.
 nonisolated public struct LowMarginItem: Codable, Identifiable {
     public var id: String { "\(saleId)-\(saleItemId)" }
     public let saleId: Int
     public let saleItemId: Int
-    public let item: String?
+    public let item: ProfitReportItemSummary?
     public let productModel: String
     public let salePrice: String
     public let profit: String
@@ -67,7 +84,7 @@ nonisolated public struct ProfitReportLine: Codable, Identifiable {
     public let saleItemId: Int
     public let returnId: Int?
     public let profitDate: String
-    public let item: String?
+    public let item: ProfitReportItemSummary?
     public let productModel: String
     public let quantity: Int
     public let salePrice: String

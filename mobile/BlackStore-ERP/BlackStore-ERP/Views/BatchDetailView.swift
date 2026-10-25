@@ -57,13 +57,16 @@ public struct BatchDetailView: View {
 
     private func headerSection(for d: BatchDetail) -> some View {
         Section("Partiya ma'lumotlari") {
-            LabeledContent("Yetkazib beruvchi", value: d.supplier.name)
-            LabeledContent("Qabul ombori", value: d.location.name)
+            LabeledContent("Yetkazib beruvchi", value: d.supplier?.name ?? "—")
+            if let inv = d.investor {
+                LabeledContent("Mulkdor / Investor", value: "\(inv.name) (\(inv.code))")
+            }
+            LabeledContent("Qabul ombori", value: d.location?.name ?? "—")
             if let date = d.arrivalDate {
                 LabeledContent("Yetib kelgan sana", value: date)
             }
-            if let track = d.trackingNumber {
-                LabeledContent("Trek raqam", value: track)
+            if let note = d.note, !note.isEmpty {
+                LabeledContent("Izoh", value: note)
             }
         }
     }

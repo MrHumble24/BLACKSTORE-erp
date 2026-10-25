@@ -1,12 +1,32 @@
 import Foundation
 
-/// Summary record for investor list (FR-9, FR-10).
-nonisolated public struct InvestorSummary: Codable, Identifiable, Hashable {
+nonisolated public struct InvestorSummary: Codable, Identifiable, Hashable, Sendable {
     public let id: Int
     public let name: String
     public let code: String
     public let isOwn: Bool
     public let isActive: Bool
+
+    enum CodingKeys: String, CodingKey {
+        case id, name, code, isOwn, isActive
+    }
+
+    public init(id: Int, name: String, code: String, isOwn: Bool = false, isActive: Bool = true) {
+        self.id = id
+        self.name = name
+        self.code = code
+        self.isOwn = isOwn
+        self.isActive = isActive
+    }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(Int.self, forKey: .id)
+        name = try c.decode(String.self, forKey: .name)
+        code = (try? c.decode(String.self, forKey: .code)) ?? ""
+        isOwn = (try? c.decode(Bool.self, forKey: .isOwn)) ?? false
+        isActive = (try? c.decode(Bool.self, forKey: .isActive)) ?? true
+    }
 }
 
 /// Detailed money figures (F25, F26) available to managers with view_cost.

@@ -48,8 +48,8 @@ public struct BatchesView: View {
         let query = searchText.trimmingCharacters(in: .whitespaces)
         guard !query.isEmpty else { return viewModel.batches }
         return viewModel.batches.filter {
-            $0.supplier.name.localizedCaseInsensitiveContains(query)
-                || $0.location.name.localizedCaseInsensitiveContains(query)
+            ($0.supplier?.name ?? "").localizedCaseInsensitiveContains(query)
+                || ($0.location?.name ?? "").localizedCaseInsensitiveContains(query)
                 || ($0.trackingNumber ?? "").localizedCaseInsensitiveContains(query)
         }
     }
@@ -99,9 +99,14 @@ private struct BatchRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(alignment: .firstTextBaseline) {
-                Text(batch.supplier.name).font(.headline)
+                Text(batch.supplier?.name ?? "Yetkazib beruvchi").font(.headline)
                 Spacer()
-                StatusBadge(text: batch.location.name)
+                StatusBadge(text: batch.location?.name ?? "Filial")
+            }
+            if let inv = batch.investor {
+                Text("Mulkdor: \(inv.name) (\(inv.code))")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
             HStack {
                 if let date = batch.arrivalDate {
@@ -114,10 +119,11 @@ private struct BatchRow: View {
             }
             .font(.subheadline)
             .foregroundStyle(.secondary)
-            if let track = batch.trackingNumber, !track.isEmpty {
-                Label("Trek: \(track)", systemImage: "number")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+            if let note = batch.note, !note.isEmpty {
+                Text(note)
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+                    .lineLimit(1)
             }
         }
         .padding(.vertical, 4)

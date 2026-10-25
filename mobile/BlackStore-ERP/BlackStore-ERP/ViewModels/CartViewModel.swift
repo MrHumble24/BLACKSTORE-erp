@@ -89,7 +89,7 @@ public final class CartViewModel: ObservableObject {
             lines.append(line)
             isScanning = false
             HapticManager.scanSuccess()
-            successMessage = "\(item.productModel.name) qo'shildi."
+            successMessage = "\(item.displayTitle) qo'shildi."
             return true
         } catch {
             isScanning = false
@@ -107,7 +107,7 @@ public final class CartViewModel: ObservableObject {
             isDevice: true,
             itemId: item.id,
             productModelId: item.productModel.id,
-            name: item.productModel.name,
+            name: item.displayTitle,
             identifierDisplay: item.primaryIdentifier,
             unitPrice: price,
             minPrice: minPrice,

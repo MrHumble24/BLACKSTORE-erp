@@ -26,7 +26,27 @@ public final class StockCountViewModel: ObservableObject {
         }
     }
 
-    /// Starts a new physical audit session for the selected location.
+    /// Checks for an existing open audit at the given location and resumes it if found.
+    public func checkAndResumeActiveAudit(for locationId: Int) async -> Bool {
+        do {
+            let res: StockCountListResponse = try await APIClient.shared.get("/stock-counts?locationId=\(locationId)&page=1&pageSize=10")
+            if let open = res.items.first(where: { !$0.isFinished }) {
+                let fullCount: StockCount = try await APIClient.shared.get("/stock-counts/\(open.id)")
+                self.activeCount = fullCount
+                self.recentScans = []
+                self.errorMessage = nil
+                HapticManager.success()
+                return true
+            }
+        } catch {
+            #if DEBUG
+            print("[StockCountViewModel] Could not check active audits: \(error)")
+            #endif
+        }
+        return false
+    }
+
+    /// Starts a new physical audit session for the selected location (auto-resumes on 409 conflict).
     public func startCount() async -> Bool {
         guard let loc = selectedLocation else {
             errorMessage = "Iltimos, filialni tanlang."
@@ -47,6 +67,18 @@ public final class StockCountViewModel: ObservableObject {
             HapticManager.success()
             return true
         } catch {
+            // On 409 Conflict (location already has an open audit), wisely resume that active audit!
+            let desc = error.localizedDescription.lowercased()
+            let isConflict = (error as? APIError)?.statusCode == 409 || desc.contains("409") || desc.contains("already has an open")
+
+            if isConflict {
+                let resumed = await checkAndResumeActiveAudit(for: loc.id)
+                if resumed {
+                    self.isLoading = false
+                    return true
+                }
+            }
+
             self.isLoading = false
             self.errorMessage = error.localizedDescription
             HapticManager.error()

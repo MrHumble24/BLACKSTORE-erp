@@ -15,23 +15,32 @@ public final class CustomerDetailViewModel: ObservableObject {
         self.customerId = customerId
     }
 
-    /// Loads customer details and purchases in parallel.
+    /// Loads customer details and purchases in parallel with independent failure isolation.
     public func loadData() async {
         isLoading = true
         errorMessage = nil
 
-        async let fetchDetail: CustomerDetail = APIClient.shared.get("/customers/\(customerId)")
-        async let fetchSales: SaleListResponse = APIClient.shared.get("/sales?customerId=\(customerId)&page=1&pageSize=50")
+        async let detailTask: CustomerDetail? = try? await APIClient.shared.get("/customers/\(customerId)")
+        async let salesTask: SaleListResponse? = try? await APIClient.shared.get("/sales?customerId=\(customerId)&page=1&pageSize=50")
 
-        do {
-            let (detail, salesList) = try await (fetchDetail, fetchSales)
+        let (detail, salesList) = await (detailTask, salesTask)
+
+        if let detail = detail {
             self.customer = detail
-            self.sales = salesList.items
-            self.isLoading = false
-        } catch {
-            self.isLoading = false
-            self.errorMessage = error.localizedDescription
+        } else {
+            // If try? failed, run explicitly to capture error for the user
+            do {
+                self.customer = try await APIClient.shared.get("/customers/\(customerId)")
+            } catch {
+                self.errorMessage = "Mijoz ma'lumotlarini yuklab bo'lmadi: \(error.localizedDescription)"
+            }
         }
+
+        if let salesList = salesList {
+            self.sales = salesList.items
+        }
+
+        self.isLoading = false
     }
 
     /// Generates or retrieves the customer's Telegram deep link via POST /customers/:id/telegram-link (PRD F23).
