@@ -1,39 +1,18 @@
 import SwiftUI
 
-/// Daily expense and petty cash ledger view (FR-27).
+/// Daily expenses and other income: net total on top, then a plain statement (FR-27).
 public struct LedgerView: View {
     @StateObject private var viewModel = LedgerViewModel()
     @State private var isShowingAddSheet: Bool = false
+    @State private var searchText = ""
 
     public init() {}
 
     public var body: some View {
-        NavigationStack {
-            VStack(spacing: 0) {
-                if let totals = viewModel.totals {
-                    totalsStrip(totals: totals)
-                }
-
-                typeFilterPicker
-
-                if let err = viewModel.errorMessage {
-                    bannerView(text: err, color: .red)
-                }
-                if let succ = viewModel.successMessage {
-                    bannerView(text: succ, color: .green)
-                }
-
-                if viewModel.isLoading && viewModel.entries.isEmpty {
-                    ProgressView().padding(.top, 40)
-                    Spacer()
-                } else if viewModel.entries.isEmpty {
-                    emptyPlaceholder
-                } else {
-                    entriesList
-                }
-            }
+        content
             .navigationTitle("Xarajatlar & Kassa")
             .navigationBarTitleDisplayMode(.inline)
+            .searchable(text: $searchText, prompt: "Kategoriya yoki izoh")
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
                     Button {
@@ -43,45 +22,68 @@ public struct LedgerView: View {
                     }
                 }
             }
-            .task {
-                await viewModel.fetchCategories()
-                await viewModel.fetchEntries()
-            }
-            .refreshable {
-                await viewModel.fetchCategories()
-                await viewModel.fetchEntries(type: viewModel.selectedTypeFilter)
-            }
+            .task(id: viewModel.selectedTypeFilter) { await reload() }
             .sheet(isPresented: $isShowingAddSheet) {
                 AddExpenseSheet(viewModel: viewModel)
             }
+    }
+
+    private func reload() async {
+        await viewModel.fetchCategories()
+        await viewModel.fetchEntries(type: viewModel.selectedTypeFilter)
+        // A newer filter change cancelled this load; drop its "cancelled" error.
+        if Task.isCancelled { viewModel.errorMessage = nil }
+    }
+
+    /// Entries matching the search by category or note.
+    private var filtered: [LedgerEntry] {
+        let q = searchText.trimmingCharacters(in: .whitespaces)
+        guard !q.isEmpty else { return viewModel.entries }
+        return viewModel.entries.filter {
+            $0.category.localizedCaseInsensitiveContains(q) || ($0.note ?? "").localizedCaseInsensitiveContains(q)
         }
     }
 
-    private func totalsStrip(totals: LedgerTotals) -> some View {
-        HStack(spacing: 12) {
-            totalCard(title: "Chiqim", amount: totals.expense, color: .red)
-            totalCard(title: "Boshqa kirim", amount: totals.income, color: .green)
-            totalCard(title: "Sof farq", amount: totals.net, color: .primary)
+    @ViewBuilder
+    private var content: some View {
+        if viewModel.isLoading && viewModel.entries.isEmpty && viewModel.totals == nil {
+            PeopleLoadingState()
+        } else if let err = viewModel.errorMessage, viewModel.entries.isEmpty, viewModel.totals == nil {
+            PeopleErrorState(message: err) { await reload() }
+        } else {
+            List {
+                if let totals = viewModel.totals { totalsHeader(totals) }
+                messagesSection
+                Section { typeFilterPicker }
+                entriesSection
+            }
+            .listStyle(.insetGrouped)
+            .refreshable { await reload() }
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 8)
-        .background(Color(.secondarySystemBackground))
     }
 
-    private func totalCard(title: String, amount: String, color: Color) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Text(title)
-                .font(.caption2)
-                .foregroundStyle(.secondary)
-            Text(APIConfig.formatMoney(amount))
-                .font(.subheadline)
-                .fontWeight(.bold)
-                .foregroundStyle(color)
+    private func totalsHeader(_ totals: LedgerTotals) -> some View {
+        let net = Double(totals.net) ?? 0
+        return PeopleAmountHeader(title: "Sof farq", amount: net, tint: peopleSignTint(net)) {
+            HStack(spacing: 16) {
+                Label(APIConfig.formatMoney(totals.expense), systemImage: "arrow.down.right")
+                    .foregroundStyle(.red)
+                Label(APIConfig.formatMoney(totals.income), systemImage: "arrow.up.left")
+                    .foregroundStyle(.green)
+            }
+            .font(.footnote.weight(.semibold))
+            .monospacedDigit()
+            .accessibilityLabel("Chiqim \(APIConfig.formatMoney(totals.expense)), kirim \(APIConfig.formatMoney(totals.income))")
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(8)
-        .background(Color(.systemBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 8))
+    }
+
+    @ViewBuilder
+    private var messagesSection: some View {
+        if let err = viewModel.errorMessage {
+            PeopleInlineError(message: err)
+        } else if let succ = viewModel.successMessage {
+            Section { Label(succ, systemImage: "checkmark.circle.fill").foregroundStyle(.green).font(.footnote) }
+        }
     }
 
     private var typeFilterPicker: some View {
@@ -91,99 +93,44 @@ public struct LedgerView: View {
             Text("Kirimlar").tag(LedgerType.income as LedgerType?)
         }
         .pickerStyle(.segmented)
-        .padding(.horizontal, 16)
-        .padding(.vertical, 8)
-        .onChange(of: viewModel.selectedTypeFilter) { _, newType in
-            Task { await viewModel.fetchEntries(type: newType) }
-        }
+        .listRowBackground(Color.clear)
+        .listRowInsets(EdgeInsets())
     }
 
-    private var entriesList: some View {
-        List {
-            ForEach(viewModel.entries) { entry in
-                entryRow(for: entry)
+    @ViewBuilder
+    private var entriesSection: some View {
+        if viewModel.entries.isEmpty {
+            ContentUnavailableView {
+                Label("Yozuvlar mavjud emas", systemImage: "tray")
+            } description: {
+                Text("Kunlik xarajat yoki qo'shimcha daromadlarni kiriting.")
+            } actions: {
+                Button("Yangi kiritish") { isShowingAddSheet = true }
+                    .buttonStyle(.borderedProminent)
             }
-        }
-        .listStyle(.insetGrouped)
-    }
-
-    private func entryRow(for entry: LedgerEntry) -> some View {
-        HStack(spacing: 12) {
-            Image(systemName: entry.isExpense ? "arrow.down.right.circle.fill" : "arrow.up.left.circle.fill")
-                .font(.title2)
-                .foregroundStyle(entry.isExpense ? .red : .green)
-
-            VStack(alignment: .leading, spacing: 3) {
-                Text(entry.category)
-                    .font(.headline)
-
-                if let note = entry.note, !note.isEmpty {
-                    Text(note)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-
-                HStack {
-                    Text(formattedDate(entry.date))
-                        .font(.caption2)
-                        .foregroundStyle(.tertiary)
-
-                    if entry.inCash == true {
-                        Text("Naqd")
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
-                            .padding(.horizontal, 4)
-                            .padding(.vertical, 1)
-                            .background(Color(.tertiarySystemFill))
-                            .clipShape(RoundedRectangle(cornerRadius: 4))
-                    }
+            .listRowBackground(Color.clear)
+        } else if filtered.isEmpty {
+            ContentUnavailableView.search(text: searchText)
+                .listRowBackground(Color.clear)
+        } else {
+            Section("Yozuvlar") {
+                ForEach(filtered) { entry in
+                    PeopleStatementRow(
+                        title: entry.category,
+                        subtitle: entrySubtitle(entry),
+                        date: entry.date,
+                        amount: (Double(entry.amount) ?? 0) * (entry.isExpense ? -1 : 1)
+                    )
                 }
             }
-
-            Spacer()
-
-            Text("\(entry.isExpense ? "-" : "+")\(APIConfig.formatMoney(entry.amount))")
-                .font(.subheadline)
-                .fontWeight(.bold)
-                .foregroundStyle(entry.isExpense ? .red : .green)
-        }
-        .padding(.vertical, 2)
-    }
-
-    private var emptyPlaceholder: some View {
-        VStack(spacing: 12) {
-            Spacer()
-            Image(systemName: "tray")
-                .font(.system(size: 48))
-                .foregroundStyle(.secondary)
-            Text("Yozuvlar mavjud emas")
-                .font(.headline)
-            Text("Kunlik xarajat yoki qo'shimcha daromadlarni kiriting.")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-            Button {
-                isShowingAddSheet = true
-            } label: {
-                Label("Yangi kiritish", systemImage: "plus")
-            }
-            .buttonStyle(.borderedProminent)
-            .padding(.top, 8)
-            Spacer()
         }
     }
 
-    private func bannerView(text: String, color: Color) -> some View {
-        Text(text)
-            .font(.caption)
-            .foregroundStyle(color)
-            .padding(.horizontal, 16)
-            .padding(.vertical, 6)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(color.opacity(0.1))
-    }
-
-    private func formattedDate(_ isoDate: String) -> String {
-        guard let date = ISO8601DateFormatter().date(from: isoDate) else { return isoDate }
-        return date.formatted(date: .abbreviated, time: .shortened)
+    /// Note plus a "Naqd" marker when paid from the cash drawer.
+    private func entrySubtitle(_ entry: LedgerEntry) -> String? {
+        let parts = [entry.note, entry.inCash == true ? "Naqd" : nil]
+            .compactMap { $0 }
+            .filter { !$0.isEmpty }
+        return parts.isEmpty ? nil : parts.joined(separator: " · ")
     }
 }

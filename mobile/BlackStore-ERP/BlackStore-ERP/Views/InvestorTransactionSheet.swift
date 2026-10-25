@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Sheet modal to record investor cash deposit or payout (FR-10).
+/// Sheet to record an investor cash deposit or payout (FR-10).
 public struct InvestorTransactionSheet: View {
     @Environment(\.dismiss) private var dismiss
     public let investorId: Int
@@ -11,6 +11,7 @@ public struct InvestorTransactionSheet: View {
     @State private var amountString: String = ""
     @State private var note: String = ""
     @State private var isSubmitting: Bool = false
+    @State private var failed: Bool = false
 
     public init(investorId: Int, investorName: String, viewModel: InvestorsViewModel) {
         self.investorId = investorId
@@ -18,47 +19,71 @@ public struct InvestorTransactionSheet: View {
         self.viewModel = viewModel
     }
 
+    /// Valid positive amount, or nil.
+    private var amount: Double? {
+        guard let value = peopleParseAmount(amountString), value > 0 else { return nil }
+        return value
+    }
+
     public var body: some View {
         NavigationStack {
             Form {
-                Section("Investor") {
-                    Text(investorName).font(.headline)
-                }
-
-                Section("Tranzaksiya turi") {
+                Section {
                     Picker("Turi", selection: $txType) {
                         Text("Depozit (Kirim)").tag("DEPOSIT")
                         Text("To'lov (Chiqim)").tag("PAYOUT")
                     }
                     .pickerStyle(.segmented)
+                } header: {
+                    Text(investorName)
+                } footer: {
+                    Text(txType == "DEPOSIT" ? "Investor do'konga pul berdi." : "Do'kon investorga pul to'ladi.")
                 }
 
                 Section("Summa ($)") {
-                    TextField("0.00", text: $amountString)
+                    TextField("0.00", text: peopleDecimalBinding($amountString))
                         .keyboardType(.decimalPad)
+                        .font(.title2.weight(.semibold))
+                        .monospacedDigit()
                 }
 
-                Section("Izoh (Ixtiyoriy)") {
+                Section("Izoh (ixtiyoriy)") {
                     TextField("Masalan: Bank o'tkazmasi orqali", text: $note)
+                }
+
+                if failed, let err = viewModel.errorMessage {
+                    PeopleInlineError(message: err)
                 }
             }
             .navigationTitle("Tranzaksiya qo'shish")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Bekor qilish") { dismiss() }
-                }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Saqlash") { submit() }
-                        .disabled((Double(amountString) ?? 0) <= 0 || isSubmitting)
-                }
+            .peopleKeyboardDoneBar()
+            .toolbar { toolbarButtons }
+        }
+        .presentationDetents([.medium, .large])
+        .presentationDragIndicator(.visible)
+        .interactiveDismissDisabled(isSubmitting)
+    }
+
+    @ToolbarContentBuilder
+    private var toolbarButtons: some ToolbarContent {
+        ToolbarItem(placement: .cancellationAction) {
+            Button("Bekor qilish") { dismiss() }
+        }
+        ToolbarItem(placement: .confirmationAction) {
+            if isSubmitting {
+                ProgressView()
+            } else {
+                Button("Saqlash") { submit() }
+                    .disabled(amount == nil)
             }
         }
     }
 
     private func submit() {
-        guard let amount = Double(amountString), amount > 0 else { return }
+        guard let amount else { return }
         isSubmitting = true
+        failed = false
         HapticManager.medium()
 
         Task {
@@ -73,6 +98,7 @@ public struct InvestorTransactionSheet: View {
                 HapticManager.success()
                 dismiss()
             } else {
+                failed = true
                 HapticManager.error()
             }
         }
