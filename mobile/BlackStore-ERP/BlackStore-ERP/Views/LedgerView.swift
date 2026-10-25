@@ -100,11 +100,8 @@ public struct LedgerView: View {
     @ViewBuilder
     private var entriesSection: some View {
         if viewModel.entries.isEmpty {
-            ContentUnavailableView {
-                Label("Yozuvlar mavjud emas", systemImage: "tray")
-            } description: {
-                Text("Kunlik xarajat yoki qo'shimcha daromadlarni kiriting.")
-            } actions: {
+            MessagePanel(title: "Yozuvlar mavjud emas", systemImage: "tray",
+                         message: "Kunlik xarajat yoki qo'shimcha daromadlarni kiriting.") {
                 Button("Yangi kiritish") { isShowingAddSheet = true }
                     .buttonStyle(.borderedProminent)
             }

@@ -81,9 +81,7 @@ public struct CustomerPickerSheet: View {
         } else if let err = viewModel.errorMessage {
             ErrorState(message: err) { await viewModel.search() }
         } else {
-            ContentUnavailableView {
-                Label("Xaridor topilmadi", systemImage: "person.crop.circle.badge.questionmark")
-            } actions: {
+            MessagePanel(title: "Xaridor topilmadi", systemImage: "person.crop.circle.badge.questionmark") {
                 Button("Yangi xaridor qo'shish") { isShowingCreateForm = true }
                     .buttonStyle(.borderedProminent)
             }

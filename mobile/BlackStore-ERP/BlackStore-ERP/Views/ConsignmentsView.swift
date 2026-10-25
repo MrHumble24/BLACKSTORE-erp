@@ -20,6 +20,7 @@ public struct ConsignmentsView: View {
                 )
             }
             .navigationTitle("Konsignatsiya")
+            .navigationBarTitleDisplayMode(.inline) // inline: a pinned filter bar under a large title leaves a blank band
             .navigationBarTitleDisplayMode(.inline)
             .searchable(text: $searchText, prompt: "Hamkor yoki izoh")
             .toolbar {
@@ -86,11 +87,8 @@ public struct ConsignmentsView: View {
     }
 
     private var emptyState: some View {
-        ContentUnavailableView {
-            Label("Konsignatsiya yo'q", systemImage: "arrow.up.right.square")
-        } description: {
-            Text("Hamkorlarga sotish uchun mahsulot topshiring.")
-        } actions: {
+        MessagePanel(title: "Konsignatsiya yo'q", systemImage: "arrow.up.right.square",
+                     message: "Hamkorlarga sotish uchun mahsulot topshiring.") {
             Button { isShowingHandoverSheet = true } label: {
                 Label("Yangi topshirish", systemImage: "plus")
             }

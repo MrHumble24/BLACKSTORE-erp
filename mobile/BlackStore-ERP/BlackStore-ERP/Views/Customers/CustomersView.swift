@@ -11,6 +11,7 @@ public struct CustomersView: View {
         NavigationStack {
             content
                 .navigationTitle("Xaridorlar")
+                .navigationBarTitleDisplayMode(.inline) // inline: a pinned filter bar under a large title leaves a blank band
                 .searchable(text: $viewModel.searchText, prompt: "Ism yoki telefon raqami")
                 .safeAreaInset(edge: .top, spacing: 0) { filterPicker }
                 .task(id: reloadKey) { await reload() }

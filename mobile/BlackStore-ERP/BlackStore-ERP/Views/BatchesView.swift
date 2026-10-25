@@ -78,11 +78,8 @@ public struct BatchesView: View {
     }
 
     private var emptyState: some View {
-        ContentUnavailableView {
-            Label("Partiyalar mavjud emas", systemImage: "shippingbox")
-        } description: {
-            Text("Yetkazib beruvchidan yangi partiya oching va qurilmalarni qabul qiling.")
-        } actions: {
+        MessagePanel(title: "Partiyalar mavjud emas", systemImage: "shippingbox",
+                     message: "Yetkazib beruvchidan yangi partiya oching va qurilmalarni qabul qiling.") {
             Button { isShowingCreateSheet = true } label: {
                 Label("Yangi partiya ochish", systemImage: "plus")
             }

@@ -22,6 +22,7 @@ public struct InventoryLookupView: View {
                     if !viewModel.locations.isEmpty { locationFilterBar }
                 }
                 .navigationTitle("Ombor")
+                .navigationBarTitleDisplayMode(.inline) // inline: a pinned filter bar under a large title leaves a blank band
                 .navigationBarTitleDisplayMode(.inline)
                 .searchable(text: $viewModel.searchText, prompt: "Model, IMEI yoki seriya raqami")
                 .toolbar {

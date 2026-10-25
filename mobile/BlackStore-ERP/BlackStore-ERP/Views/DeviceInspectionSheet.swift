@@ -81,19 +81,12 @@ public struct DeviceInspectionSheet: View {
         if viewModel.isLoading {
             ProgressView("Qurilma qidirilmoqda...").frame(maxWidth: .infinity, minHeight: 120)
         } else if let err = viewModel.errorMessage {
-            ContentUnavailableView {
-                Label("Qurilma topilmadi", systemImage: "exclamationmark.magnifyingglass")
-            } description: {
-                Text(err)
-            } actions: {
+            MessagePanel(title: "Qurilma topilmadi", systemImage: "exclamationmark.magnifyingglass", message: err) {
                 Button("Qayta urinish", action: search).buttonStyle(.bordered).disabled(!canSearch)
             }
         } else {
-            ContentUnavailableView(
-                "Qurilmani skanerlang",
-                systemImage: "magnifyingglass",
-                description: Text("IMEI yoki seriya raqamini skanerlab, uning to'liq xarakteristikasini ko'ring.")
-            )
+            MessagePanel(title: "Qurilmani skanerlang", systemImage: "magnifyingglass",
+                         message: "IMEI yoki seriya raqamini skanerlab, uning to'liq xarakteristikasini ko'ring.")
         }
     }
 

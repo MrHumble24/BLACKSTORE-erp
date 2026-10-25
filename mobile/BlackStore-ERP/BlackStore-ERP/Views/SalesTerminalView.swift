@@ -62,11 +62,8 @@ public struct SalesTerminalView: View {
 
     private var emptyCart: some View {
         Section {
-            ContentUnavailableView {
-                Label("Savatcha bo'sh", systemImage: "cart")
-            } description: {
-                Text("Shtrix-kodni skanerlang yoki ombordan tanlang.")
-            } actions: {
+            MessagePanel(title: "Savatcha bo'sh", systemImage: "cart",
+                         message: "Shtrix-kodni skanerlang yoki ombordan tanlang.") {
                 Button { activeSheet = .scanner } label: {
                     Label("Skanerlash", systemImage: "barcode.viewfinder")
                 }

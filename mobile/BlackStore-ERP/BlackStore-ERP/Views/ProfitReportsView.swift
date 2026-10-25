@@ -10,6 +10,7 @@ public struct ProfitReportsView: View {
     public var body: some View {
         content
             .navigationTitle("Foyda va hisobotlar")
+            .navigationBarTitleDisplayMode(.inline) // inline: a pinned filter bar under a large title leaves a blank band
             .navigationBarTitleDisplayMode(.inline)
             .safeAreaInset(edge: .top, spacing: 0) { periodPicker }
             .task(id: viewModel.selectedPeriod) {
