@@ -139,7 +139,8 @@ nonisolated struct BulkAddSettings: Equatable, Sendable {
 
 /// Result of sending one device.
 nonisolated struct BulkAddOutcome: Identifiable, Sendable {
-    enum Status: Sendable { case added, failed(String) }
+    /// `added` carries the created item's id, so the result row can open the device page.
+    enum Status: Sendable { case added(itemId: Int), failed(String) }
     let device: BulkDevice
     let status: Status
     var id: String { device.id }

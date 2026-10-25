@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Searchable list of in-stock devices with a branch filter; can add a device to the cart (PRD FR-12).
+/// Searchable list of in-stock devices with a branch filter; a row opens the device page and can add it to the cart (PRD FR-12).
 public struct InventoryLookupView: View {
     @Environment(\.dismiss) private var dismiss
     @StateObject private var viewModel = InventoryLookupViewModel()
@@ -81,13 +81,16 @@ public struct InventoryLookupView: View {
 
     private var itemsList: some View {
         List(viewModel.items) { item in
-            InventoryItemRow(item: item, onAdd: onAddToCart.map { add in
-                {
-                    add(item)
-                    HapticManager.success()
-                    dismiss()
-                }
-            })
+            // Pushes inside this sheet's own NavigationStack; the bordered "Kassaga" button keeps its own tap.
+            NavigationLink { ItemDetailView(itemId: item.id) } label: {
+                InventoryItemRow(item: item, onAdd: onAddToCart.map { add in
+                    {
+                        add(item)
+                        HapticManager.success()
+                        dismiss()
+                    }
+                })
+            }
         }
         .listStyle(.insetGrouped)
         .refreshable { await viewModel.fetchItems() }

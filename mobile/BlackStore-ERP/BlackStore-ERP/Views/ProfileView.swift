@@ -73,14 +73,24 @@ public struct ProfileView: View {
         }
     }
 
-    /// Stock links: batches (by permission), consignments, transfers, stock count.
+    /// Stock links: batches and bulk add (receive_batch), accessories (view_stock), consignments, transfers, stock count.
     private var stockSection: some View {
         Section("Ombor va logistika") {
-            if authViewModel.currentUser?.hasPermission("receive_batch") == true {
-                NavigationLink {
-                    BatchesView()
-                } label: {
-                    Label("Partiyalar & Qabul qilish", systemImage: "shippingbox.fill")
+            if let user = authViewModel.currentUser {
+                if user.hasPermission("receive_batch") {
+                    NavigationLink {
+                        BatchesView()
+                    } label: {
+                        Label("Partiyalar & Qabul qilish", systemImage: "shippingbox.fill")
+                    }
+                    NavigationLink { BulkAddView(user: user) } label: {
+                        Label("Ommaviy qabul qilish (IMEI ro'yxati)", systemImage: "list.bullet.rectangle.portrait")
+                    }
+                }
+                if user.hasPermission("view_stock") {
+                    NavigationLink { AccessoriesView(user: user) } label: {
+                        Label("Aksessuarlar ombori", systemImage: "headphones")
+                    }
                 }
             }
 

@@ -15,6 +15,20 @@ nonisolated enum LabelDrawing {
     private static let barGap: CGFloat = 1.5  // gap-0.5
     private static let quietModules = 10  // Code 128 quiet zone on each side
 
+    /// Writes the labels' PDF off the main thread to `<temp>/<folder>/<fileName>` and returns its URL.
+    /// Callers give each variant (paper, copies) its own folder, so a slower earlier render can't
+    /// overwrite the newer file. Shared by the batch labels and the single-label sheet.
+    static func writePDFFile(labels: [PrintLabel], layout: LabelSheetLayout, title: String,
+                             folder: String, fileName: String) async throws -> URL {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(folder)
+        let url = directory.appendingPathComponent(fileName)
+        try await Task.detached(priority: .userInitiated) {
+            try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+            try writePDF(labels: labels, layout: layout, title: title, to: url)
+        }.value
+        return url
+    }
+
     /// Writes a PDF of all labels at real page size to `url`, one grid of labels per page.
     static func writePDF(labels: [PrintLabel], layout: LabelSheetLayout, title: String, to url: URL) throws {
         let format = UIGraphicsPDFRendererFormat()

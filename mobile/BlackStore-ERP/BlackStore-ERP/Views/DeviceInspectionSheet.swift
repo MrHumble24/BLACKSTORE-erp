@@ -8,7 +8,10 @@ public struct DeviceInspectionSheet: View {
 
     @State private var inputCode: String = ""
     @State private var isShowingCamera: Bool = false
-    @State private var isShowingLabelPrint: Bool = false
+    /// System-code-only item for the label sheet, set once the code is ready (or known to be missing).
+    @State private var labelItem: Item?
+    @State private var isPreparingLabel: Bool = false
+    @State private var labelError: String?
 
     public init(onAddToCart: ((Item) -> Void)? = nil) {
         self.onAddToCart = onAddToCart
@@ -20,15 +23,7 @@ public struct DeviceInspectionSheet: View {
 
     public var body: some View {
         NavigationStack {
-            List {
-                searchSection
-                if let item = viewModel.item {
-                    DeviceDetailSections(item: item) { isShowingLabelPrint = true }
-                } else {
-                    Section { stateView }.listRowBackground(Color.clear)
-                }
-            }
-            .listStyle(.insetGrouped)
+            list
             .safeAreaInset(edge: .bottom) { addToCartBar }
             .navigationTitle("Qurilma ma'lumotlari")
             .navigationBarTitleDisplayMode(.inline)
@@ -49,12 +44,53 @@ public struct DeviceInspectionSheet: View {
                     Task { _ = await viewModel.lookup(code: code) }
                 }
             }
-            .sheet(isPresented: $isShowingLabelPrint) {
-                if let item = viewModel.item { BarcodePrintSheet(item: item) }
+            .sheet(item: $labelItem) { BarcodePrintSheet(item: $0) }
+            .alert("Tizim kodini yaratib bo'lmadi", isPresented: Binding(
+                get: { labelError != nil }, set: { if !$0 { labelError = nil } }
+            )) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text(labelError ?? "")
             }
         }
         .presentationDetents([.large])
         .presentationDragIndicator(.visible)
+    }
+
+    private var list: some View {
+        List {
+            searchSection
+            if let item = viewModel.item {
+                DeviceDetailSections(item: item) { printLabel(item) }
+                Section {
+                    NavigationLink { ItemDetailView(itemId: item.id) } label: {
+                        Label("Batafsil", systemImage: "info.circle")
+                    }
+                }
+            } else {
+                Section { stateView }.listRowBackground(Color.clear)
+            }
+        }
+        .listStyle(.insetGrouped)
+    }
+
+    /// Creates the missing system code when the user may (like the device page), then opens the
+    /// label sheet; without the right the sheet itself says "Tizim kodi yo'q".
+    private func printLabel(_ item: Item) {
+        guard !isPreparingLabel else { return }
+        isPreparingLabel = true
+        Task {
+            defer { isPreparingLabel = false }
+            do {
+                switch try await SystemCodeLabel.prepare(item) {
+                case .ready(let ready): labelItem = ready
+                case .noSystemCode: labelItem = item
+                }
+            } catch {
+                labelError = error.localizedDescription
+                HapticManager.error()
+            }
+        }
     }
 
     private var searchSection: some View {

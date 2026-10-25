@@ -84,23 +84,22 @@ final class BatchLabelsModel {
     private func render() {
         renderTask?.cancel()
         guard !labels.isEmpty else { document = nil; return }
-        let labels = labels, layout = layout, title = jobName
+        let labels = labels, layout = layout
         // One folder per paper, so a slower render for the previous paper can't overwrite this file.
-        let folder = FileManager.default.temporaryDirectory.appendingPathComponent("labels-\(paper.rawValue)")
-        let url = folder.appendingPathComponent("Partiya-\(batchId)-yorliqlar.pdf")
+        let folder = "labels-\(paper.rawValue)", fileName = "Partiya-\(batchId)-yorliqlar.pdf"
         isRendering = true
         renderTask = Task {
-            let result = await Task.detached(priority: .userInitiated) {
-                Result {
-                    try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
-                    try LabelDrawing.writePDF(labels: labels, layout: layout, title: title, to: url)
-                }
-            }.value
-            guard !Task.isCancelled else { return }
-            isRendering = false
-            switch result {
-            case .success: document = Document(fileURL: url, pageCount: layout.pageCount(for: labels.count))
-            case .failure(let error): document = nil; phase = .failed(error.localizedDescription)
+            do {
+                let url = try await LabelDrawing.writePDFFile(labels: labels, layout: layout, title: jobName,
+                                                              folder: folder, fileName: fileName)
+                guard !Task.isCancelled else { return }
+                isRendering = false
+                document = Document(fileURL: url, pageCount: layout.pageCount(for: labels.count))
+            } catch {
+                guard !Task.isCancelled else { return }
+                isRendering = false
+                document = nil
+                phase = .failed(error.localizedDescription)
             }
         }
     }

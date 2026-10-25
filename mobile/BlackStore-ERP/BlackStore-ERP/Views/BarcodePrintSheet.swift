@@ -1,39 +1,46 @@
 import SwiftUI
 
-/// Pick a code, preview the 50x30 mm sticker and print or share it (FR-15).
+/// One device's 50x30 mm label (FR-15), drawn by the same `LabelDrawing` / `Code128` code as the
+/// batch labels, printed via AirPrint or shared as a PDF. It prints only the shop's system code;
+/// an item without one shows "Tizim kodi yo'q" (the device page creates the code before opening this).
 public struct BarcodePrintSheet: View {
     @Environment(\.dismiss) private var dismiss
     public let item: Item
 
-    @State private var selectedIdentifier: String = ""
     @State private var copies: Int = 1
-    @State private var labelImage: UIImage? = nil
+    @State private var fileURL: URL?
+    @State private var renderError: String?
+    @State private var printAnchor: CGRect = .zero
+
+    private let layout = LabelSheetLayout(paper: .roll)
 
     public init(item: Item) {
         self.item = item
     }
 
+    private var systemCode: String? {
+        item.identifiers.first { $0.type == "SYSTEM_CODE" && !$0.value.isEmpty }?.value
+    }
+
+    /// The label for the system code, priced like the batch labels; nil when there is no printable code.
+    private var label: PrintLabel? {
+        guard let systemCode else { return nil }
+        let device = LabelBatchItem(id: item.id, identifiers: [LabelIdentifier(type: "SYSTEM_CODE", value: systemCode)],
+                                    salePrice: item.salePrice)
+        return LabelPlanner.plan(device, title: item.productModel.name).label
+    }
+
+    private var jobName: String { "\(item.productModel.name) yorlig'i" }
+
     public var body: some View {
         NavigationStack {
-            Form {
-                Section("Shtrix-kod kodi") {
-                    Picker("Kod", selection: $selectedIdentifier) {
-                        ForEach(item.identifiers) { idf in
-                            Text("\(idf.type): \(idf.value)").tag(idf.value)
-                        }
-                    }
-                }
-                Section {
-                    labelPreview
-                } header: {
-                    Text("Yorliq ko'rinishi (50x30 mm)")
-                }
-                Section {
-                    Stepper("Nusxalar soni: \(copies)", value: $copies, in: 1...20)
-                        .monospacedDigit()
+            Group {
+                if let label {
+                    labelForm(label)
+                } else {
+                    MessagePanel(title: noLabelTitle, systemImage: "barcode", message: noLabelReason) { EmptyView() }
                 }
             }
-            .safeAreaInset(edge: .bottom) { actionButtons }
             .navigationTitle("Yorliq chop etish")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -41,75 +48,72 @@ public struct BarcodePrintSheet: View {
                     Button("Yopish") { dismiss() }
                 }
             }
-            .onAppear {
-                initializeDefaultIdentifier()
-                renderActiveLabel()
-            }
-            .onChange(of: selectedIdentifier) {
-                renderActiveLabel()
-            }
         }
         .presentationDetents([.large])
         .presentationDragIndicator(.visible)
     }
 
-    @ViewBuilder
-    private var labelPreview: some View {
-        if let image = labelImage {
-            Image(uiImage: image)
-                .resizable()
-                .scaledToFit()
-                .frame(maxWidth: .infinity, maxHeight: 200)
-                .padding(10)
-                // The printed sticker is white paper, so the preview stays white in dark mode too.
-                .background(Color.white, in: RoundedRectangle(cornerRadius: 12))
-                .accessibilityLabel("Yorliq ko'rinishi: \(item.productModel.name)")
-        } else {
-            ProgressView().frame(maxWidth: .infinity, minHeight: 120)
-        }
+    /// No code at all, or a system code with characters Code 128 can't encode.
+    private var noLabelTitle: String {
+        systemCode == nil ? "Tizim kodi yo'q" : "Yorliq chop etilmaydi"
     }
 
-    private var actionButtons: some View {
-        BottomBar(
-            title: "AirPrint orqali chop etish",
-            systemImage: "printer.fill",
-            isDisabled: labelImage == nil,
-            action: printLabel
-        ) {
-            if let img = labelImage {
-                ShareLink(item: Image(uiImage: img), preview: SharePreview("Yorliq", image: Image(uiImage: img))) {
-                    Label("Rasmni saqlash / Ulashish", systemImage: "square.and.arrow.up")
+    private var noLabelReason: String {
+        systemCode == nil
+            ? "Yorliq faqat tizim kodi bilan chop etiladi. Kodni qurilma sahifasida yarating."
+            : LabelWarningReason.badCode.text
+    }
+
+    private func labelForm(_ label: PrintLabel) -> some View {
+        Form {
+            Section("Yorliq ko'rinishi (50×30 mm)") {
+                LabelPagePreview(page: 0, pageCount: 1, labels: [label], layout: layout)
+            }
+            Section {
+                Stepper("Nusxalar soni: \(copies)", value: $copies, in: 1...20)
+                    .monospacedDigit()
+            }
+            if let renderError {
+                Section { InlineMessage(text: renderError) }
+            }
+        }
+        .safeAreaInset(edge: .bottom) { actions }
+        .task(id: copies) { await render(label) }
+    }
+
+    private var actions: some View {
+        BottomBar(title: "Chop etish", systemImage: "printer", isDisabled: fileURL == nil, action: printLabel) {
+            if let fileURL {
+                ShareLink(item: fileURL, preview: SharePreview(jobName)) {
+                    Label("Ulashish", systemImage: "square.and.arrow.up")
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.bordered)
                 .controlSize(.large)
             }
         }
+        .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { printAnchor = $0 }
     }
 
-    private func printLabel() {
-        guard let img = labelImage else { return }
-        BarcodeLabelPrinter.shared.printLabel(image: img, jobName: "\(item.productModel.name) Label")
-        HapticManager.selection()
-    }
-
-    private func initializeDefaultIdentifier() {
-        if let sys = item.identifiers.first(where: { $0.type.uppercased().contains("SYSTEM") }) {
-            selectedIdentifier = sys.value
-        } else if let first = item.identifiers.first {
-            selectedIdentifier = first.value
-        } else {
-            selectedIdentifier = "\(item.id)"
+    /// Writes one roll page per copy; each copy count gets its own folder (see `writePDFFile`).
+    private func render(_ label: PrintLabel) async {
+        fileURL = nil
+        do {
+            let url = try await LabelDrawing.writePDFFile(
+                labels: Array(repeating: label, count: copies), layout: layout, title: jobName,
+                folder: "label-\(item.id)-\(copies)", fileName: "Yorliq-\(label.code).pdf")
+            guard !Task.isCancelled else { return }
+            fileURL = url
+            renderError = nil
+        } catch {
+            if !Task.isCancelled { renderError = error.localizedDescription }
         }
     }
 
-    private func renderActiveLabel() {
-        let code = selectedIdentifier.isEmpty ? "\(item.id)" : selectedIdentifier
-        let price = item.salePrice ?? item.minSalePrice
-        self.labelImage = BarcodeLabelPrinter.shared.renderLabelImage(
-            title: item.productModel.name,
-            code: code,
-            price: price
-        )
+    /// Opens the system AirPrint sheet at the label's real page size.
+    private func printLabel() {
+        guard let fileURL else { return }
+        LabelPrinter.shared.print(fileURL: fileURL, pageSize: layout.paper.pageSize, jobName: jobName, anchor: printAnchor)
+        HapticManager.selection()
     }
 }
