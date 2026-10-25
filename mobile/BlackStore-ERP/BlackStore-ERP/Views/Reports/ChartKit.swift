@@ -6,7 +6,7 @@ import Charts
 enum ChartFormat {
     /// Short money for axes and bar labels ("$12.3K"); exact figures use `APIConfig.formatMoney`.
     static func shortMoney(_ value: Double) -> String {
-        // Same decimal mark as formatMoney (locale), so "$13,8K" and "$13 800,00" agree.
+        // Same decimal mark as formatMoney (always a dot), so "$13.8K" and "$13 800.00" agree.
         let text = ProfitCharts.compact(abs(value)) // "." to match formatMoney, which forces a dot
         return (value < 0 ? "-" : "") + APIConfig.currency + text
     }
