@@ -1,13 +1,14 @@
 import SwiftUI
 
-/// Checkout modal sheet for completing the sale with payment, warranty, and customer selection.
+/// Checkout sheet: branch, payment type, customer, warranty, then complete the sale.
 public struct CheckoutView: View {
     @Environment(\.dismiss) private var dismiss
     @StateObject private var viewModel = CheckoutViewModel()
     @ObservedObject public var cartViewModel: CartViewModel
     public let onSaleCompleted: (Sale) -> Void
 
-    @State private var isShowingCustomerPicker: Bool = false
+    @State private var isShowingCustomerPicker = false
+    @State private var isLoadingLocations = true
 
     public init(
         cartViewModel: CartViewModel,
@@ -17,175 +18,70 @@ public struct CheckoutView: View {
         self.onSaleCompleted = onSaleCompleted
     }
 
+    /// Money still owed after the entered payment; a debt needs a customer.
+    private var debtRemaining: Double {
+        max(0, cartViewModel.totalAmount - (Double(viewModel.paidAmountText) ?? 0))
+    }
+
+    private var needsCustomer: Bool {
+        viewModel.paymentType == .debt || debtRemaining > 0.01
+    }
+
+    private var canSubmit: Bool {
+        !viewModel.isSubmitting && cartViewModel.allPricesValid && viewModel.selectedLocation != nil
+            && !(needsCustomer && viewModel.selectedCustomer == nil)
+    }
+
     public var body: some View {
         NavigationStack {
             Form {
-                locationSection
-                customerSection
-                warrantySection
-                paymentSection
-                summarySection
-
+                CheckoutPaymentSection(viewModel: viewModel, total: cartViewModel.totalAmount, showsDueDate: needsCustomer)
+                CheckoutCustomerSection(customer: viewModel.selectedCustomer, isRequired: needsCustomer) {
+                    isShowingCustomerPicker = true
+                }
+                CheckoutDetailsSection(viewModel: viewModel, isLoading: isLoadingLocations, onRetry: loadLocations)
+                CheckoutSummarySection(total: cartViewModel.totalAmount, paidText: viewModel.paidAmountText, debt: debtRemaining)
                 if let err = viewModel.errorMessage {
                     Section {
-                        Text(err)
-                            .font(.caption)
-                            .foregroundStyle(.red)
+                        Label(err, systemImage: "exclamationmark.triangle.fill").foregroundStyle(.red)
                     }
-                }
-
-                Section {
-                    Button(action: submitSale) {
-                        if viewModel.isSubmitting {
-                            ProgressView()
-                                .frame(maxWidth: .infinity)
-                        } else {
-                            Text("Savdoni yakunlash (\(cartViewModel.formattedTotal))")
-                                .font(.headline)
-                                .frame(maxWidth: .infinity)
-                        }
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .controlSize(.large)
-                    .disabled(viewModel.isSubmitting || !cartViewModel.allPricesValid)
                 }
             }
-            .navigationTitle("To'lov va rasmiylashtirish")
+            .navigationTitle("To'lov")
             .navigationBarTitleDisplayMode(.inline)
+            .salesKeyboardDoneBar()
+            .safeAreaInset(edge: .bottom) {
+                SalesBottomBar(
+                    title: "Savdoni yakunlash · \(cartViewModel.formattedTotal)",
+                    isBusy: viewModel.isSubmitting,
+                    isDisabled: !canSubmit,
+                    action: submitSale
+                )
+            }
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Bekor qilish") { dismiss() }
                 }
             }
             .sheet(isPresented: $isShowingCustomerPicker) {
-                CustomerPickerSheet { customer in
-                    viewModel.selectedCustomer = customer
-                }
+                CustomerPickerSheet { customer in viewModel.selectedCustomer = customer }
             }
             .task {
-                await viewModel.fetchLocations()
+                // prepare() resets errorMessage, so it runs first to keep a branch-load error visible.
                 viewModel.prepare(for: cartViewModel.totalAmount)
+                await loadLocations()
             }
         }
+        .presentationDetents([.large])
+        .presentationDragIndicator(.visible)
+        .interactiveDismissDisabled(viewModel.isSubmitting)
     }
 
-    private var locationSection: some View {
-        Section("Filial") {
-            Picker("Filial", selection: $viewModel.selectedLocation) {
-                ForEach(viewModel.locations) { loc in
-                    Text(loc.name).tag(Optional(loc))
-                }
-            }
-        }
-    }
-
-    private var customerSection: some View {
-        Section("Xaridor") {
-            if let customer = viewModel.selectedCustomer {
-                HStack {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(customer.name)
-                            .font(.headline)
-                        Text(customer.phone)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-
-                    Spacer()
-
-                    Button("O'zgartirish") {
-                        isShowingCustomerPicker = true
-                    }
-                    .font(.caption)
-                    .buttonStyle(.bordered)
-                }
-            } else {
-                Button {
-                    isShowingCustomerPicker = true
-                } label: {
-                    Label("Xaridorni tanlash (Nasiya uchun shart)", systemImage: "person.crop.circle.badge.plus")
-                }
-            }
-        }
-    }
-
-    private var warrantySection: some View {
-        Section("Kafolat muddati") {
-            Picker("Kafolat", selection: $viewModel.warrantyPeriod) {
-                ForEach(WarrantyPeriod.allCases) { period in
-                    Text(period.rawValue).tag(period)
-                }
-            }
-            .pickerStyle(.segmented)
-        }
-    }
-
-    private var paymentSection: some View {
-        Section("To'lov turi") {
-            Picker("To'lov turi", selection: $viewModel.paymentType) {
-                ForEach(CheckoutPaymentType.allCases) { type in
-                    Text(type.rawValue).tag(type)
-                }
-            }
-            .pickerStyle(.segmented)
-            .onChange(of: viewModel.paymentType) { _, newType in
-                if newType == .debt {
-                    viewModel.paidAmountText = "0.00"
-                } else if viewModel.paidAmountText == "0.00" || viewModel.paidAmountText.isEmpty {
-                    viewModel.paidAmountText = String(format: "%.2f", cartViewModel.totalAmount)
-                }
-            }
-
-            if viewModel.paymentType != .debt {
-                HStack {
-                    Text("To'langan summa ($):")
-                        .font(.subheadline)
-                    Spacer()
-                    TextField("0.00", text: $viewModel.paidAmountText)
-                        .keyboardType(.decimalPad)
-                        .multilineTextAlignment(.trailing)
-                        .textFieldStyle(.roundedBorder)
-                        .frame(width: 120)
-                }
-            }
-
-            let entered = Double(viewModel.paidAmountText) ?? 0.0
-            let debtRemaining = cartViewModel.totalAmount - entered
-            if debtRemaining > 0.01 || viewModel.paymentType == .debt {
-                DatePicker("Qarz muddati", selection: $viewModel.dueDate, displayedComponents: .date)
-            }
-        }
-    }
-
-    private var summarySection: some View {
-        let entered = Double(viewModel.paidAmountText) ?? 0.0
-        let debtRemaining = max(0, cartViewModel.totalAmount - entered)
-
-        return Section("Savdo hisoboti") {
-            HStack {
-                Text("Umumiy summa")
-                Spacer()
-                Text(cartViewModel.formattedTotal)
-                    .fontWeight(.semibold)
-            }
-
-            HStack {
-                Text("To'lanayotgan summa")
-                Spacer()
-                Text(APIConfig.formatMoney(entered))
-                    .foregroundStyle(.green)
-            }
-
-            if debtRemaining > 0.01 {
-                HStack {
-                    Text("Qarz (Nasiya)")
-                    Spacer()
-                    Text(APIConfig.formatMoney(debtRemaining))
-                        .foregroundStyle(.red)
-                        .fontWeight(.bold)
-                }
-            }
-        }
+    /// Loads branches and tracks loading so the picker can show a spinner or an empty state.
+    private func loadLocations() async {
+        isLoadingLocations = true
+        await viewModel.fetchLocations()
+        isLoadingLocations = false
     }
 
     private func submitSale() {

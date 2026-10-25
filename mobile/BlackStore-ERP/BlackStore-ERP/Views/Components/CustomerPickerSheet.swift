@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Modal sheet for searching or quick-registering a customer for checkout.
+/// Sheet to search a customer by name or phone, or quickly register a new one.
 public struct CustomerPickerSheet: View {
     @Environment(\.dismiss) private var dismiss
     @StateObject private var viewModel = CustomerSearchViewModel()
@@ -14,115 +14,170 @@ public struct CustomerPickerSheet: View {
 
     public var body: some View {
         NavigationStack {
-            VStack(spacing: 0) {
+            Group {
                 if isShowingCreateForm {
-                    createCustomerSection
+                    QuickCustomerForm(viewModel: viewModel) { customer in
+                        onSelect(customer)
+                        dismiss()
+                    }
                 } else {
-                    customerListSection
+                    customerList
                 }
             }
+            // The form footer shows only the create error, never a stale search error.
+            .onChange(of: isShowingCreateForm) { viewModel.errorMessage = nil }
             .navigationTitle(isShowingCreateForm ? "Yangi xaridor" : "Xaridorni tanlash")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button(isShowingCreateForm ? "Orqaga" : "Yopish") {
-                        if isShowingCreateForm {
-                            isShowingCreateForm = false
-                        } else {
-                            dismiss()
-                        }
+                        if isShowingCreateForm { isShowingCreateForm = false } else { dismiss() }
                     }
                 }
-
                 if !isShowingCreateForm {
                     ToolbarItem(placement: .primaryAction) {
-                        Button {
-                            isShowingCreateForm = true
-                        } label: {
-                            Image(systemName: "person.badge.plus")
+                        Button { isShowingCreateForm = true } label: {
+                            Label("Yangi xaridor", systemImage: "person.badge.plus")
                         }
                     }
                 }
             }
-            .task {
-                await viewModel.search()
-            }
         }
+        .presentationDetents([.large])
+        .presentationDragIndicator(.visible)
     }
 
-    private var customerListSection: some View {
+    private var customerList: some View {
         List {
+            if viewModel.customers.isEmpty {
+                Section { stateView }.listRowBackground(Color.clear)
+            }
             ForEach(viewModel.customers) { customer in
                 Button {
                     onSelect(customer)
                     dismiss()
                 } label: {
-                    HStack {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(customer.name)
-                                .font(.body)
-                                .fontWeight(.medium)
-                                .foregroundStyle(.primary)
-
-                            Text(customer.phone)
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
-
-                        Spacer()
-
-                        if let debt = customer.displayDebt {
-                            Text("Qarz: \(debt)")
-                                .font(.caption)
-                                .fontWeight(.semibold)
-                                .foregroundStyle(.red)
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 4)
-                                .background(Color.red.opacity(0.1))
-                                .clipShape(Capsule())
-                        }
-                    }
+                    CustomerPickerRow(customer: customer)
                 }
             }
         }
         .listStyle(.insetGrouped)
         .searchable(text: $viewModel.searchText, prompt: "Ism yoki telefon...")
-        .onSubmit(of: .search) {
-            Task { await viewModel.search() }
+        .refreshable { await viewModel.search() }
+        // Live search: restarts on each keystroke and waits briefly so we do not call the API per letter.
+        .task(id: viewModel.searchText) {
+            if !viewModel.searchText.isEmpty { try? await Task.sleep(for: .milliseconds(350)) }
+            guard !Task.isCancelled else { return }
+            await viewModel.search()
+            // A newer keystroke cancelled this search; its "cancelled" error is not a real failure.
+            if Task.isCancelled { viewModel.errorMessage = nil }
         }
     }
 
-    private var createCustomerSection: some View {
-        Form {
-            Section("Xaridor ma'lumotlari") {
-                TextField("F.I.SH", text: $viewModel.newName)
-                TextField("Telefon raqami", text: $viewModel.newPhone)
-                    .keyboardType(.phonePad)
-            }
-
-            if let err = viewModel.errorMessage {
+    @ViewBuilder
+    private var stateView: some View {
+        if viewModel.isLoading {
+            ProgressView().frame(maxWidth: .infinity, minHeight: 120)
+        } else if let err = viewModel.errorMessage {
+            ContentUnavailableView {
+                Label("Yuklab bo'lmadi", systemImage: "wifi.exclamationmark")
+            } description: {
                 Text(err)
-                    .font(.caption)
-                    .foregroundStyle(.red)
+            } actions: {
+                Button("Qayta urinish") { Task { await viewModel.search() } }
+                    .buttonStyle(.borderedProminent)
             }
+        } else {
+            ContentUnavailableView {
+                Label("Xaridor topilmadi", systemImage: "person.crop.circle.badge.questionmark")
+            } actions: {
+                Button("Yangi xaridor qo'shish") { isShowingCreateForm = true }
+                    .buttonStyle(.borderedProminent)
+            }
+        }
+    }
+}
 
-            Button {
-                Task {
-                    if let customer = await viewModel.quickRegister() {
-                        onSelect(customer)
-                        dismiss()
-                    }
-                }
-            } label: {
-                if viewModel.isCreating {
-                    ProgressView()
-                } else {
-                    Text("Xaridorni saqlash va tanlash")
-                        .frame(maxWidth: .infinity)
+/// One customer row: name, phone and a red debt capsule when they owe money.
+private struct CustomerPickerRow: View {
+    let customer: Customer
+
+    var body: some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(customer.name).font(.body.weight(.medium)).foregroundStyle(.primary)
+                Text(customer.phone).font(.caption).foregroundStyle(.secondary)
+            }
+            Spacer(minLength: 8)
+            if let debt = customer.displayDebt {
+                Text("Qarz: \(debt)")
+                    .font(.caption.weight(.semibold))
+                    .monospacedDigit()
+                    .foregroundStyle(.red)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(Color.red.opacity(0.12), in: Capsule())
+            }
+        }
+        .frame(minHeight: 44)
+        .accessibilityElement(children: .combine)
+    }
+}
+
+/// Name and phone form that registers a customer and selects them.
+private struct QuickCustomerForm: View {
+    @ObservedObject var viewModel: CustomerSearchViewModel
+    let onCreated: (Customer) -> Void
+    @FocusState private var focusedField: Field?
+
+    private enum Field { case name, phone }
+
+    private var isValid: Bool {
+        !viewModel.newName.trimmingCharacters(in: .whitespaces).isEmpty
+            && !viewModel.newPhone.trimmingCharacters(in: .whitespaces).isEmpty
+    }
+
+    var body: some View {
+        Form {
+            Section {
+                TextField("F.I.SH", text: $viewModel.newName)
+                    .textContentType(.name)
+                    .focused($focusedField, equals: .name)
+                    .submitLabel(.next)
+                    .onSubmit { focusedField = .phone }
+                TextField("Telefon raqami", text: $viewModel.newPhone)
+                    .textContentType(.telephoneNumber)
+                    .keyboardType(.phonePad)
+                    .focused($focusedField, equals: .phone)
+            } header: {
+                Text("Xaridor ma'lumotlari")
+            } footer: {
+                if let err = viewModel.errorMessage {
+                    Text(err).foregroundStyle(.red)
                 }
             }
-            .buttonStyle(.borderedProminent)
-            .disabled(viewModel.newName.isEmpty || viewModel.newPhone.isEmpty || viewModel.isCreating)
+            Section {
+                Button(action: save) {
+                    Group {
+                        if viewModel.isCreating { ProgressView() } else { Text("Xaridorni saqlash va tanlash") }
+                    }
+                    .font(.headline)
+                    .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.borderedProminent)
+                .controlSize(.large)
+                .disabled(!isValid || viewModel.isCreating)
+            }
+            .listRowBackground(Color.clear)
+            .listRowInsets(EdgeInsets())
+        }
+        .salesKeyboardDoneBar()
+        .onAppear { focusedField = .name }
+    }
+
+    private func save() {
+        Task {
+            if let customer = await viewModel.quickRegister() { onCreated(customer) }
         }
     }
 }
