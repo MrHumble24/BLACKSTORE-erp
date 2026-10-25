@@ -41,13 +41,13 @@ struct ConsignmentRow: View {
                 Text(record.partner.name).font(.headline)
                 Spacer()
                 if record.heldCount > 0 {
-                    StockBadge(text: "\(record.heldCount) ta qolgan")
+                    StatusBadge(text: "\(record.heldCount) ta qolgan")
                 } else {
-                    StockBadge(text: "Yakunlangan", color: .secondary)
+                    StatusBadge(text: "Yakunlangan", tint: .secondary)
                 }
             }
             HStack {
-                Label(stockFormattedDate(record.date), systemImage: "calendar")
+                Label(DateDisplay.dateTime(record.date) ?? record.date, systemImage: "calendar")
                     .foregroundStyle(.secondary)
                 if let due = record.dueDate {
                     Spacer()

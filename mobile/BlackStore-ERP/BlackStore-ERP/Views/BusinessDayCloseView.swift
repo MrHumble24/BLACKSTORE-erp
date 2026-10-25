@@ -12,7 +12,7 @@ public struct BusinessDayCloseView: View {
         content
             .navigationTitle("Kun yakuni")
             .navigationBarTitleDisplayMode(.inline)
-            .peopleKeyboardDoneBar()
+            .keyboardDoneBar()
             .confirmationDialog(
                 "Kunni yopishni tasdiqlaysizmi?",
                 isPresented: $showingConfirmAlert,
@@ -35,9 +35,9 @@ public struct BusinessDayCloseView: View {
         } else if let day = viewModel.currentDay {
             dayForm(day)
         } else if let err = viewModel.errorMessage {
-            PeopleErrorState(message: err) { await viewModel.fetchCurrentDay() }
+            ErrorState(message: err) { await viewModel.fetchCurrentDay() }
         } else {
-            PeopleLoadingState()
+            LoadingState()
         }
     }
 
@@ -72,7 +72,7 @@ public struct BusinessDayCloseView: View {
                 TextField("Kun yakuni bo'yicha izoh", text: $viewModel.noteText)
             }
             if let err = viewModel.errorMessage {
-                PeopleInlineError(message: err)
+                Section { InlineMessage(text: err, font: .footnote) }
             }
             submitSection
         }
@@ -80,7 +80,7 @@ public struct BusinessDayCloseView: View {
 
     /// Both drawer counts must be numbers before the day can be closed.
     private var countsAreValid: Bool {
-        peopleParseAmount(viewModel.countedCashText) != nil && peopleParseAmount(viewModel.countedCardText) != nil
+        DecimalInput.parse(viewModel.countedCashText) != nil && DecimalInput.parse(viewModel.countedCardText) != nil
     }
 
     private var submitSection: some View {

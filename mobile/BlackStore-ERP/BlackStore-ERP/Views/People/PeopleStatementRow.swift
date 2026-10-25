@@ -18,7 +18,7 @@ struct PeopleStatementRow: View {
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                 }
-                Text(PeopleDate.display(date))
+                Text(DateDisplay.dateTime(date) ?? String(date.prefix(10)))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -30,23 +30,5 @@ struct PeopleStatementRow: View {
         }
         .padding(.vertical, 2)
         .accessibilityElement(children: .combine)
-    }
-}
-
-/// Turns server ISO dates into short local text.
-enum PeopleDate {
-    private static let withFraction: ISO8601DateFormatter = {
-        let f = ISO8601DateFormatter()
-        f.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        return f
-    }()
-    private static let plain = ISO8601DateFormatter()
-
-    /// "25 Oct 2026, 14:05" for a timestamp, or the raw yyyy-MM-dd when no time is given.
-    static func display(_ iso: String) -> String {
-        guard let date = withFraction.date(from: iso) ?? plain.date(from: iso) else {
-            return String(iso.prefix(10))
-        }
-        return date.formatted(date: .abbreviated, time: .shortened)
     }
 }

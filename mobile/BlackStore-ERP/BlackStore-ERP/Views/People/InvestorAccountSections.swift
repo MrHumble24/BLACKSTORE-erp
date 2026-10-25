@@ -6,15 +6,15 @@ struct InvestorMoneyTrailSection: View {
 
     var body: some View {
         Section {
-            PeopleMoneyRow("Yetkazib beruvchiga yuborilgan", money.sentToSuppliersDouble)
-            PeopleMoneyRow("Ushlangan komissiyalar", Double(money.feesCharged) ?? 0)
+            MoneyRow("Yetkazib beruvchiga yuborilgan", money.sentToSuppliersDouble)
+            MoneyRow("Ushlangan komissiyalar", Double(money.feesCharged) ?? 0)
             LabeledContent("Ombordagi tovarlar") {
                 Text("\(money.unsoldItems) dona · \(APIConfig.formatMoney(money.unsoldAtCost))").monospacedDigit()
             }
             if money.defectiveItems > 0 {
                 LabeledContent("Nosoz tovarlar", value: "\(money.defectiveItems) dona")
             }
-            PeopleMoneyRow("Qoldiq depozit", money.unsentDepositsDouble)
+            MoneyRow("Qoldiq depozit", money.unsentDepositsDouble)
         } header: {
             Text("Mablag'lar harakati")
         } footer: {

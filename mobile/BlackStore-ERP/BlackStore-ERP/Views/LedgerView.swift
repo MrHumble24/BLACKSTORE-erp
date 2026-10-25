@@ -47,9 +47,9 @@ public struct LedgerView: View {
     @ViewBuilder
     private var content: some View {
         if viewModel.isLoading && viewModel.entries.isEmpty && viewModel.totals == nil {
-            PeopleLoadingState()
+            LoadingState()
         } else if let err = viewModel.errorMessage, viewModel.entries.isEmpty, viewModel.totals == nil {
-            PeopleErrorState(message: err) { await reload() }
+            ErrorState(message: err) { await reload() }
         } else {
             List {
                 if let totals = viewModel.totals { totalsHeader(totals) }
@@ -80,9 +80,9 @@ public struct LedgerView: View {
     @ViewBuilder
     private var messagesSection: some View {
         if let err = viewModel.errorMessage {
-            PeopleInlineError(message: err)
+            Section { InlineMessage(text: err, font: .footnote) }
         } else if let succ = viewModel.successMessage {
-            Section { Label(succ, systemImage: "checkmark.circle.fill").foregroundStyle(.green).font(.footnote) }
+            Section { InlineMessage(text: succ, isError: false, font: .footnote) }
         }
     }
 

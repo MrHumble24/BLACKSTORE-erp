@@ -34,7 +34,7 @@ struct WalkInDeviceSection: View {
                     .keyboardType(.decimalPad)
                     .multilineTextAlignment(.trailing)
                     .monospacedDigit()
-                    .salesDecimalCommaFix($viewModel.pricePaid)
+                    .decimalCommaFix($viewModel.pricePaid)
             }
         }
     }

@@ -44,7 +44,7 @@ public struct InvestorDetailView: View {
                 owedHeader(for: d)
                 // Without an account the statement section shows the error with Retry itself.
                 if let err = viewModel.errorMessage, viewModel.accountResponse != nil {
-                    PeopleInlineError(message: err)
+                    Section { InlineMessage(text: err, font: .footnote) }
                 }
                 if let money = d.money {
                     InvestorMoneyTrailSection(money: money)
@@ -58,9 +58,9 @@ public struct InvestorDetailView: View {
             .listStyle(.insetGrouped)
             .refreshable { await load() }
         } else if let err = viewModel.errorMessage {
-            PeopleErrorState(message: err) { await load() }
+            ErrorState(message: err) { await load() }
         } else {
-            PeopleLoadingState()
+            LoadingState()
         }
     }
 

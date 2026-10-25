@@ -27,7 +27,7 @@ public struct AccessoryPickerSheet: View {
             }
             .listStyle(.insetGrouped)
             .searchable(text: $viewModel.searchText, prompt: "Aksessuarni qidirish...")
-            .salesKeyboardDoneBar()
+            .keyboardDoneBar()
             .refreshable { await viewModel.fetchAccessories() }
             .navigationTitle("Aksessuarlar")
             .navigationBarTitleDisplayMode(.inline)
@@ -48,14 +48,7 @@ public struct AccessoryPickerSheet: View {
         if viewModel.isLoading {
             ProgressView("Aksessuarlar yuklanmoqda...").frame(maxWidth: .infinity, minHeight: 120)
         } else if let err = viewModel.errorMessage {
-            ContentUnavailableView {
-                Label("Yuklab bo'lmadi", systemImage: "wifi.exclamationmark")
-            } description: {
-                Text(err)
-            } actions: {
-                Button("Qayta urinish") { Task { await viewModel.fetchAccessories() } }
-                    .buttonStyle(.borderedProminent)
-            }
+            ErrorState(message: err) { await viewModel.fetchAccessories() }
         } else if !viewModel.searchText.isEmpty {
             ContentUnavailableView.search(text: viewModel.searchText)
         } else {
@@ -93,7 +86,7 @@ public struct AccessoryPickerSheet: View {
                 .monospacedDigit()
                 .textFieldStyle(.roundedBorder)
                 .frame(maxWidth: 100)
-                .salesDecimalCommaFix(priceBinding(for: item.productModel.id))
+                .decimalCommaFix(priceBinding(for: item.productModel.id))
             Button {
                 guard let price = price(for: item.productModel.id) else { return }
                 onSelect(item.productModel.id, item.productModel.name, price)

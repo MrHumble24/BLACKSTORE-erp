@@ -21,7 +21,7 @@ public struct InvestorTransactionSheet: View {
 
     /// Valid positive amount, or nil.
     private var amount: Double? {
-        guard let value = peopleParseAmount(amountString), value > 0 else { return nil }
+        guard let value = DecimalInput.parse(amountString), value > 0 else { return nil }
         return value
     }
 
@@ -41,7 +41,8 @@ public struct InvestorTransactionSheet: View {
                 }
 
                 Section("Summa ($)") {
-                    TextField("0.00", text: peopleDecimalBinding($amountString))
+                    TextField("0.00", text: $amountString)
+                        .decimalCommaFix($amountString)
                         .keyboardType(.decimalPad)
                         .font(.title2.weight(.semibold))
                         .monospacedDigit()
@@ -52,12 +53,12 @@ public struct InvestorTransactionSheet: View {
                 }
 
                 if failed, let err = viewModel.errorMessage {
-                    PeopleInlineError(message: err)
+                    Section { InlineMessage(text: err, font: .footnote) }
                 }
             }
             .navigationTitle("Tranzaksiya qo'shish")
             .navigationBarTitleDisplayMode(.inline)
-            .peopleKeyboardDoneBar()
+            .keyboardDoneBar()
             .toolbar { toolbarButtons }
         }
         .presentationDetents([.medium, .large])

@@ -31,7 +31,7 @@ public struct AddExpenseSheet: View {
             }
             .navigationTitle("Yangi kiritish")
             .navigationBarTitleDisplayMode(.inline)
-            .peopleKeyboardDoneBar()
+            .keyboardDoneBar()
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Bekor qilish") { dismiss() }
@@ -82,7 +82,8 @@ public struct AddExpenseSheet: View {
 
     private var amountSection: some View {
         Section {
-            TextField("0.00", text: peopleDecimalBinding($amountText))
+            TextField("0.00", text: $amountText)
+                .decimalCommaFix($amountText)
                 .keyboardType(.decimalPad)
                 .font(.title2.weight(.semibold))
                 .monospacedDigit()
@@ -102,7 +103,7 @@ public struct AddExpenseSheet: View {
         }
     }
 
-    private var amount: Double { peopleParseAmount(amountText) ?? 0 }
+    private var amount: Double { DecimalInput.parse(amountText) ?? 0 }
 
     private var resolvedCategory: String {
         if category == Self.otherTag {

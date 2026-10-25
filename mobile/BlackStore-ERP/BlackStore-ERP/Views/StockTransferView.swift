@@ -36,7 +36,7 @@ public struct StockTransferView: View {
             }
         }
         .sheet(isPresented: $isShowingScanner) {
-            StockScannerSheet(title: "Skanerlash", count: viewModel.scannedItems.count, feedback: feedback) { code in
+            ScannerSheet(title: "Skanerlash", count: viewModel.scannedItems.count, feedback: feedback) { code in
                 scan(code)
             }
         }
@@ -86,7 +86,7 @@ public struct StockTransferView: View {
                 Label("Kamera bilan skanerlash", systemImage: "camera.viewfinder")
             }
             if let feedback {
-                StockMessageRow(text: "\(feedback.code): \(feedback.message)", isError: feedback.isError)
+                InlineMessage(text: "\(feedback.code): \(feedback.message)", isError: feedback.isError)
             }
         }
     }
@@ -112,11 +112,11 @@ public struct StockTransferView: View {
     private var submitSection: some View {
         Section {
             if let err = viewModel.errorMessage {
-                StockMessageRow(text: err)
+                InlineMessage(text: err)
             } else if let succ = viewModel.successMessage {
-                StockMessageRow(text: succ, isError: false)
+                InlineMessage(text: succ, isError: false)
             }
-            StockPrimaryButton(
+            PrimaryButton(
                 title: "Ko'chirishni tasdiqlash (\(viewModel.scannedItems.count))",
                 isBusy: viewModel.isSubmitting,
                 action: submitTransfer

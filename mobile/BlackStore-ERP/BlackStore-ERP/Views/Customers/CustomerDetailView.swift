@@ -21,7 +21,7 @@ public struct CustomerDetailView: View {
             List {
                 debtHeader(customer)
                 if let err = viewModel.errorMessage {
-                    PeopleInlineError(message: err)
+                    Section { InlineMessage(text: err, font: .footnote) }
                 }
                 contactSection(customer)
                 CustomerTelegramSection(customer: customer, viewModel: viewModel)
@@ -30,9 +30,9 @@ public struct CustomerDetailView: View {
             .listStyle(.insetGrouped)
             .refreshable { await viewModel.loadData() }
         } else if let err = viewModel.errorMessage {
-            PeopleErrorState(message: err) { await viewModel.loadData() }
+            ErrorState(message: err) { await viewModel.loadData() }
         } else {
-            PeopleLoadingState()
+            LoadingState()
         }
     }
 
@@ -102,7 +102,7 @@ public struct CustomerDetailView: View {
         return HStack(alignment: .firstTextBaseline, spacing: 12) {
             VStack(alignment: .leading, spacing: 3) {
                 Text("Savdo #\(sale.id)").font(.body)
-                Text(PeopleDate.display(sale.createdAt))
+                Text(DateDisplay.dateTime(sale.createdAt) ?? String(sale.createdAt.prefix(10)))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

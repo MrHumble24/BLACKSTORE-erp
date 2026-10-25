@@ -30,7 +30,7 @@ public struct SalesTerminalView: View {
             }
             .listStyle(.insetGrouped)
             .navigationTitle("Kassa")
-            .salesKeyboardDoneBar()
+            .keyboardDoneBar()
             .safeAreaInset(edge: .bottom) {
                 CartTotalBar(cartViewModel: cartViewModel) { activeSheet = .checkout }
             }
@@ -98,7 +98,7 @@ public struct SalesTerminalView: View {
     private func sheetContent(for sheet: TerminalSheet) -> some View {
         switch sheet {
         case .scanner:
-            SalesScannerSheet(title: "Shtrix-kod skaner", onClose: { activeSheet = nil }) { code in
+            ScannerSheet(title: "Shtrix-kod skaner", onClose: { activeSheet = nil }) { code in
                 Task {
                     if await cartViewModel.scanCode(code) { activeSheet = nil }
                 }

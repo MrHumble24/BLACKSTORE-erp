@@ -9,12 +9,12 @@ struct SaleRow: View {
             VStack(alignment: .leading, spacing: 4) {
                 HStack(spacing: 8) {
                     Text("Savdo #\(sale.id)").font(.headline)
-                    SaleStatusBadge(status: sale.status)
+                    StatusBadge.sale(sale.status)
                 }
                 Text(sale.customer?.name ?? "Noma'lum xaridor")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
-                if let date = SalesFormat.dateTime(sale.createdAt) {
+                if let date = DateDisplay.dateTime(sale.createdAt) {
                     Text(date).font(.caption).foregroundStyle(.secondary)
                 }
             }

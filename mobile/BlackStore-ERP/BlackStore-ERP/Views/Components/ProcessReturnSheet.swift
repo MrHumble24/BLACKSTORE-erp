@@ -44,9 +44,9 @@ public struct ProcessReturnSheet: View {
                     Section { Label(err, systemImage: "exclamationmark.triangle.fill").foregroundStyle(.red) }
                 }
             }
-            .salesKeyboardDoneBar()
+            .keyboardDoneBar()
             .safeAreaInset(edge: .bottom) {
-                SalesBottomBar(
+                BottomBar(
                     title: "Qaytarishni tasdiqlash (\(APIConfig.formatMoney(enteredRefundAmount)))",
                     isBusy: viewModel.isSubmitting,
                     isDisabled: !canSubmit
@@ -84,7 +84,7 @@ public struct ProcessReturnSheet: View {
                     .keyboardType(.decimalPad)
                     .multilineTextAlignment(.trailing)
                     .monospacedDigit()
-                    .salesDecimalCommaFix($refundAmountText)
+                    .decimalCommaFix($refundAmountText)
             }
             TextField("Qaytarish sababi (ixtiyoriy)", text: $reason, axis: .vertical)
         } header: {

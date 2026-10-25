@@ -33,7 +33,7 @@ public struct BatchDetailView: View {
             .refreshable { await loadDetail() }
             .keyboardDoneBar()
             .sheet(isPresented: $isShowingCamera) {
-                StockScannerSheet(title: "IMEI skanerlash", count: sessionScanCount, feedback: feedback) { code in
+                ScannerSheet(title: "IMEI skanerlash", count: sessionScanCount, feedback: feedback) { code in
                     submitDevice(code: code)
                 }
             }
@@ -42,7 +42,7 @@ public struct BatchDetailView: View {
     @ViewBuilder
     private var content: some View {
         if isLoading && detail == nil {
-            ProgressView("Yuklanmoqda…")
+            LoadingState()
         } else if let detail {
             List {
                 headerSection(for: detail)
@@ -51,14 +51,7 @@ public struct BatchDetailView: View {
             }
             .listStyle(.insetGrouped)
         } else {
-            ContentUnavailableView {
-                Label("Partiya yuklanmadi", systemImage: "exclamationmark.triangle")
-            } description: {
-                Text(loadError ?? "Ma'lumot topilmadi")
-            } actions: {
-                Button("Qayta urinish") { Task { await loadDetail() } }
-                    .buttonStyle(.borderedProminent)
-            }
+            ErrorState(title: "Partiya yuklanmadi", systemImage: "exclamationmark.triangle", message: loadError ?? "Ma'lumot topilmadi") { await loadDetail() }
         }
     }
 
@@ -87,9 +80,9 @@ public struct BatchDetailView: View {
             priceField("Min narx", value: $defaultMinPrice)
             imeiRow
             if let feedback {
-                StockMessageRow(text: "\(feedback.code): \(feedback.message)", isError: feedback.isError)
+                InlineMessage(text: "\(feedback.code): \(feedback.message)", isError: feedback.isError)
             }
-            StockPrimaryButton(title: "Kamera bilan skanerlash", systemImage: "camera.viewfinder") {
+            PrimaryButton(title: "Kamera bilan skanerlash", systemImage: "camera.viewfinder") {
                 isShowingCamera = true
             }
             .disabled(selectedModel == nil)

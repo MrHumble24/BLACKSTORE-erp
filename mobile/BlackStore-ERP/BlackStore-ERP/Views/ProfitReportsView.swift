@@ -25,7 +25,7 @@ public struct ProfitReportsView: View {
             List {
                 netProfitHeader(report.totals)
                 if let err = viewModel.errorMessage {
-                    PeopleInlineError(message: err)
+                    Section { InlineMessage(text: err, font: .footnote) }
                 }
                 splitSection(report.totals)
                 breakdownSection(report)
@@ -36,9 +36,9 @@ public struct ProfitReportsView: View {
             .listStyle(.insetGrouped)
             .refreshable { await viewModel.fetchReport() }
         } else if let err = viewModel.errorMessage {
-            PeopleErrorState(message: err) { await viewModel.fetchReport() }
+            ErrorState(message: err) { await viewModel.fetchReport() }
         } else {
-            PeopleLoadingState()
+            LoadingState()
         }
     }
 
@@ -68,11 +68,11 @@ public struct ProfitReportsView: View {
 
     private func splitSection(_ totals: ProfitTotals) -> some View {
         Section {
-            PeopleMoneyRow("Yalpi foyda", totals.profitDouble)
-            PeopleMoneyRow("Chiqimlar", totals.expensesDouble)
-            PeopleMoneyRow("Boshqa kirimlar", Double(totals.otherIncome) ?? 0)
-            PeopleMoneyRow("Do'kon ulushi", totals.businessShareDouble)
-            PeopleMoneyRow("Investorlar ulushi", totals.investorShareDouble)
+            MoneyRow("Yalpi foyda", totals.profitDouble)
+            MoneyRow("Chiqimlar", totals.expensesDouble)
+            MoneyRow("Boshqa kirimlar", Double(totals.otherIncome) ?? 0)
+            MoneyRow("Do'kon ulushi", totals.businessShareDouble)
+            MoneyRow("Investorlar ulushi", totals.investorShareDouble)
         } header: {
             Text("Foyda taqsimoti")
         } footer: {

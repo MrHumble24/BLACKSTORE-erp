@@ -42,17 +42,9 @@ public struct ConsignmentsView: View {
     @ViewBuilder
     private var content: some View {
         if viewModel.isLoading && viewModel.consignments.isEmpty {
-            ProgressView("Yuklanmoqda…")
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            LoadingState()
         } else if let err = viewModel.errorMessage, viewModel.consignments.isEmpty {
-            ContentUnavailableView {
-                Label("Yuklab bo'lmadi", systemImage: "wifi.exclamationmark")
-            } description: {
-                Text(err)
-            } actions: {
-                Button("Qayta urinish") { Task { await reload() } }
-                    .buttonStyle(.borderedProminent)
-            }
+            ErrorState(message: err) { await reload() }
         } else if viewModel.consignments.isEmpty {
             emptyState
         } else {
@@ -73,7 +65,7 @@ public struct ConsignmentsView: View {
     private var consignmentsList: some View {
         List {
             if let msg = viewModel.errorMessage ?? viewModel.successMessage {
-                Section { StockMessageRow(text: msg, isError: viewModel.errorMessage != nil) }
+                Section { InlineMessage(text: msg, isError: viewModel.errorMessage != nil) }
             }
             Section {
                 ForEach(filteredConsignments) { record in

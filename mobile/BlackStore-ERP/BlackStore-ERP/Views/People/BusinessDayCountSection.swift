@@ -13,10 +13,11 @@ struct BusinessDayCountSection: View {
 
     var body: some View {
         Section(title) {
-            PeopleMoneyRow(takingsTitle, takings)
-            PeopleMoneyRow(expectedTitle, expected)
+            MoneyRow(takingsTitle, takings)
+            MoneyRow(expectedTitle, expected)
             LabeledContent("\(countedTitle) ($)") {
-                TextField("0.00", text: peopleDecimalBinding($counted))
+                TextField("0.00", text: $counted)
+                    .decimalCommaFix($counted)
                     .keyboardType(.decimalPad)
                     .multilineTextAlignment(.trailing)
                     .monospacedDigit()

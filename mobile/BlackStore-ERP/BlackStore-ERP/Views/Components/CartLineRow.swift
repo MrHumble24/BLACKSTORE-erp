@@ -50,7 +50,7 @@ public struct CartLineRow: View {
         .alert("Narxni o'zgartirish", isPresented: $isEditingPrice) {
             TextField("Narx", text: $priceInput)
                 .keyboardType(.decimalPad)
-                .salesDecimalCommaFix($priceInput)
+                .decimalCommaFix($priceInput)
             Button("Bekor qilish", role: .cancel) {}
             Button("OK") {
                 if let newPrice = Double(priceInput) {
