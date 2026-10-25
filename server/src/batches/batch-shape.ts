@@ -14,13 +14,29 @@ export const batchLineSelect = {
   quantity: true,
   unitPrice: true,
   extraCost: true,
-  productModel: { select: { id: true, name: true, category: { select: { id: true, name: true } } } },
+  productModel: {
+    select: {
+      id: true,
+      name: true,
+      category: { select: { id: true, name: true } },
+    },
+  },
   item: {
     select: {
       id: true,
       status: true,
-      identifiers: { select: { id: true, type: true, value: true }, orderBy: { id: 'asc' } },
-      productModel: { select: { id: true, name: true, category: { select: { id: true, name: true } } } },
+      salePrice: true, // not a cost key: safe for every role (iOS label prices)
+      identifiers: {
+        select: { id: true, type: true, value: true },
+        orderBy: { id: 'asc' },
+      },
+      productModel: {
+        select: {
+          id: true,
+          name: true,
+          category: { select: { id: true, name: true } },
+        },
+      },
     },
   },
 } satisfies Prisma.PurchaseLineSelect;
@@ -48,7 +64,9 @@ export const batchDetailSelect = {
 
 type SummaryRow = Prisma.BatchGetPayload<{ select: typeof batchSummarySelect }>;
 type DetailRow = Prisma.BatchGetPayload<{ select: typeof batchDetailSelect }>;
-type LineRow = Prisma.PurchaseLineGetPayload<{ select: typeof batchLineSelect }>;
+type LineRow = Prisma.PurchaseLineGetPayload<{
+  select: typeof batchLineSelect;
+}>;
 
 function header(row: SummaryRow | DetailRow) {
   return {
@@ -66,7 +84,10 @@ function header(row: SummaryRow | DetailRow) {
 /** itemsCost = Σ unitPrice × quantity over every line; a cost key (view_cost only). */
 function itemsCost(lines: { unitPrice: Prisma.Decimal; quantity: number }[]) {
   return lines
-    .reduce((sum, l) => sum.plus(l.unitPrice.times(l.quantity)), new Prisma.Decimal(0))
+    .reduce(
+      (sum, l) => sum.plus(l.unitPrice.times(l.quantity)),
+      new Prisma.Decimal(0),
+    )
     .toFixed(2);
 }
 
@@ -102,12 +123,21 @@ export function toBatchLine(line: LineRow, canViewCost: boolean) {
     id: line.id,
     quantity: line.quantity,
     item: line.item
-      ? { id: line.item.id, status: line.item.status, identifiers: line.item.identifiers }
+      ? {
+          id: line.item.id,
+          status: line.item.status,
+          salePrice: line.item.salePrice?.toFixed(2) ?? null,
+          identifiers: line.item.identifiers,
+        }
       : null,
     productModel: { id: model.id, name: model.name, category: model.category },
   };
   if (!canViewCost) return base;
-  return { ...base, unitPrice: line.unitPrice.toFixed(2), extraCost: line.extraCost.toFixed(2) };
+  return {
+    ...base,
+    unitPrice: line.unitPrice.toFixed(2),
+    extraCost: line.extraCost.toFixed(2),
+  };
 }
 
 /** Full Batch: summary fields plus ordered lines. */
