@@ -37,12 +37,20 @@ struct CategoryDetailView: View {
         }
         .navigationBarTitleDisplayMode(.inline)
         .task { await viewModel.fetchModels(categoryId: categoryId) }
+        .onDisappear {
+            // The list shares this view model; don't carry detail messages back to it.
+            viewModel.errorMessage = nil
+            viewModel.notice = nil
+        }
     }
 
     private func content(_ category: CategoryItem) -> some View {
         List {
             if let err = viewModel.errorMessage {
                 Section { InlineMessage(text: err) }
+            }
+            if let notice = viewModel.notice {
+                Section { InlineMessage(text: notice.text, isError: notice.isError) }
             }
             header(category)
             attributesSection(category)
@@ -89,15 +97,15 @@ struct CategoryDetailView: View {
             if category.attributes.isEmpty {
                 Text("Xususiyatlar mavjud emas").foregroundStyle(.secondary)
             }
-            ForEach(category.attributes.sorted { $0.sortOrder < $1.sortOrder }) { attribute in
+            ForEach(category.attributes) { attribute in
                 Button { attributeTarget = .edit(attribute) } label: { AttributeRow(attribute: attribute) }
                     .foregroundStyle(.primary)
                     .disabled(!category.isActive)
             }
         } header: {
-            sectionHeader("Xususiyatlar (atributlar)", enabled: category.isActive) { attributeTarget = .new }
-        } footer: {
-            if !category.isActive { Text("Nofaol kategoriyaning xususiyatlarini o'zgartirib bo'lmaydi") }
+            sectionHeader("Xususiyatlar (atributlar)", add: "Xususiyat qo'shish", enabled: category.isActive) {
+                attributeTarget = .new
+            }
         }
     }
 
@@ -111,21 +119,20 @@ struct CategoryDetailView: View {
             ForEach(models) { model in
                 ModelRow(
                     model: model,
-                    isBusy: viewModel.isSaving,
                     onEdit: { modelTarget = .edit(model) },
-                    onToggle: { isOn in Task { await viewModel.setModelActive(model, isActive: isOn) } }
+                    onToggle: { await viewModel.setModelActive(id: model.id, categoryId: categoryId, isActive: $0) }
                 )
             }
         } header: {
-            sectionHeader("Modellar", enabled: true) { modelTarget = .new }
+            sectionHeader("Modellar", add: "Model qo'shish", enabled: true) { modelTarget = .new }
         }
     }
 
-    private func sectionHeader(_ title: String, enabled: Bool, add: @escaping () -> Void) -> some View {
+    private func sectionHeader(_ title: String, add: String, enabled: Bool, action: @escaping () -> Void) -> some View {
         HStack {
             Text(title)
             Spacer()
-            Button("Qo'shish", systemImage: "plus", action: add)
+            Button(add, systemImage: "plus", action: action)
                 .labelStyle(.titleAndIcon)
                 .font(.subheadline)
                 .textCase(nil)

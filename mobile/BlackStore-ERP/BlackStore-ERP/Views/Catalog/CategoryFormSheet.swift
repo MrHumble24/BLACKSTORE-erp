@@ -1,73 +1,56 @@
 import SwiftUI
 
-/// Create or edit sheet for a category: name, serialized switch and (edit only) active toggle.
+/// Create or edit sheet for a category: name and serialized switch, like the web form.
 struct CategoryFormSheet: View {
     @ObservedObject var viewModel: CategoriesViewModel
     /// nil = create a new category.
     let category: CategoryItem?
-    @Environment(\.dismiss) private var dismiss
     @State private var name: String
     @State private var isSerialized: Bool
-    @State private var isActive: Bool
+    @State private var nameEdited = false
 
     init(viewModel: CategoriesViewModel, category: CategoryItem? = nil) {
         self.viewModel = viewModel
         self.category = category
         _name = State(initialValue: category?.name ?? "")
         _isSerialized = State(initialValue: category?.isSerialized ?? true)
-        _isActive = State(initialValue: category?.isActive ?? true)
     }
 
     private var trimmedName: String { name.trimmingCharacters(in: .whitespacesAndNewlines) }
-    private var nameError: String? { trimmedName.count > 100 ? "Ko'pi bilan 100 ta belgi" : nil }
-    private var isValid: Bool { !trimmedName.isEmpty && nameError == nil }
-
-    var body: some View {
-        NavigationStack {
-            Form {
-                if let err = viewModel.errorMessage {
-                    Section { InlineMessage(text: err) }
-                }
-                Section {
-                    TextField("Kategoriya nomini kiriting", text: $name)
-                    if let nameError { InlineMessage(text: nameError, font: .caption) }
-                } header: { Text("Nomi") }
-                Section {
-                    Toggle("Seriya raqamli", isOn: $isSerialized)
-                } footer: {
-                    Text("Seriya raqamli mahsulotlar IMEI yoki seriya raqami bo'yicha donabay hisoblanadi")
-                }
-                if category != nil {
-                    Section { Toggle("Faol", isOn: $isActive) }
-                }
-            }
-            .navigationTitle(category == nil ? "Kategoriya qo'shish" : "Kategoriyani tahrirlash")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Bekor qilish") { dismiss() } }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Saqlash") { Task { await save() } }
-                        .disabled(!isValid || viewModel.isSaving)
-                }
-            }
-        }
-        .presentationDetents([.medium, .large])
-        .presentationDragIndicator(.visible)
-        .onAppear { viewModel.errorMessage = nil }
-        .onDisappear { viewModel.errorMessage = nil }
+    private var nameError: String? {
+        if trimmedName.isEmpty { return "Ismni kiriting" }
+        return trimmedName.utf16.count > 100 ? "Ko'pi bilan 100 ta belgi" : nil
     }
 
-    /// Sends create or update and closes on success.
-    private func save() async {
-        let ok: Bool
+    var body: some View {
+        Group {
+            Section {
+                TextField("Kategoriya nomini kiriting", text: $name)
+                    .onChange(of: name) { nameEdited = true }
+                if nameEdited, let nameError { InlineMessage(text: nameError, font: .caption) }
+            } header: { Text("Nomi") }
+            Section {
+                Toggle("Seriya raqamli", isOn: $isSerialized)
+            } footer: {
+                Text("Seriya raqamli mahsulotlar IMEI yoki seriya raqami bo'yicha donabay hisoblanadi")
+            }
+        }
+        .formSheet(
+            title: category == nil ? "Kategoriya qo'shish" : "Kategoriyani tahrirlash",
+            canSave: nameError == nil,
+            isSaving: viewModel.isSaving,
+            save: save
+        )
+    }
+
+    /// Sends create or update; throws so the sheet shows the error.
+    private func save() async throws {
         if let category {
-            ok = await viewModel.updateCategory(
-                id: category.id,
-                UpdateCategoryPayload(name: trimmedName, isSerialized: isSerialized, isActive: isActive)
+            try await viewModel.updateCategory(
+                id: category.id, UpdateCategoryPayload(name: trimmedName, isSerialized: isSerialized)
             )
         } else {
-            ok = await viewModel.createCategory(CreateCategoryPayload(name: trimmedName, isSerialized: isSerialized))
+            try await viewModel.createCategory(CreateCategoryPayload(name: trimmedName, isSerialized: isSerialized))
         }
-        if ok { dismiss() }
     }
 }

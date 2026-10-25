@@ -53,14 +53,7 @@ public struct UsersManagementView: View {
             Button {
                 Task { await viewModel.toggleActive(user: user) }
             } label: {
-                Text((user.isActive ?? true) ? "Faol" : "Nofaol")
-                    .font(.caption2)
-                    .fontWeight(.semibold)
-                    .foregroundStyle((user.isActive ?? true) ? .green : .secondary)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(((user.isActive ?? true) ? Color.green : Color.secondary).opacity(0.12))
-                    .clipShape(Capsule())
+                ActiveBadge(isActive: user.isActive ?? true)
             }
             .buttonStyle(.plain)
         }

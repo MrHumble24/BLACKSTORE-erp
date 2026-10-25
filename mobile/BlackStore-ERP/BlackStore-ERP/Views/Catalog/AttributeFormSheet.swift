@@ -6,7 +6,6 @@ struct AttributeFormSheet: View {
     let categoryId: Int
     /// nil = add a new attribute.
     let attribute: CategoryAttribute?
-    @Environment(\.dismiss) private var dismiss
     @State private var draft: AttributeDraft
     private let initial: AttributeDraft
 
@@ -23,33 +22,26 @@ struct AttributeFormSheet: View {
     private var showErrors: Bool { draft != initial }
 
     var body: some View {
-        NavigationStack {
-            Form {
-                if let err = viewModel.errorMessage {
-                    Section { InlineMessage(text: err) }
+        Group {
+            nameSection
+            typeSection
+            Section {
+                Toggle("Majburiy maydon", isOn: $draft.required)
+                LabeledContent("Tartib raqami") {
+                    TextField("0", text: $draft.sortOrderText)
+                        .keyboardType(.numberPad)
+                        .multilineTextAlignment(.trailing)
+                        .monospacedDigit()
                 }
-                nameSection
-                typeSection
-                Section {
-                    Toggle("Majburiy maydon", isOn: $draft.required)
-                    LabeledContent("Tartib raqami") {
-                        TextField("0", text: $draft.sortOrderText)
-                            .keyboardType(.numberPad)
-                            .multilineTextAlignment(.trailing)
-                            .monospacedDigit()
-                    }
-                    fieldError(draft.orderError)
-                }
+                fieldError(draft.orderError)
             }
-            .navigationTitle(attribute == nil ? "Xususiyat qo'shish" : "Xususiyatni tahrirlash")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar { toolbarButtons }
-            .keyboardDoneBar()
         }
-        .presentationDetents([.large])
-        .presentationDragIndicator(.visible)
-        .onAppear { viewModel.errorMessage = nil }
-        .onDisappear { viewModel.errorMessage = nil }
+        .formSheet(
+            title: attribute == nil ? "Xususiyat qo'shish" : "Xususiyatni tahrirlash",
+            canSave: draft.isValid,
+            isSaving: viewModel.isSaving,
+            save: save
+        )
     }
 
     private var nameSection: some View {
@@ -81,27 +73,17 @@ struct AttributeFormSheet: View {
         }
     }
 
-    @ToolbarContentBuilder
-    private var toolbarButtons: some ToolbarContent {
-        ToolbarItem(placement: .cancellationAction) { Button("Bekor qilish") { dismiss() } }
-        ToolbarItem(placement: .confirmationAction) {
-            Button("Saqlash") { Task { await save() } }
-                .disabled(!draft.isValid || viewModel.isSaving)
-        }
-    }
-
     @ViewBuilder
     private func fieldError(_ message: String?) -> some View {
         if showErrors, let message { InlineMessage(text: message, font: .caption) }
     }
 
-    /// Sends create or update and closes on success.
-    private func save() async {
-        let ok = if let attribute {
-            await viewModel.updateAttribute(categoryId: categoryId, attributeId: attribute.id, draft.payload)
+    /// Sends create or update; throws so the sheet shows the error.
+    private func save() async throws {
+        if let attribute {
+            try await viewModel.updateAttribute(categoryId: categoryId, attributeId: attribute.id, draft.payload)
         } else {
-            await viewModel.createAttribute(categoryId: categoryId, draft.payload)
+            try await viewModel.createAttribute(categoryId: categoryId, draft.payload)
         }
-        if ok { dismiss() }
     }
 }

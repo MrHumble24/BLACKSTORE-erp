@@ -56,13 +56,7 @@ public struct SuppliersView: View {
             }
             Spacer()
             if !(supplier.isActive ?? true) {
-                Text("Nofaol")
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-                    .padding(.horizontal, 6)
-                    .padding(.vertical, 2)
-                    .background(Color(.systemGray5))
-                    .clipShape(Capsule())
+                ActiveBadge(isActive: false)
             }
         }
         .padding(.vertical, 2)

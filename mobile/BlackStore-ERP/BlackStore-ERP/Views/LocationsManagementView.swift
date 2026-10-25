@@ -51,13 +51,7 @@ public struct LocationsManagementView: View {
                     .foregroundStyle(.secondary)
             }
             Spacer()
-            Text(loc.isActive ? "Faol" : "Nofaol")
-                .font(.caption2)
-                .foregroundStyle(loc.isActive ? .green : .secondary)
-                .padding(.horizontal, 6)
-                .padding(.vertical, 2)
-                .background((loc.isActive ? Color.green : Color.secondary).opacity(0.12))
-                .clipShape(Capsule())
+            ActiveBadge(isActive: loc.isActive)
         }
         .padding(.vertical, 2)
     }
