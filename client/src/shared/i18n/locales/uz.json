@@ -1345,7 +1345,8 @@
       "customerReceipts": "Mijozlarga cheklar",
       "debtReminders": "Qarz eslatmalari",
       "warrantyReminders": "Kafolat eslatmalari",
-      "investorReports": "Investor hisobotlari"
+      "investorReports": "Investor hisobotlari",
+      "dayCloseAlerts": "Kassa yopilishi va farqlar xabari"
     },
     "disconnect": "Uzish",
     "disconnectTitle": "Telegram uzilsinmi?",

@@ -21,6 +21,8 @@ export interface TelegramFeatures {
   warrantyReminders: boolean;
   // Monthly per-investor report cron (F18, roadmap #6). Default OFF — it messages external investors.
   investorReports: boolean;
+  // Day close and cash variance alerts to owner (Phase 1). Default ON.
+  dayCloseAlerts: boolean;
 }
 
 /** The 'telegram' Setting row value. The token is stored encrypted and never leaves the server. */
@@ -248,6 +250,7 @@ export class TelegramConfigService {
         // Investor reports message external investors → OFF until the owner opts in (same `?? false`
         // reason as the customer flags above: isFeatureEnabled defaults a MISSING flag to on).
         investorReports: s.features?.investorReports ?? false,
+        dayCloseAlerts: s.features?.dayCloseAlerts ?? true,
       },
     };
   }

@@ -8,6 +8,7 @@ const ON: TelegramFeatures = {
   debtReminders: true,
   warrantyReminders: true,
   investorReports: true,
+  dayCloseAlerts: true,
 };
 const investor = { id: 7, name: 'Ali' };
 
@@ -29,7 +30,10 @@ describe('menu', () => {
 
   it('keyboard is persistent; a stranger (no buttons) gets null', () => {
     expect(keyboardFor({ owner: true }, ON)).toEqual({
-      keyboard: [[BUTTONS.status, BUTTONS.lowStock, BUTTONS.debtors]],
+      keyboard: [
+        [BUTTONS.status, BUTTONS.cash],
+        [BUTTONS.lowStock, BUTTONS.debtors],
+      ],
       resize_keyboard: true,
       is_persistent: true,
     });
@@ -38,6 +42,7 @@ describe('menu', () => {
   });
 
   it('isButton matches labels exactly', () => {
+    expect(isButton(BUTTONS.cash)).toBe(true);
     expect(isButton(BUTTONS.debtors)).toBe(true);
     expect(isButton('/status')).toBe(false);
   });

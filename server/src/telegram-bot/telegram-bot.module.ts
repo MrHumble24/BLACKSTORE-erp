@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { BusinessDayModule } from '../business-day/business-day.module';
 import { DashboardModule } from '../dashboard/dashboard.module';
 import { IntegrationsModule } from '../integrations/integrations.module';
 import { ReportsModule } from '../reports/reports.module';
@@ -12,13 +13,13 @@ import { KnownChatService } from './known-chat.service';
 /**
  * Inbound Telegram feature (F15 `/status`, F16 `/start` chat linking, F21 known-chat discovery, F22
  * button menu). Imports IntegrationsModule (credentials + feature flags + bot username),
- * DashboardModule (snapshot data), SettingsModule (shop name) and ReportsModule (investor figures);
- * none of them imports this module, so there is no cycle. ScheduleModule is already global (the
- * @Interval poll runs).
+ * DashboardModule (snapshot data), SettingsModule (shop name), ReportsModule (investor figures)
+ * and BusinessDayModule (cash status); none of them imports this module, so there is no cycle.
+ * ScheduleModule is already global (the @Interval poll runs).
  * Exports LinkTokenService so F17/F18 can call `buildInviteLink(kind, refId, issuedById)`.
  */
 @Module({
-  imports: [IntegrationsModule, DashboardModule, SettingsModule, ReportsModule],
+  imports: [IntegrationsModule, DashboardModule, SettingsModule, ReportsModule, BusinessDayModule],
   providers: [TelegramBotService, LinkTokenService, KnownChatService, BotRoleService, BotReportsService],
   exports: [LinkTokenService],
 })

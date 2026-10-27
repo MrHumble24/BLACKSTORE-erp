@@ -1345,7 +1345,8 @@
       "customerReceipts": "Customer receipts",
       "debtReminders": "Debt reminders",
       "warrantyReminders": "Warranty reminders",
-      "investorReports": "Investor reports"
+      "investorReports": "Investor reports",
+      "dayCloseAlerts": "Day close & discrepancy alerts"
     },
     "disconnect": "Disconnect",
     "disconnectTitle": "Disconnect Telegram?",

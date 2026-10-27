@@ -13,6 +13,8 @@ export interface TelegramFeatures {
   warrantyReminders: boolean;
   /** Monthly report pushed to each linked investor (F18). */
   investorReports: boolean;
+  /** Instant alert sent to owner when a business day is closed (Phase 1). */
+  dayCloseAlerts: boolean;
 }
 
 /** Saved Telegram state from GET /integrations/telegram (never includes a token). */

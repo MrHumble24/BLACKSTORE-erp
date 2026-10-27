@@ -50,6 +50,19 @@ export async function handleStatus(update: BotUpdate, ctx: CommandContext, keybo
   return sent;
 }
 
+/** `/cash` and `/kassa` commands (Phase 1): live register cash status, same security gate as /status. */
+export async function handleCash(update: BotUpdate, ctx: CommandContext, keyboard: ReplyMarkup | null) {
+  const ignored = statusIgnoreReason(update, ctx);
+  if (ignored) {
+    ctx.logger.log(`/cash ignored: ${ignored}`);
+    return false;
+  }
+  const text = await ctx.reports.cashStatus();
+  const sent = await safeSend(ctx.logger, ctx.token, update.chatId, text, '/cash', keyboard ?? undefined);
+  if (sent) ctx.logger.log('/cash answered');
+  return sent;
+}
+
 /** Why `/status` must stay silent for this update, or null when it may answer (the FR-29 gate). */
 function statusIgnoreReason(update: BotUpdate, ctx: CommandContext): string | null {
   if (update.chat.type !== 'private') return 'not a private chat'; // a group may share the alerts chat id
@@ -103,6 +116,8 @@ function ignoreButton(update: BotUpdate, ctx: CommandContext, menu: Menu) {
 function buttonReply(button: ReportButton, ctx: CommandContext, role: Role): Promise<string> | null {
   const { customerId, investor } = role;
   switch (button) {
+    case BUTTONS.cash:
+      return ctx.reports.cashStatus();
     case BUTTONS.lowStock:
       return ctx.reports.lowStock();
     case BUTTONS.debtors:

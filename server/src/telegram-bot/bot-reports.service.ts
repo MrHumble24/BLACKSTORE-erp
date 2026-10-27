@@ -1,6 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Optional } from '@nestjs/common';
 import { Prisma, SaleStatus } from '@prisma/client';
 import { buildLowStockDigest, lowStockLines } from '../accessory-stock/low-stock';
+import { BusinessDayService } from '../business-day/business-day.service';
 import { startOfToday } from '../common/dates';
 import { buildDebtReminderText } from '../customer-notifications/customer-messages';
 import { deviceName, warrantyItemSelect } from '../customer-notifications/warranty-select';
@@ -10,6 +11,7 @@ import { InvestorReportService } from '../reports/investor-report.service';
 import { debtSaleSelect, totalDebt } from '../sales/sale-totals';
 import { SettingsService } from '../settings/settings.service';
 import {
+  buildCashStatusText,
   buildDebtorsText,
   buildNoActivityText,
   buildNoDebtText,
@@ -33,7 +35,34 @@ export class BotReportsService {
     private readonly prisma: PrismaService,
     private readonly settings: SettingsService,
     private readonly investorReport: InvestorReportService,
+    @Optional() private readonly businessDay?: BusinessDayService,
   ) {}
+
+  /** Owner: live register drawer cash status for the current open business day, or "no open day". */
+  async cashStatus(): Promise<string> {
+    if (!this.businessDay) return '⚠️ Kassa moduli ulanmagan.';
+    try {
+      const cur = await this.businessDay.getCurrent();
+      return buildCashStatusText(
+        {
+          dayId: cur.day.id,
+          expectedCash: cur.expectedCash,
+          expectedCard: cur.expectedCard,
+          paymentsCash: cur.breakdown.paymentsCash,
+          paymentsCard: cur.breakdown.paymentsCard,
+          cashIncome: cur.breakdown.cashIncome,
+          cashExpense: cur.breakdown.cashExpense,
+          cashRefunds: cur.breakdown.cashRefunds,
+          walkInPurchases: cur.breakdown.walkInPurchases,
+          pendingSalesCash: cur.breakdown.pendingSalesCash,
+          pendingSalesCount: cur.pendingSalesCount,
+        },
+        new Date(),
+      );
+    } catch {
+      return '⚠️ Hozirda ochiq kassa (ish kuni) mavjud emas.';
+    }
+  }
 
   /** Owner: the same low-stock list as the daily digest, or "nothing low". */
   async lowStock(): Promise<string> {

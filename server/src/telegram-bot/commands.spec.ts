@@ -33,7 +33,7 @@ const update = (text: string, chatId = OWNER, type = 'private'): BotUpdate => ({
   removed: false,
 });
 const kb = (...rows: string[][]) => ({ keyboard: rows, resize_keyboard: true, is_persistent: true });
-const OWNER_KB = kb([BUTTONS.status, BUTTONS.lowStock, BUTTONS.debtors]);
+const OWNER_KB = kb([BUTTONS.status, BUTTONS.cash], [BUTTONS.lowStock, BUTTONS.debtors]);
 const CUSTOMER_KB = kb([BUTTONS.myDebt, BUTTONS.warranty]);
 const REMOVE = { remove_keyboard: true };
 const ALL_ON: TelegramFeatures = {
@@ -43,6 +43,7 @@ const ALL_ON: TelegramFeatures = {
   debtReminders: true,
   warrantyReminders: true,
   investorReports: true,
+  dayCloseAlerts: true,
 };
 
 describe('parseCommand', () => {
@@ -61,6 +62,7 @@ describe('routeUpdate', () => {
   const investorFind = jest.fn();
   const prisma = { customer: { findUnique: customerFind }, investor: { findUnique: investorFind } };
   const reports = {
+    cashStatus: jest.fn().mockResolvedValue('CASH_STATUS'),
     lowStock: jest.fn().mockResolvedValue('LOW'),
     debtors: jest.fn().mockResolvedValue('DEBTORS'),
     customerDebt: jest.fn().mockResolvedValue('MY DEBT'),
@@ -140,6 +142,26 @@ describe('routeUpdate', () => {
     });
   });
 
+  describe('/cash', () => {
+    it('sends cash status with owner keyboard for /cash from owner chat', async () => {
+      await routeUpdate(update('/cash'), ctx);
+      expect(reports.cashStatus).toHaveBeenCalled();
+      expect(sendMessage).toHaveBeenCalledWith('t', OWNER, 'CASH_STATUS', OWNER_KB);
+    });
+
+    it('matches /kassa alias', async () => {
+      await routeUpdate(update('/kassa'), ctx);
+      expect(reports.cashStatus).toHaveBeenCalled();
+      expect(sendMessage).toHaveBeenCalledWith('t', OWNER, 'CASH_STATUS', OWNER_KB);
+    });
+
+    it('ignores /cash from non-owner chat', async () => {
+      await routeUpdate(update('/cash', '999'), ctx);
+      expect(reports.cashStatus).not.toHaveBeenCalled();
+      expect(sendMessage).not.toHaveBeenCalled();
+    });
+  });
+
   describe('/start', () => {
     it('links FIRST, then replies with the new menu; never returns business data', async () => {
       linkChat.mockResolvedValueOnce({ kind: 'CUSTOMER', refId: 42 });
@@ -197,6 +219,12 @@ describe('routeUpdate', () => {
       await routeUpdate(update(BUTTONS.status), ctx);
       expect(sendMessage).toHaveBeenCalledWith('t', OWNER, 'SNAPSHOT', OWNER_KB);
       expect(log).toHaveBeenCalledWith('/status answered');
+    });
+
+    it('owner cash button sends live cash status', async () => {
+      await routeUpdate(update(BUTTONS.cash), ctx);
+      expect(reports.cashStatus).toHaveBeenCalled();
+      expect(sendMessage).toHaveBeenCalledWith('t', OWNER, 'CASH_STATUS', OWNER_KB);
     });
 
     it('customer buttons read only their own id', async () => {

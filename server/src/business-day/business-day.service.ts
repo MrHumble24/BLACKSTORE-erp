@@ -1,12 +1,15 @@
-import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, Logger, NotFoundException, Optional } from '@nestjs/common';
 import { DayStatus, Prisma } from '@prisma/client';
 import { AuditService } from '../audit/audit.service';
 import type { PublicUser } from '../common/auth-user';
+import { errorMessage, safeSend } from '../common/telegram';
 import { PaginationQueryDto } from '../common/pagination-query.dto';
+import { TelegramConfigService } from '../integrations/telegram-config.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { buildDayCloseAlertText } from './business-day-messages';
 import { loadEvents, buildEvents } from './business-day.events';
 import {
-  confirmedSaleSelect, daySelect, DayWindow, DbClient, DrawerWindow, ledgerSelect, lockOpenDay, openDay, saleSelect,
+  ClosedDay, confirmedSaleSelect, daySelect, DayWindow, DbClient, DrawerWindow, ledgerSelect, lockOpenDay, openDay, saleSelect,
   toDay, toLedgerRow, toReturnRow, Tx, walkInSelect, windowRange,
 } from './business-day.mappers';
 import { computeExpected } from './business-day.reconcile';
@@ -17,9 +20,12 @@ import { UpdateBusinessDayDto } from './dto/update-business-day.dto';
 /** Daily close / reconciliation (F13). Owner-only (close_day); anti-fraud drawer counting with flags. */
 @Injectable()
 export class BusinessDayService {
+  private readonly logger = new Logger(BusinessDayService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly audit: AuditService,
+    @Optional() private readonly telegram?: TelegramConfigService,
   ) {}
 
   /** The current OPEN day with live expected cash/card, its breakdown, the review lists and the events feed (F13, F30). */
@@ -62,7 +68,7 @@ export class BusinessDayService {
    * and with a second close: the loser waits, then finds no OPEN row and gets a 409.
    */
   async close(dto: CloseDayDto, actor: PublicUser) {
-    return this.prisma.$transaction(async (tx) => {
+    const closedDay = await this.prisma.$transaction(async (tx) => {
       const day = await lockOpenDay(tx, { retry: false });
       const closedAt = new Date();
       const expected = computeExpected(await this.loadDrawer(tx, day.openedAt, closedAt));
@@ -92,8 +98,25 @@ export class BusinessDayService {
 
       await this.audit.log({ userId: actor.id, action: 'close', entity: 'BusinessDay', entityId: day.id, before: { id: day.id, status: DayStatus.OPEN }, after: closed }, tx);
       await this.audit.log({ userId: actor.id, action: 'create', entity: 'BusinessDay', entityId: nextDay.id, after: nextDay }, tx);
-      return toDay(closed);
+      return closed;
     });
+
+    await this.notifyDayClose(closedDay, actor.name, dto.note);
+    return toDay(closedDay);
+  }
+
+  /** Sends an instant Telegram alert to the owner on day close (F34, Phase 1). */
+  private async notifyDayClose(closed: ClosedDay, actorName: string, note?: string | null): Promise<void> {
+    try {
+      if (!this.telegram) return;
+      if (!(await this.telegram.isFeatureEnabled('dayCloseAlerts'))) return;
+      const { token, alertChatId } = await this.telegram.getCredentials();
+      if (!token || !alertChatId) return;
+      const text = buildDayCloseAlertText(closed, actorName, note);
+      await safeSend(this.logger, token, alertChatId, text, 'Day close alert');
+    } catch (e) {
+      this.logger.warn(`Day close Telegram alert failed: ${errorMessage(e)}`);
+    }
   }
 
   /** CLOSED days only, newest close first, paginated (F28 history). */

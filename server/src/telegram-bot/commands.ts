@@ -4,7 +4,7 @@ import type { DashboardService } from '../dashboard/dashboard.service';
 import type { TelegramFeatures } from '../integrations/telegram-config.service';
 import type { BotReportsService } from './bot-reports.service';
 import type { BotRoleService } from './bot-role.service';
-import { handleButton, handleStart, handleStatus, menuFor, sendMenuOrWelcome } from './handlers';
+import { handleButton, handleCash, handleStart, handleStatus, menuFor, sendMenuOrWelcome } from './handlers';
 import type { LinkTokenService } from './link-token.service';
 import { isButton } from './menu';
 
@@ -39,6 +39,7 @@ export async function routeUpdate(update: BotUpdate, ctx: CommandContext): Promi
   if (!command) return false; // membership changes, photos ...: nothing to answer
   const menu = await menuFor(update, ctx); // no DB read outside private chats
   if (command === '/status') return handleStatus(update, ctx, menu.keyboard);
+  if (command === '/cash' || command === '/kassa') return handleCash(update, ctx, menu.keyboard);
   if (update.chat.type !== 'private') return false;
   const text = update.text.trim();
   if (isButton(text)) return handleButton(text, update, ctx, menu);

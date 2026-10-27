@@ -1345,7 +1345,8 @@
       "customerReceipts": "Чеки клиентам",
       "debtReminders": "Напоминания о долге",
       "warrantyReminders": "Напоминания о гарантии",
-      "investorReports": "Отчёты инвесторам"
+      "investorReports": "Отчёты инвесторам",
+      "dayCloseAlerts": "Закрытие кассы и расхождения"
     },
     "disconnect": "Отключить",
     "disconnectTitle": "Отключить Telegram?",

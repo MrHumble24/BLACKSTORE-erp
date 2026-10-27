@@ -50,3 +50,44 @@ export function buildWarrantyListText(shopName: string, items: WarrantyItem[]): 
 export function buildNoActivityText(month: string): string {
   return [`📊 ${monthLabel(month)}`, "Bu oyda harakat yo'q. / В этом месяце движений нет."].join('\n');
 }
+
+/** Live cash breakdown of the open business day for the owner's "Kassa" button (Phase 1). */
+export interface CashStatusData {
+  dayId: number;
+  expectedCash: string;
+  expectedCard: string;
+  paymentsCash: string;
+  paymentsCard: string;
+  cashIncome: string;
+  cashExpense: string;
+  cashRefunds: string;
+  walkInPurchases: string;
+  pendingSalesCash?: string;
+  pendingSalesCount?: number;
+}
+
+/** Owner: live register and drawer cash status for the open business day. */
+export function buildCashStatusText(data: CashStatusData, now: Date): string {
+  const hh = String(now.getHours()).padStart(2, '0');
+  const mm = String(now.getMinutes()).padStart(2, '0');
+  const lines = [
+    `<b>💵 Kassa holati</b> (#${data.dayId})`,
+    `<i>Vaqt: ${hh}:${mm}</i>`,
+    '',
+    `💵 <b>Kassada naqd pul:</b> ${money(data.expectedCash)}`,
+    `💳 <b>Karta / Terminal:</b> ${money(data.expectedCard)}`,
+    '',
+    '<b>Harakatlar (Bugun):</b>',
+    `• Naqd savdo: +${money(data.paymentsCash)}`,
+    `• Terminal savdo: +${money(data.paymentsCard)}`,
+    `• Kirim (Prixod): +${money(data.cashIncome)}`,
+    `• Chiqim (Rasxod): -${money(data.cashExpense)}`,
+    `• Qaytarilgan: -${money(data.cashRefunds)}`,
+    `• Walk-in to'lov: -${money(data.walkInPurchases)}`,
+  ];
+  if (data.pendingSalesCount && data.pendingSalesCount > 0) {
+    lines.push('', `⚠️ <i>Kutilayotgan: ${data.pendingSalesCount} ta tasdiqlanmagan savdo (${money(data.pendingSalesCash ?? '0')})</i>`);
+  }
+  return lines.join('\n');
+}
+

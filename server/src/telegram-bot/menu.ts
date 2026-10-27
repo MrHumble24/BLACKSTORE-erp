@@ -4,6 +4,7 @@ import type { TelegramFeatures } from '../integrations/telegram-config.service';
 /** Button labels of the bot's reply keyboard (F22). The label IS the message the bot receives. */
 export const BUTTONS = {
   status: '📊 Holat',
+  cash: '💵 Kassa',
   lowStock: '📦 Kam qolgan tovarlar',
   debtors: '💳 Qarzdorlar',
   myDebt: '💳 Mening qarzim',
@@ -30,7 +31,10 @@ const pick = (pairs: [Button, boolean][]): Button[] => pairs.filter(([, on]) => 
 export function buttonRows(role: Role, f: TelegramFeatures): Button[][] {
   const rows: Button[][] = [];
   if (role.owner) {
-    rows.push(pick([[BUTTONS.status, f.ownerSnapshot], [BUTTONS.lowStock, true], [BUTTONS.debtors, true]]));
+    const r1 = pick([[BUTTONS.status, f.ownerSnapshot], [BUTTONS.cash, f.ownerSnapshot]]);
+    if (r1.length) rows.push(r1);
+    const r2 = pick([[BUTTONS.lowStock, true], [BUTTONS.debtors, true]]);
+    if (r2.length) rows.push(r2);
   }
   if (role.customerId) {
     rows.push(pick([[BUTTONS.myDebt, f.debtReminders], [BUTTONS.warranty, f.warrantyReminders]]));

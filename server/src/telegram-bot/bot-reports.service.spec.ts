@@ -1,4 +1,5 @@
 import { Prisma } from '@prisma/client';
+import type { BusinessDayService } from '../business-day/business-day.service';
 import type { PrismaService } from '../prisma/prisma.service';
 import type { InvestorReportService } from '../reports/investor-report.service';
 import type { SettingsService } from '../settings/settings.service';
@@ -17,10 +18,12 @@ describe('BotReportsService', () => {
   const saleItem = { findMany: jest.fn() };
   const accessoryStock = { findMany: jest.fn() };
   const report = jest.fn();
+  const businessDay = { getCurrent: jest.fn() };
   const service = new BotReportsService(
     { sale, saleItem, accessoryStock } as unknown as PrismaService,
     { getReceipt: jest.fn().mockResolvedValue({ shopName: 'Shop' }) } as unknown as SettingsService,
     { report } as unknown as InvestorReportService,
+    businessDay as unknown as BusinessDayService,
   );
 
   beforeEach(() => jest.clearAllMocks());
@@ -79,5 +82,35 @@ describe('BotReportsService', () => {
     expect(text).toContain('Sizning ulushingiz: $2.00');
     report.mockResolvedValue({ rows: [] });
     expect(await service.investorMonth(7, 'Ali', '2026-09')).toContain("Bu oyda harakat yo'q");
+  });
+
+  it('cashStatus: returns formatted live cash status when day is open', async () => {
+    businessDay.getCurrent.mockResolvedValue({
+      day: { id: 3 },
+      expectedCash: '2000.00',
+      expectedCard: '500.00',
+      breakdown: {
+        paymentsCash: '2500.00',
+        paymentsCard: '500.00',
+        cashIncome: '100.00',
+        cashExpense: '200.00',
+        cashRefunds: '50.00',
+        walkInPurchases: '350.00',
+        pendingSalesCash: '150.00',
+      },
+      pendingSalesCount: 1,
+    });
+
+    const text = await service.cashStatus();
+    expect(text).toContain('💵 Kassa holati</b> (#3)');
+    expect(text).toContain('Kassada naqd pul:</b> $2 000.00');
+    expect(text).toContain('Karta / Terminal:</b> $500.00');
+    expect(text).toContain('1 ta tasdiqlanmagan savdo');
+  });
+
+  it('cashStatus: handles no open business day gracefully', async () => {
+    businessDay.getCurrent.mockRejectedValue(new Error('No open day'));
+    const text = await service.cashStatus();
+    expect(text).toBe('⚠️ Hozirda ochiq kassa (ish kuni) mavjud emas.');
   });
 });

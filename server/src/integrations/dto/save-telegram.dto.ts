@@ -39,6 +39,11 @@ export class TelegramFeaturesDto {
   @IsOptional()
   @IsBoolean()
   investorReports?: boolean;
+
+  // Day close and cash variance alerts to owner (Phase 1). Default on.
+  @IsOptional()
+  @IsBoolean()
+  dayCloseAlerts?: boolean;
 }
 
 /** Everyday Telegram settings (no token): toggles + chat ids. Needs a bot already configured. */

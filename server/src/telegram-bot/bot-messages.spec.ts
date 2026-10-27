@@ -1,4 +1,5 @@
 import {
+  buildCashStatusText,
   buildDebtorsText,
   buildNoActivityText,
   buildNoDebtText,
@@ -38,4 +39,31 @@ describe('bot-messages', () => {
   it('no activity: names the month, bilingual', () => {
     expect(buildNoActivityText('2026-01')).toBe("📊 01.2026\nBu oyda harakat yo'q. / В этом месяце движений нет.");
   });
+
+  it('cash status: formats expected cash, card, movements, and pending warning', () => {
+    const data = {
+      dayId: 8,
+      expectedCash: '2500',
+      expectedCard: '800',
+      paymentsCash: '3000',
+      paymentsCard: '800',
+      cashIncome: '500',
+      cashExpense: '200',
+      cashRefunds: '100',
+      walkInPurchases: '700',
+      pendingSalesCash: '350',
+      pendingSalesCount: 2,
+    };
+    const now = new Date(2026, 9, 27, 14, 30);
+    const text = buildCashStatusText(data, now);
+
+    expect(text).toContain('<b>💵 Kassa holati</b> (#8)');
+    expect(text).toContain('<i>Vaqt: 14:30</i>');
+    expect(text).toContain('💵 <b>Kassada naqd pul:</b> $2 500.00');
+    expect(text).toContain('💳 <b>Karta / Terminal:</b> $800.00');
+    expect(text).toContain('• Naqd savdo: +$3 000.00');
+    expect(text).toContain('• Chiqim (Rasxod): -$200.00');
+    expect(text).toContain('⚠️ <i>Kutilayotgan: 2 ta tasdiqlanmagan savdo ($350.00)</i>');
+  });
 });
+
