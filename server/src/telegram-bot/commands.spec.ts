@@ -44,6 +44,7 @@ const ALL_ON: TelegramFeatures = {
   warrantyReminders: true,
   investorReports: true,
   dayCloseAlerts: true,
+  matchAlerts: false,
 };
 
 describe('parseCommand', () => {

@@ -83,6 +83,11 @@ public final class APIClient: Sendable {
         return try await request(path: path, method: "PATCH", body: bodyData)
     }
 
+    /// Performs HTTP PATCH with no body (e.g. confirm / pay toggles) and decodes JSON response.
+    public func patch<T: Decodable>(_ path: String) async throws -> T {
+        try await request(path: path, method: "PATCH", body: nil)
+    }
+
     /// Core request executor with session cookie/Bearer token injection, logging, and error handling.
     public func request<T: Decodable>(path: String, method: String, body: Data?) async throws -> T {
         guard let url = URL(string: "\(APIConfig.baseURL)\(path)") else {

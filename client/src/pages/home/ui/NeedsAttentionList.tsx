@@ -1,7 +1,7 @@
 import type { ComponentType } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { Wallet, Clock, PackageX, CheckCircle2, ChevronRight } from 'lucide-react';
+import { Wallet, Clock, PackageX, CheckCircle2, ChevronRight, BellRing } from 'lucide-react';
 import { Card } from '@/shared/ui';
 import { cn } from '@/shared/lib';
 import type { DashboardSummary } from '@/entities/dashboard';
@@ -30,7 +30,7 @@ function Row({ to, icon: Icon, title, accent }: AttentionRow) {
   );
 }
 
-/** Debtors to chase and overdue partner items; friendly empty state when nothing is pending. */
+/** Debtors to chase, overdue partner items, low stock and new Watcher offers; friendly empty state when nothing is pending. */
 export function NeedsAttentionList({ summary }: { summary: DashboardSummary }) {
   const { t } = useTranslation();
   const rows: AttentionRow[] = [];
@@ -57,6 +57,16 @@ export function NeedsAttentionList({ summary }: { summary: DashboardSummary }) {
       icon: PackageX,
       title: t('home.lowStockAccessories', { count: summary.lowStockCount }),
       accent: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
+    });
+  }
+
+  // Present only for manage_watches users (server omits it otherwise).
+  if (summary.newMatchCount) {
+    rows.push({
+      to: '/matches?status=NEW',
+      icon: BellRing,
+      title: t('home.newOffers', { count: summary.newMatchCount }),
+      accent: 'bg-pricing-blue/10 text-pricing-blue',
     });
   }
 

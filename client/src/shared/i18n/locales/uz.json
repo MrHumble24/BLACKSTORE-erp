@@ -66,7 +66,9 @@
     "closeDay": "Kun yakuni",
     "hardDelete": "Xavfli hudud",
     "shrinkSidebar": "Yon panelni yig'ish (⌘B)",
-    "expandSidebar": "Yon panelni yoyish (⌘B)"
+    "expandSidebar": "Yon panelni yoyish (⌘B)",
+    "watches": "Kuzatuvlar",
+    "matches": "Takliflar"
   },
   "auth": {
     "title": "Tizimga kirish",
@@ -152,7 +154,8 @@
       "costValue": "Tan narxi",
       "devicesCount": "{{count}} ta qurilma",
       "itemsCount": "{{count}} ta"
-    }
+    },
+    "newOffers": "{{count}} ta yangi taklif"
   },
   "scan": {
     "placeholder": "IMEI yoki seriya raqami...",
@@ -1346,8 +1349,10 @@
       "debtReminders": "Qarz eslatmalari",
       "warrantyReminders": "Kafolat eslatmalari",
       "investorReports": "Investor hisobotlari",
-      "dayCloseAlerts": "Kassa yopilishi va farqlar xabari"
+      "dayCloseAlerts": "Kassa yopilishi va farqlar xabari",
+      "matchAlerts": "Watcher mosliklari haqida xabar"
     },
+    "matchAlertsHint": "Watcherning o'z boti egasini allaqachon xabardor qiladi. Faqat u bot o'chiq bo'lsa yoqing, aks holda har bir taklif ikki marta keladi.",
     "disconnect": "Uzish",
     "disconnectTitle": "Telegram uzilsinmi?",
     "disconnectWarning": "Saqlangan bot va chatlar o'chiriladi. Qayta ulamaguningizcha zaxira nusxalar va ogohlantirishlar to'xtaydi.",
@@ -1495,5 +1500,68 @@
   "pwa": {
     "updateAvailable": "Yangi versiya tayyor",
     "reload": "Yangilash"
+  },
+  "watches": {
+    "title": "Kuzatuvlar",
+    "subtitle": "Telegram kuzatuvchisi sotuvchilar guruhlarida qidiradigan qurilmalar",
+    "addWatch": "Kuzatuv qo'shish",
+    "editWatch": "Kuzatuvni tahrirlash",
+    "name": "Nomi",
+    "namePlaceholder": "masalan, iPhone 17 Pro Max",
+    "aliases": "Muqobil nomlar",
+    "aliasesPlaceholder": "17 pro max\n17pm",
+    "aliasesHint": "Har qatorda bittadan, 30 tagacha",
+    "productModel": "Mahsulot modeli",
+    "noProductModel": "Bog'lanmagan",
+    "maxPrice": "Maks. narx",
+    "currency": "Valyuta",
+    "synced": "Kuzatuvchi bilan sinxronlangan",
+    "notSynced": "Hali kuzatuvchiga yuborilmagan",
+    "syncedColumn": "Sinxron",
+    "noWatches": "Hozircha kuzatuvlar yo'q",
+    "createdSuccess": "Kuzatuv qo'shildi",
+    "updatedSuccess": "Kuzatuv yangilandi",
+    "validation": {
+      "nameRequired": "Nomini kiriting",
+      "tooManyAliases": "Ko'pi bilan 30 ta muqobil nom",
+      "aliasTooLong": "Har bir nom 60 belgidan oshmasin",
+      "maxPriceInvalid": "Narxni kiriting, masalan 1300 yoki 1300.50"
+    }
+  },
+  "matches": {
+    "title": "Takliflar",
+    "subtitle": "Kuzatuvlaringizga mos Telegram postlari; har 15 soniyada yangilanadi",
+    "status": "Holat",
+    "allStatuses": "Hammasi",
+    "watch": "Kuzatuv",
+    "allWatches": "Barcha kuzatuvlar",
+    "received": "Qabul qilingan",
+    "device": "Qurilma",
+    "price": "Narx",
+    "confidence": "Aniqlik",
+    "seller": "Sotuvchi",
+    "message": "Xabar",
+    "link": "Havola",
+    "openMessage": "Postni Telegramda ochish",
+    "noMatches": "Hozircha takliflar yo'q",
+    "note": "Izoh",
+    "noteTitle": "Taklif izohi",
+    "notePlaceholder": "Izoh yozing (500 belgigacha)",
+    "noteSaved": "Izoh saqlandi",
+    "condition": { "new": "Yangi", "used": "Ishlatilgan" },
+    "statuses": {
+      "NEW": "Yangi",
+      "SEEN": "Ko'rildi",
+      "CONTACTED": "Bog'lanildi",
+      "BOUGHT": "Sotib olindi",
+      "IGNORED": "O'tkazib yuborildi"
+    },
+    "actions": {
+      "SEEN": "Ko'rildi",
+      "CONTACTED": "Bog'lanildi",
+      "BOUGHT": "Sotib olindi",
+      "IGNORED": "O'tkazib yuborish",
+      "NEW": "Qaytarish"
+    }
   }
 }

@@ -10,6 +10,13 @@ struct SaleRow: View {
                 HStack(spacing: 8) {
                     Text("Savdo #\(sale.id)").font(.headline)
                     StatusBadge.sale(sale.status)
+                    // Not yet confirmed at the daily close (F33): its money isn't counted yet.
+                    if !sale.isConfirmed {
+                        Image(systemName: "clock.badge.exclamationmark")
+                            .font(.caption2)
+                            .foregroundStyle(.orange)
+                            .accessibilityLabel("Tasdiqlash kutilmoqda")
+                    }
                 }
                 Text(sale.customer?.name ?? "Noma'lum xaridor")
                     .font(.subheadline)

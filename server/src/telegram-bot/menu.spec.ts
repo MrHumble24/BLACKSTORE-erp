@@ -9,6 +9,7 @@ const ON: TelegramFeatures = {
   warrantyReminders: true,
   investorReports: true,
   dayCloseAlerts: true,
+  matchAlerts: false,
 };
 const investor = { id: 7, name: 'Ali' };
 

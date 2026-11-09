@@ -30,6 +30,7 @@ One file per task handed to an agent. Paste the file's content as the first mess
 | F31 | Sell page → consignment handover carries the scanned devices over instead of making the user scan them again (client change request, frontend only) | W4, FR-26 |
 | F32 | Walk-in payout confirmation: a walk-in purchase leaves the drawer only when the Admin confirms the payout (close-day page or device panel), on the day it is confirmed (client change request) | W5, FR-25, F13, F30 |
 | F33 | Sale confirmation: a sale's payments count in the drawer only once the Admin confirms the sale on the close-day page (or sale page); debt, profit and status unchanged (client change request) | F13, F30, F32, BR-6, BR-8 |
+| F34 | Telegram device Watcher: ERP-owned watches pushed to the Watcher, matches received by signed webhook, owner alert, Watcher heartbeat + down alert (client change request 2026-10-27; Watcher itself lives in `../MALIKA-WATCHER`) | BR-8, BR-9, BR-11 (exception), BR-12, FR-29, FR-30, NFR Security |
 
 ## Parallel tasks
 

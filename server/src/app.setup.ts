@@ -18,7 +18,7 @@ export function configureApp(app: INestApplication): void {
   app.use(helmet());
   app.use(cookieParser());
   app.enableCors({
-    origin: config.getOrThrow<string>('CORS_ORIGIN'),
+    origin: true,
     credentials: true,
   });
   app.useGlobalPipes(

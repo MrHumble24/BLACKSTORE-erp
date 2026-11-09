@@ -12,7 +12,7 @@ export async function createTestApp(): Promise<INestApplication<App>> {
   const moduleFixture: TestingModule = await Test.createTestingModule({
     imports: [AppModule],
   }).compile();
-  const app = moduleFixture.createNestApplication<App>();
+  const app = moduleFixture.createNestApplication<App>({ rawBody: true }); // same as main.ts
   configureApp(app);
   await app.init();
   return app;

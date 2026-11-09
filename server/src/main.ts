@@ -5,7 +5,7 @@ import { AppModule } from './app.module';
 import { configureApp } from './app.setup';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, { rawBody: true }); // rawBody: webhook HMAC (F34)
   configureApp(app);
 
   const port = app.get(ConfigService).getOrThrow<number>('PORT');
@@ -14,4 +14,7 @@ async function bootstrap() {
     `Application running on: http://localhost:${port}/api`,
   );
 }
-void bootstrap();
+bootstrap().catch((err: unknown) => {
+  new Logger('Bootstrap').error('Failed to start', err instanceof Error ? err.stack : String(err));
+  process.exit(1);
+});

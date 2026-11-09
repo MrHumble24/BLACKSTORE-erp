@@ -158,6 +158,9 @@ model User {
   issuedTelegramTokens    TelegramLinkToken[] // invite links this user handed out (F24)
   telegramLinkedCustomers Customer[]          @relation("CustomerTelegramLinkedBy")
   telegramLinkedInvestors Investor[]          @relation("InvestorTelegramLinkedBy")
+
+  createdWatches     Watch[] @relation("WatchCreator") // F34
+  matchStatusChanges Match[] @relation("MatchStatusChanger") // F34
 }
 
 model AuditLog {
@@ -272,6 +275,7 @@ model ProductModel {
   saleItems           SaleItem[]
   purchaseLines       PurchaseLine[]
   transferAccessories TransferAccessory[]
+  watches             Watch[] // F34: Watcher watches linked to this model
 
   @@unique([categoryId, name])
 }
@@ -732,4 +736,68 @@ model TelegramKnownChat {
   title      String // group/channel title, or the person's name/username
   type       String // private | group | supergroup | channel
   lastSeenAt DateTime @updatedAt
+}
+
+// ─────────────────────────────────────────────
+// Watcher integration (F34): devices the owner wants to buy and the Telegram offers found
+// ─────────────────────────────────────────────
+
+// A device the owner is looking for: model name plus aliases the Watcher matches against.
+// currency is a label only (BR-11 exception, answers B5): no conversion, no sums.
+model Watch {
+  id             Int           @id @default(autoincrement())
+  name           String
+  aliases        String[]
+  productModelId Int?
+  productModel   ProductModel? @relation(fields: [productModelId], references: [id], onDelete: SetNull) // so the super-admin hard delete of a product model still works
+  maxPrice       Decimal?      @db.Decimal(12, 2)
+  currency       String        @default("USD") // "USD" | "UZS"
+  isActive       Boolean       @default(true) // BR-12: switched off, never deleted
+  syncedAt       DateTime? // last successful push to the Watcher; stale when < updatedAt
+  createdById    Int
+  createdBy      User          @relation("WatchCreator", fields: [createdById], references: [id])
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  matches        Match[]
+
+  @@index([isActive])
+  @@index([productModelId])
+}
+
+enum MatchStatus {
+  NEW
+  SEEN
+  CONTACTED
+  BOUGHT
+  IGNORED
+}
+
+// One seller offer the Watcher found for a watch; created only by the webhook.
+model Match {
+  id                Int         @id @default(autoincrement())
+  externalId        String      @unique // Watcher matchId; makes webhook retries idempotent
+  watchId           Int
+  watch             Watch       @relation(fields: [watchId], references: [id])
+  status            MatchStatus @default(NEW)
+  device            String
+  price             Decimal?    @db.Decimal(12, 2)
+  currency          String? // label only (BR-11 exception)
+  condition         String?
+  confidence        Decimal     @db.Decimal(4, 3)
+  sellerName        String?
+  sellerTelegramId  String? // stored, never returned to the client
+  sellerUsername    String?
+  messageText       String
+  messageLink       String? // null for basic groups (no message links)
+  groupTitle        String
+  parentText        String?
+  messageAt         DateTime
+  receivedAt        DateTime    @default(now())
+  statusChangedAt   DateTime?
+  statusChangedById Int?
+  statusChangedBy   User?       @relation("MatchStatusChanger", fields: [statusChangedById], references: [id])
+  note              String?
+
+  @@index([watchId])
+  @@index([status, receivedAt])
 }

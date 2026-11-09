@@ -20,7 +20,7 @@ import { PermissionsGuard } from './permissions.guard';
         },
       }),
     }),
-    // Only used by @UseGuards(ThrottlerGuard) on POST /auth/login.
+    // Used by @UseGuards(ThrottlerGuard) on POST /auth/login and the Watcher match webhook.
     ThrottlerModule.forRoot([{ ttl: 60_000, limit: 10 }]),
   ],
   controllers: [AuthController],

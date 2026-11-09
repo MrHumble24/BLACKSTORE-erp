@@ -25,7 +25,8 @@ public struct BusinessDayCloseView: View {
             } message: {
                 Text("Kun yopilgach, barcha kassa hisoblari muzlatiladi va yangi kun ochiladi.")
             }
-            .task { await viewModel.fetchCurrentDay() }
+            .task { await viewModel.refreshAll() }
+            .refreshable { await viewModel.refreshAll() }
     }
 
     @ViewBuilder
@@ -47,6 +48,11 @@ public struct BusinessDayCloseView: View {
                 Text("Bugun \(day.sales.count) ta savdo")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
+            }
+            WaitingSalesSection(viewModel: viewModel)
+            PendingPayoutsSection(viewModel: viewModel)
+            if let actionErr = viewModel.actionError {
+                Section { InlineMessage(text: actionErr, font: .footnote) }
             }
             BusinessDayCountSection(
                 title: "Naqd pul (G'aladon)",

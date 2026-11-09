@@ -51,5 +51,7 @@ export interface DashboardSummary {
   lowStockCount: number;
   /** Net profit this calendar month — present only with view_profit. */
   monthNetProfit?: string;
+  /** Watcher offers still in NEW status — present only with manage_watches. */
+  newMatchCount?: number;
   recentSales: DashboardRecentSale[];
 }

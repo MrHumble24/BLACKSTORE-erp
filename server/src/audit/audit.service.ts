@@ -13,8 +13,8 @@ export interface AuditEntry {
   after?: object | null;
 }
 
-/** Keys scrubbed from every audited before/after snapshot: a secret and a private contact id. */
-const REDACTED_KEYS = new Set(['passwordHash', 'telegramChatId']);
+/** Keys scrubbed from every audited before/after snapshot: a secret and private contact ids (F34 seller id). */
+const REDACTED_KEYS = new Set(['passwordHash', 'telegramChatId', 'sellerTelegramId']);
 
 /** Fields of an audit row that leave the server (Admin only); before/after returned as stored. */
 const auditSelect = {
@@ -34,7 +34,7 @@ export class AuditService {
   constructor(private readonly prisma: PrismaService) {}
 
   /**
-   * Saves one audit row; passwordHash and telegramChatId are removed at any depth before saving
+   * Saves one audit row; passwordHash, telegramChatId and sellerTelegramId are removed at any depth before saving
    * (secret / private contact data must never land in the audit trail or GET /audit-log).
    * Pass the transaction client (tx) to write it inside the same transaction as the change.
    */

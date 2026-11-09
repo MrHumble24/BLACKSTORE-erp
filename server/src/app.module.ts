@@ -35,6 +35,7 @@ import { SuppliersModule } from './suppliers/suppliers.module';
 import { TransfersModule } from './transfers/transfers.module';
 import { UsersModule } from './users/users.module';
 import { WalkInPurchasesModule } from './walk-in-purchases/walk-in-purchases.module';
+import { WatchesModule } from './watches/watches.module';
 
 @Module({
   imports: [
@@ -71,6 +72,7 @@ import { WalkInPurchasesModule } from './walk-in-purchases/walk-in-purchases.mod
     BusinessDayModule,
     SuperAdminModule,
     HealthModule,
+    WatchesModule,
   ],
   providers: [{ provide: APP_FILTER, useClass: PrismaExceptionFilter }],
 })

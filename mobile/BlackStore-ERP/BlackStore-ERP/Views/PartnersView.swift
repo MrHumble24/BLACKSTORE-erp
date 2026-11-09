@@ -9,6 +9,14 @@ public struct PartnersView: View {
 
     public var body: some View {
         List {
+            Section {
+                NavigationLink {
+                    PartnerTransactionsView()
+                } label: {
+                    Label("Tranzaksiyalar", systemImage: "arrow.left.arrow.right.circle")
+                }
+            }
+
             if let err = viewModel.errorMessage {
                 Section { Text(err).font(.caption).foregroundStyle(.red) }
             }

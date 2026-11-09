@@ -13,7 +13,19 @@ public final class BusinessDayViewModel: ObservableObject {
     @Published public var errorMessage: String? = nil
     @Published public var closedSnapshot: ClosedDaySnapshot? = nil
 
+    // Close-day confirmation (F33) and walk-in payouts (F32): the lists and the actions' state.
+    @Published public var pendingPayouts: [WalkInPayoutRow] = []
+    @Published public var actionError: String? = nil
+    @Published public var busySaleIds: Set<Int> = []
+    @Published public var busyPayoutIds: Set<Int> = []
+
     public init() {}
+
+    /// Unconfirmed sales awaiting the owner's confirmation; their money is not counted yet.
+    public var pendingSales: [PendingSaleRow] { currentDay?.pendingSales ?? [] }
+
+    private struct ConfirmSalesBody: Encodable { let ids: [Int] }
+    private struct ConfirmManyResult: Decodable { let confirmed: Int }
 
     /// Expected cash in drawer as a Double.
     public var expectedCashAmount: Double {
@@ -87,6 +99,71 @@ public final class BusinessDayViewModel: ObservableObject {
             self.errorMessage = error.localizedDescription
             HapticManager.error()
             return false
+        }
+    }
+
+    /// Loads the current day and the pending walk-in payouts together (the close screen needs both).
+    public func refreshAll() async {
+        await fetchCurrentDay()
+        await fetchPendingPayouts()
+    }
+
+    /// Unconfirmed walk-in payouts from any day, oldest first (GET /walk-in-purchases/pending, F32).
+    public func fetchPendingPayouts() async {
+        do {
+            let page: WalkInPayoutPage = try await APIClient.shared.get("/walk-in-purchases/pending?page=1&pageSize=50")
+            self.pendingPayouts = page.items
+        } catch {
+            // Non-fatal: the drawer still closes without the payout list.
+            self.actionError = "To'lovlarni yuklab bo'lmadi: \(error.localizedDescription)"
+        }
+    }
+
+    /// Confirms one sale at the close (PATCH /sales/:id/confirm); its money then counts in the drawer.
+    public func confirmSale(_ id: Int) async {
+        busySaleIds.insert(id)
+        defer { busySaleIds.remove(id) }
+        actionError = nil
+        do {
+            let _: Sale = try await APIClient.shared.patch("/sales/\(id)/confirm")
+            HapticManager.success()
+            await fetchCurrentDay()
+        } catch {
+            self.actionError = error.localizedDescription
+            HapticManager.error()
+        }
+    }
+
+    /// Confirms every waiting sale in one request (PATCH /sales/confirm); already-confirmed ids are skipped.
+    public func confirmAllSales() async {
+        let ids = pendingSales.map(\.id)
+        guard !ids.isEmpty else { return }
+        isSubmitting = true
+        defer { isSubmitting = false }
+        actionError = nil
+        do {
+            let _: ConfirmManyResult = try await APIClient.shared.patch("/sales/confirm", body: ConfirmSalesBody(ids: ids))
+            HapticManager.success()
+            await fetchCurrentDay()
+        } catch {
+            self.actionError = error.localizedDescription
+            HapticManager.error()
+        }
+    }
+
+    /// Marks a walk-in payout paid or undoes it (PATCH /walk-in-purchases/:lineId/pay|unpay, F32).
+    /// Both the payout list and the expected cash change, so the whole screen is refreshed.
+    public func setWalkInPaid(_ lineId: Int, paid: Bool) async {
+        busyPayoutIds.insert(lineId)
+        defer { busyPayoutIds.remove(lineId) }
+        actionError = nil
+        do {
+            let _: WalkInPayoutRow = try await APIClient.shared.patch("/walk-in-purchases/\(lineId)/\(paid ? "pay" : "unpay")")
+            HapticManager.success()
+            await refreshAll()
+        } catch {
+            self.actionError = error.localizedDescription
+            HapticManager.error()
         }
     }
 }

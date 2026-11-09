@@ -23,6 +23,7 @@ export const ADMIN_ONLY_PERMISSIONS = [
   'view_audit_log',
   'manage_backups',
   'close_day',
+  'manage_watches',
 ] as const;
 
 // Super-admin-only powers (F12). Admin never implicitly gets these; only the SuperAdmin role,

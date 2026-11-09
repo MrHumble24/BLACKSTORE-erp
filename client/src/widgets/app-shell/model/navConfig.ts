@@ -5,7 +5,7 @@ import {
   Package, HandCoins, Building2, Upload,
   CalendarCheck, Wallet, BarChart3, Coins,
   Users, MapPin, Shapes, Settings, DatabaseBackup, ScrollText,
-  Send, Trash2,
+  Send, Trash2, Radar, BellRing,
 } from 'lucide-react';
 import type { Permission } from '@/shared/config/permissions';
 
@@ -69,6 +69,8 @@ export const NAV_GROUPS: NavGroup[] = [
       { to: '/purchases/walk-in', labelKey: 'nav.walkInPurchase', icon: HandCoins, permission: 'buy_walk_in' },
       { to: '/suppliers', labelKey: 'nav.suppliers', icon: Building2, permission: 'manage_suppliers' },
       { to: '/items/import', labelKey: 'nav.importStock', icon: Upload, permission: 'manage_prices' },
+      { to: '/watches', labelKey: 'nav.watches', icon: Radar, permission: 'manage_watches' },
+      { to: '/matches', labelKey: 'nav.matches', icon: BellRing, permission: 'manage_watches' },
     ],
   },
   {

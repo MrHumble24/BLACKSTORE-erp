@@ -29,6 +29,8 @@ import { ProfitReportPage, InvestorReportPage } from '@/pages/reports';
 import { ReceiptSettingsPage } from '@/pages/settings';
 import { TelegramPage, HardDeletePage } from '@/pages/super-admin';
 import { CloseDayPage } from '@/pages/close-day';
+import { WatchesPage } from '@/pages/watches';
+import { MatchesPage } from '@/pages/matches';
 import type { Permission } from '@/shared/config/permissions';
 import { ProtectedRoute } from './ProtectedRoute';
 
@@ -56,6 +58,8 @@ const PROTECTED_ROUTES: RouteConfig[] = [
   { path: 'investors/:id', permission: 'manage_investors', Component: InvestorDetailPage },
   { path: 'suppliers', permission: 'manage_suppliers', Component: SuppliersPage },
   { path: 'suppliers/:id', permission: 'manage_suppliers', Component: SupplierDetailPage },
+  { path: 'watches', permission: 'manage_watches', Component: WatchesPage },
+  { path: 'matches', permission: 'manage_watches', Component: MatchesPage },
   { path: 'batches', permission: 'receive_batch', Component: BatchesPage },
   { path: 'batches/:id', permission: 'receive_batch', Component: BatchDetailPage },
   { path: 'purchases/walk-in', permission: 'buy_walk_in', Component: WalkInPurchasePage },

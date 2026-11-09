@@ -15,6 +15,8 @@ export interface TelegramFeatures {
   investorReports: boolean;
   /** Instant alert sent to owner when a business day is closed (Phase 1). */
   dayCloseAlerts: boolean;
+  /** Owner alert per Watcher match (F34). Off by default: the Watcher's own bot already alerts. */
+  matchAlerts: boolean;
 }
 
 /** Saved Telegram state from GET /integrations/telegram (never includes a token). */

@@ -66,7 +66,9 @@
     "closeDay": "Закрытие дня",
     "hardDelete": "Опасная зона",
     "shrinkSidebar": "Свернуть панель (⌘B)",
-    "expandSidebar": "Развернуть панель (⌘B)"
+    "expandSidebar": "Развернуть панель (⌘B)",
+    "watches": "Отслеживание",
+    "matches": "Предложения"
   },
   "auth": {
     "title": "Вход в систему",
@@ -152,7 +154,8 @@
       "costValue": "Себестоимость",
       "devicesCount": "{{count}} устр.",
       "itemsCount": "{{count}} шт."
-    }
+    },
+    "newOffers": "Новых предложений: {{count}}"
   },
   "scan": {
     "placeholder": "IMEI или серийный номер...",
@@ -1346,8 +1349,10 @@
       "debtReminders": "Напоминания о долге",
       "warrantyReminders": "Напоминания о гарантии",
       "investorReports": "Отчёты инвесторам",
-      "dayCloseAlerts": "Закрытие кассы и расхождения"
+      "dayCloseAlerts": "Закрытие кассы и расхождения",
+      "matchAlerts": "Оповещения о совпадениях Watcher"
     },
+    "matchAlertsHint": "Собственный бот Watcher уже оповещает владельца. Включайте, только если тот бот выключен, иначе каждое предложение придёт дважды.",
     "disconnect": "Отключить",
     "disconnectTitle": "Отключить Telegram?",
     "disconnectWarning": "Сохранённый бот и чаты будут удалены. Резервные копии и уведомления прекратятся до повторного подключения.",
@@ -1495,5 +1500,68 @@
   "pwa": {
     "updateAvailable": "Доступна новая версия",
     "reload": "Обновить"
+  },
+  "watches": {
+    "title": "Отслеживание",
+    "subtitle": "Устройства, которые Telegram-наблюдатель ищет в группах продавцов",
+    "addWatch": "Добавить отслеживание",
+    "editWatch": "Изменить отслеживание",
+    "name": "Название",
+    "namePlaceholder": "например, iPhone 17 Pro Max",
+    "aliases": "Варианты названия",
+    "aliasesPlaceholder": "17 pro max\n17pm",
+    "aliasesHint": "По одному в строке, до 30",
+    "productModel": "Модель товара",
+    "noProductModel": "Не привязана",
+    "maxPrice": "Макс. цена",
+    "currency": "Валюта",
+    "synced": "Синхронизировано с наблюдателем",
+    "notSynced": "Ещё не отправлено наблюдателю",
+    "syncedColumn": "Синхр.",
+    "noWatches": "Пока нет отслеживаний",
+    "createdSuccess": "Отслеживание добавлено",
+    "updatedSuccess": "Отслеживание обновлено",
+    "validation": {
+      "nameRequired": "Введите название",
+      "tooManyAliases": "Не более 30 вариантов",
+      "aliasTooLong": "Каждый вариант — не длиннее 60 символов",
+      "maxPriceInvalid": "Введите цену, например 1300 или 1300.50"
+    }
+  },
+  "matches": {
+    "title": "Предложения",
+    "subtitle": "Посты в Telegram, подходящие под ваши отслеживания; обновляется каждые 15 секунд",
+    "status": "Статус",
+    "allStatuses": "Все",
+    "watch": "Отслеживание",
+    "allWatches": "Все отслеживания",
+    "received": "Получено",
+    "device": "Устройство",
+    "price": "Цена",
+    "confidence": "Точность",
+    "seller": "Продавец",
+    "message": "Сообщение",
+    "link": "Ссылка",
+    "openMessage": "Открыть пост в Telegram",
+    "noMatches": "Пока нет предложений",
+    "note": "Заметка",
+    "noteTitle": "Заметка к предложению",
+    "notePlaceholder": "Напишите заметку (до 500 символов)",
+    "noteSaved": "Заметка сохранена",
+    "condition": { "new": "Новый", "used": "Б/у" },
+    "statuses": {
+      "NEW": "Новое",
+      "SEEN": "Просмотрено",
+      "CONTACTED": "Связались",
+      "BOUGHT": "Куплено",
+      "IGNORED": "Пропущено"
+    },
+    "actions": {
+      "SEEN": "Просмотрено",
+      "CONTACTED": "Связались",
+      "BOUGHT": "Куплено",
+      "IGNORED": "Пропустить",
+      "NEW": "Вернуть"
+    }
   }
 }

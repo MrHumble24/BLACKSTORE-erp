@@ -23,6 +23,8 @@ export interface TelegramFeatures {
   investorReports: boolean;
   // Day close and cash variance alerts to owner (Phase 1). Default ON.
   dayCloseAlerts: boolean;
+  // Owner alert per Watcher match (F34). Default OFF: the Watcher's own bot already alerts the owner.
+  matchAlerts: boolean;
 }
 
 /** The 'telegram' Setting row value. The token is stored encrypted and never leaves the server. */
@@ -251,6 +253,8 @@ export class TelegramConfigService {
         // reason as the customer flags above: isFeatureEnabled defaults a MISSING flag to on).
         investorReports: s.features?.investorReports ?? false,
         dayCloseAlerts: s.features?.dayCloseAlerts ?? true,
+        // OFF until opted in (same `?? false` reason as above): on would double the Watcher's alerts.
+        matchAlerts: s.features?.matchAlerts ?? false,
       },
     };
   }

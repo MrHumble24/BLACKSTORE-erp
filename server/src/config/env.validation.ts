@@ -5,6 +5,7 @@ import {
   IsInt,
   IsNotEmpty,
   IsString,
+  IsUrl,
   Min,
   MinLength,
   ValidateIf,
@@ -75,6 +76,26 @@ export class EnvironmentVariables {
 
   @IsString()
   SUPER_ADMIN_PASSWORD: string = '';
+
+  // ── Telegram device Watcher (F34) ─────────────────────────
+  // All optional so dev and tests boot without a Watcher; empty = unset.
+  @ValidateIf((o: EnvironmentVariables) => !!o.WATCHER_URL)
+  @IsUrl({ require_tld: false, require_protocol: true, protocols: ['http', 'https'] })
+  WATCHER_URL?: string;
+
+  @ValidateIf((o: EnvironmentVariables) => !!o.WATCHER_API_KEY)
+  @MinLength(32, { message: 'WATCHER_API_KEY must be at least 32 characters' })
+  WATCHER_API_KEY?: string;
+
+  // HMAC secret for the inbound match webhook; unset = webhook rejects everything (fail closed).
+  @ValidateIf((o: EnvironmentVariables) => !!o.WATCHER_WEBHOOK_SECRET)
+  @MinLength(32, { message: 'WATCHER_WEBHOOK_SECRET must be at least 32 characters' })
+  WATCHER_WEBHOOK_SECRET?: string;
+
+  // Minutes the Watcher may stay unreachable before the owner gets a Telegram alert; 0 = off.
+  @IsInt()
+  @Min(0)
+  WATCHER_DOWN_ALERT_MIN: number = 10;
 }
 
 /** Used by ConfigModule: fails startup with a list of every bad or missing variable. */

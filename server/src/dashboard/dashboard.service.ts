@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { ConsignmentItemStatus, ItemStatus, Prisma, SaleStatus } from '@prisma/client';
+import { ConsignmentItemStatus, ItemStatus, MatchStatus, Prisma, SaleStatus } from '@prisma/client';
 import { lowStockIds } from '../accessory-stock/low-stock';
 import type { PublicUser } from '../common/auth-user';
 import { endOfDay, startOfToday } from '../common/dates';
@@ -30,11 +30,19 @@ export class DashboardService {
     private readonly profit: ProfitReportService,
   ) {}
 
-  /** Builds the role-masked summary; profit is shown only to view_profit. */
+  /**
+   * Builds the role-masked summary; profit is shown only to view_profit. `newMatchCount` (F34,
+   * Watcher matches still NEW) only for manage_watches, and only here so the owner snapshot is unchanged.
+   */
   async summary(actor: PublicUser) {
     const canViewProfit = hasPermission(actor, 'view_profit');
     const canViewCost = hasPermission(actor, 'view_cost') || canViewProfit;
-    return this.collect(canViewProfit, canViewCost);
+    const canManageWatches = hasPermission(actor, 'manage_watches');
+    const [data, newMatchCount] = await Promise.all([
+      this.collect(canViewProfit, canViewCost),
+      canManageWatches ? this.prisma.match.count({ where: { status: MatchStatus.NEW } }) : null,
+    ]);
+    return { ...data, ...(newMatchCount !== null ? { newMatchCount } : {}) };
   }
 
   /**

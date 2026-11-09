@@ -58,6 +58,7 @@ function makeService() {
       }),
       count: jest.fn().mockResolvedValue(2),
     },
+    match: { count: jest.fn().mockResolvedValue(4) },
   } as unknown as PrismaService;
   const profit = {
     profitFor: jest.fn().mockResolvedValue({ gross: d('200'), net: d('900') }),
@@ -109,5 +110,12 @@ describe('DashboardService.summary (F10)', () => {
     expect(staff.stock).not.toHaveProperty('inStockCostValue');
     expect(staff.stock).not.toHaveProperty('totalCostValue');
     expect(profit.profitFor).not.toHaveBeenCalled();
+    expect(staff).not.toHaveProperty('newMatchCount');
+  });
+
+  it('adds newMatchCount only for manage_watches (F34)', async () => {
+    const { service } = makeService();
+    const admin = await service.summary(actor(['view_stock', 'manage_watches']));
+    expect(admin).toHaveProperty('newMatchCount', 4);
   });
 });

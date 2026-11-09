@@ -1,5 +1,11 @@
 import Foundation
 
+/// A minimal user/partner reference ({ id, name }) used across sales, payouts and partner feeds.
+nonisolated public struct NamedRef: Codable, Identifiable, Sendable {
+    public let id: Int
+    public let name: String
+}
+
 /// Sale line in a completed sale.
 nonisolated public struct SaleLine: Codable, Identifiable, Sendable {
     public let id: Int
@@ -46,6 +52,14 @@ nonisolated public struct Sale: Codable, Identifiable, Sendable {
     public let items: [SaleLine]?
     public let payments: [SalePayment]?
     public let returns: [SaleReturnRecord]?
+    // Close-day confirmation (F33): confirmedAt null = still waiting, its money not counted yet.
+    public let confirmedAt: String?
+    public let confirmedBy: NamedRef?
+    // True only while the confirmation can still be undone (inside the open day).
+    public let canUndo: Bool?
+
+    /// Whether this sale's money has been confirmed at a daily close.
+    public var isConfirmed: Bool { confirmedAt != nil }
 }
 
 

@@ -66,7 +66,9 @@
     "closeDay": "Close day",
     "hardDelete": "Danger zone",
     "shrinkSidebar": "Collapse sidebar (⌘B)",
-    "expandSidebar": "Expand sidebar (⌘B)"
+    "expandSidebar": "Expand sidebar (⌘B)",
+    "watches": "Watches",
+    "matches": "Offers"
   },
   "auth": {
     "title": "Sign in",
@@ -152,7 +154,8 @@
       "costValue": "Cost value",
       "devicesCount": "{{count}} devices",
       "itemsCount": "{{count}} pcs"
-    }
+    },
+    "newOffers": "{{count}} new offers"
   },
   "scan": {
     "placeholder": "IMEI or serial number...",
@@ -1346,8 +1349,10 @@
       "debtReminders": "Debt reminders",
       "warrantyReminders": "Warranty reminders",
       "investorReports": "Investor reports",
-      "dayCloseAlerts": "Day close & discrepancy alerts"
+      "dayCloseAlerts": "Day close & discrepancy alerts",
+      "matchAlerts": "Watcher match alerts"
     },
+    "matchAlertsHint": "The Watcher's own bot already alerts the owner. Turn this on only if that bot is off, otherwise every offer alerts twice.",
     "disconnect": "Disconnect",
     "disconnectTitle": "Disconnect Telegram?",
     "disconnectWarning": "The saved bot and chats will be cleared. Backups and alerts will stop until you connect again.",
@@ -1495,5 +1500,68 @@
   "pwa": {
     "updateAvailable": "A new version is ready",
     "reload": "Reload"
+  },
+  "watches": {
+    "title": "Watches",
+    "subtitle": "Devices the Telegram Watcher looks for in seller groups",
+    "addWatch": "Add watch",
+    "editWatch": "Edit watch",
+    "name": "Name",
+    "namePlaceholder": "e.g. iPhone 17 Pro Max",
+    "aliases": "Aliases",
+    "aliasesPlaceholder": "17 pro max\n17pm",
+    "aliasesHint": "One per line, up to 30",
+    "productModel": "Product model",
+    "noProductModel": "Not linked",
+    "maxPrice": "Max price",
+    "currency": "Currency",
+    "synced": "Synced with the Watcher",
+    "notSynced": "Not yet sent to the Watcher",
+    "syncedColumn": "Synced",
+    "noWatches": "No watches yet",
+    "createdSuccess": "Watch added",
+    "updatedSuccess": "Watch updated",
+    "validation": {
+      "nameRequired": "Enter a name",
+      "tooManyAliases": "At most 30 aliases",
+      "aliasTooLong": "Each alias must be at most 60 characters",
+      "maxPriceInvalid": "Enter a price like 1300 or 1300.50"
+    }
+  },
+  "matches": {
+    "title": "Offers",
+    "subtitle": "Telegram posts that match your watches; refreshes every 15 seconds",
+    "status": "Status",
+    "allStatuses": "All",
+    "watch": "Watch",
+    "allWatches": "All watches",
+    "received": "Received",
+    "device": "Device",
+    "price": "Price",
+    "confidence": "Confidence",
+    "seller": "Seller",
+    "message": "Message",
+    "link": "Link",
+    "openMessage": "Open the post in Telegram",
+    "noMatches": "No offers yet",
+    "note": "Note",
+    "noteTitle": "Offer note",
+    "notePlaceholder": "Write a note (up to 500 characters)",
+    "noteSaved": "Note saved",
+    "condition": { "new": "New", "used": "Used" },
+    "statuses": {
+      "NEW": "New",
+      "SEEN": "Seen",
+      "CONTACTED": "Contacted",
+      "BOUGHT": "Bought",
+      "IGNORED": "Ignored"
+    },
+    "actions": {
+      "SEEN": "Seen",
+      "CONTACTED": "Contacted",
+      "BOUGHT": "Bought",
+      "IGNORED": "Ignore",
+      "NEW": "Restore"
+    }
   }
 }

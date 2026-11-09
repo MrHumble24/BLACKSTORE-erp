@@ -46,8 +46,21 @@ struct SaleSummarySection: View {
             if let seller = sale.seller {
                 LabeledContent("Sotuvchi", value: seller.name)
             }
+            confirmationRow
             MoneyRow(title: "Jami summa", amount: APIConfig.formatMoney(sale.total))
             MoneyRow(title: "To'langan", amount: APIConfig.formatMoney(sale.paid))
+        }
+    }
+
+    /// Close-day confirmation status (F33): waiting, or when/by whom it was confirmed.
+    @ViewBuilder
+    private var confirmationRow: some View {
+        if sale.isConfirmed {
+            let date = DateDisplay.dateTime(sale.confirmedAt ?? "") ?? ""
+            let text = sale.confirmedBy.map { "\(date) da \($0.name) tasdiqlagan" } ?? "\(date) da tasdiqlangan"
+            LabeledContent("Tasdiqlash") { Text(text).foregroundStyle(.secondary) }
+        } else {
+            LabeledContent("Tasdiqlash") { Text("Tasdiqlash kutilmoqda").foregroundStyle(.orange) }
         }
     }
 }

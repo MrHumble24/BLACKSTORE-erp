@@ -7,7 +7,7 @@ import {
   Building2, Package, ShoppingCart, Receipt, Contact, Settings,
   ArrowLeftRight, ClipboardCheck, ScrollText, Handshake, BarChart3,
   Upload, DatabaseBackup, Moon, Sun, Search, Barcode, CalendarCheck, Trash2,
-  HandCoins, Wallet,
+  HandCoins, Wallet, Radar, BellRing,
 } from 'lucide-react';
 import { useAuthStore } from '@/entities/session';
 import { useItemByCode } from '@/entities/item';
@@ -76,6 +76,12 @@ function getManagementPages(args: ItemBuilderArgs): CommandItem[] {
   }
   if (hasPermission('stock_count')) {
     pages.push({ id: 'page-stock-count', title: t('nav.stockCount'), category: 'pages', icon: ClipboardCheck, keywords: ['reviziya', 'sanash'], perform: () => { navigate('/stock-counts'); close(); } });
+  }
+  if (hasPermission('manage_watches')) {
+    pages.push(
+      { id: 'page-watches', title: t('nav.watches'), category: 'pages', icon: Radar, keywords: ['watcher', 'kuzatuv', 'izlash', 'poisk'], perform: () => { navigate('/watches'); close(); } },
+      { id: 'page-matches', title: t('nav.matches'), category: 'pages', icon: BellRing, keywords: ['offers', 'taklif', 'telegram', 'predlozheniya'], perform: () => { navigate('/matches'); close(); } },
+    );
   }
   if (hasPermission('manage_expenses')) {
     pages.push({ id: 'page-expenses', title: t('nav.expenses'), category: 'pages', icon: Wallet, keywords: ['xarajat', 'chiqim'], perform: () => { navigate('/expenses'); close(); } });

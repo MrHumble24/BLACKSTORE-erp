@@ -44,6 +44,11 @@ export class TelegramFeaturesDto {
   @IsOptional()
   @IsBoolean()
   dayCloseAlerts?: boolean;
+
+  // Owner alert per Watcher match (F34). Default off: the Watcher's own bot already alerts.
+  @IsOptional()
+  @IsBoolean()
+  matchAlerts?: boolean;
 }
 
 /** Everyday Telegram settings (no token): toggles + chat ids. Needs a bot already configured. */

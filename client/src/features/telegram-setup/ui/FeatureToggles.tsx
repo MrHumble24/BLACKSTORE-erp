@@ -62,6 +62,8 @@ export function FeatureToggles({
         <ToggleRow
           key={key}
           label={t(`telegram.features.${key}`)}
+          // Only matchAlerts needs a warning: it duplicates the Watcher bot's own alerts.
+          description={key === 'matchAlerts' ? t('telegram.matchAlertsHint') : undefined}
           checked={features[key]}
           onCheckedChange={(value) => onFeatureChange(key, value)}
           disabled={disabled || !enabled}
