@@ -24,8 +24,8 @@ public struct ProfileView: View {
                 financeSection
                 catalogSection
                 adminSection
-                serverSection
                 #if DEBUG
+                serverSection
                 developerSection
                 #endif
                 logoutSection

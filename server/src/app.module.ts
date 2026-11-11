@@ -21,6 +21,7 @@ import { HealthModule } from './health/health.module';
 import { IntegrationsModule } from './integrations/integrations.module';
 import { InvestorsModule } from './investors/investors.module';
 import { LedgerModule } from './ledger/ledger.module';
+import { LegalModule } from './legal/legal.module';
 import { LocationsModule } from './locations/locations.module';
 import { PartnersModule } from './partners/partners.module';
 import { TelegramBotModule } from './telegram-bot/telegram-bot.module';
@@ -72,6 +73,7 @@ import { WatchesModule } from './watches/watches.module';
     BusinessDayModule,
     SuperAdminModule,
     HealthModule,
+    LegalModule,
     WatchesModule,
   ],
   providers: [{ provide: APP_FILTER, useClass: PrismaExceptionFilter }],

@@ -20,27 +20,30 @@ function requireEnv(key: string): string {
 }
 
 /**
- * Seeds a dedicated super-admin user (separate from the owner's Admin account).
- * Create-only: never overwrites an existing user's password. Skips with a warning
- * when SUPER_ADMIN_PASSWORD is empty so no guessable default account is created.
+ * Create-only seed of one user from env vars `${envPrefix}_PHONE`/`_PASSWORD`.
+ * Never overwrites an existing user's password; skips with a warning when either
+ * env var is empty so no guessable default account is created.
  */
-async function seedSuperAdmin(prisma: PrismaClient) {
-  const phone = process.env.SUPER_ADMIN_PHONE;
-  const password = process.env.SUPER_ADMIN_PASSWORD;
+async function seedUser(
+  prisma: PrismaClient,
+  opts: { envPrefix: string; roleName: string; name: string; label: string },
+) {
+  const phone = process.env[`${opts.envPrefix}_PHONE`];
+  const password = process.env[`${opts.envPrefix}_PASSWORD`];
   if (!phone || !password) {
     console.warn(
-      'SUPER_ADMIN_PHONE/SUPER_ADMIN_PASSWORD not set — skipping super-admin user.',
+      `${opts.envPrefix}_PHONE/${opts.envPrefix}_PASSWORD not set — skipping ${opts.label}.`,
     );
     return;
   }
   const role = await prisma.role.findUniqueOrThrow({
-    where: { name: SUPER_ADMIN_ROLE },
+    where: { name: opts.roleName },
   });
   await prisma.user.upsert({
     where: { phone },
-    update: {}, // keep an existing super-admin's password untouched
+    update: {}, // keep an existing user's password untouched
     create: {
-      name: 'Super Admin',
+      name: opts.name,
       phone,
       passwordHash: await bcrypt.hash(password, 10),
       roleId: role.id,
@@ -80,7 +83,20 @@ async function main(prisma: PrismaClient) {
       roleId: admin.id,
     },
   });
-  await seedSuperAdmin(prisma);
+  // Dedicated super-admin, separate from the owner's Admin account (F12).
+  await seedUser(prisma, {
+    envPrefix: 'SUPER_ADMIN',
+    roleName: SUPER_ADMIN_ROLE,
+    name: 'Super Admin',
+    label: 'super-admin user',
+  });
+  // App Store review demo login as Staff (blind to cost/profit) (F35).
+  await seedUser(prisma, {
+    envPrefix: 'DEMO',
+    roleName: STAFF_ROLE,
+    name: 'App Review Demo',
+    label: 'demo user',
+  });
   await seedMasterData(prisma);
   console.log('Seed done: roles, admin user, locations, categories and the OWN investor.');
 }
