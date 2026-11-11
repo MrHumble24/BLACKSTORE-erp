@@ -77,6 +77,15 @@ export class EnvironmentVariables {
   @IsString()
   SUPER_ADMIN_PASSWORD: string = '';
 
+  // ── App Store review demo user (F35, seed only) ────────────
+  // Staff-role login for Apple's reviewer. Empty DEMO_PASSWORD => the seed
+  // skips the user (no guessable default).
+  @IsString()
+  DEMO_PHONE: string = '';
+
+  @IsString()
+  DEMO_PASSWORD: string = '';
+
   // ── Telegram device Watcher (F34) ─────────────────────────
   // All optional so dev and tests boot without a Watcher; empty = unset.
   @ValidateIf((o: EnvironmentVariables) => !!o.WATCHER_URL)

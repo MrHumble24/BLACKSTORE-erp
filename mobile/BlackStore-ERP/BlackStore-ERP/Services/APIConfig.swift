@@ -21,11 +21,16 @@ public enum APIConfig {
         return trimmed.isEmpty ? defaultBaseURL : trimmed
     }
 
-    /// Active server base URL, stored in UserDefaults for easy switching between staging and production.
+    /// Active server base URL. Debug builds read a switchable value from UserDefaults;
+    /// release builds always use production so App Store users can't point it elsewhere.
     public static var baseURL: String {
         get {
+            #if DEBUG
             let saved = UserDefaults.standard.string(forKey: serverURLKey) ?? defaultBaseURL
             return cleanURL(saved)
+            #else
+            return defaultBaseURL
+            #endif
         }
         set {
             UserDefaults.standard.set(cleanURL(newValue), forKey: serverURLKey)
